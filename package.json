@@ -1,5 +1,5 @@
 {
-  "name": "nextjs-starter-fullstack-node",
+  "name": "unboxd",
   "version": "2.0.0",
   "private": true,
   "type": "module",
@@ -7,7 +7,8 @@
     "dev": "next dev",
     "build": "prisma generate && next build",
     "start": "next start",
-    "lint": "next typegen && tsc --noEmit && eslint",
+     "lint": "eslint",
+    "typecheck": "next typegen && tsc --noEmit",
     "prod": "prisma generate && next build && next start",
     "migrate": "prisma migrate dev && prisma generate",
     "studio": "prisma studio --browser none"
@@ -55,7 +56,7 @@
     "node": ">=24.x.x",
     "npm": ">=11.x.x"
   },
-  "author": "Saikat Sardar",
+  "author": "Nisha Sardar",
   "license": "MIT",
-  "homepage": "https://github.com/MrSaikatS/nextjs-starter-fullstack-node#readme"
+  "homepage": "https://github.com/MissNishaSardar/unboxd"
 }
