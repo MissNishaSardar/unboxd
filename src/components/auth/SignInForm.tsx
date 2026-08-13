@@ -2,8 +2,9 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader2Icon } from "lucide-react";
+import type { Route } from "next";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Controller, useForm } from "react-hook-form";
 import { authClient } from "@/lib/auth-client";
 import { signinSchema, signinType } from "@/lib/zodSchema";
@@ -19,6 +20,8 @@ import { toast } from "@/components/shadcnui/toast";
 
 const SignInForm = () => {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const callbackUrl = searchParams.get("callbackUrl") ?? "/dashboard";
 
   const {
     handleSubmit,
@@ -55,7 +58,7 @@ const SignInForm = () => {
       return;
     }
 
-    router.push("/dashboard");
+    router.push(callbackUrl as Route);
   };
 
   return (

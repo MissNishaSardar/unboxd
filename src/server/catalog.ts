@@ -7,26 +7,47 @@ import { productSortSchema } from "@/lib/zodSchema";
 export const PRODUCTS_PER_PAGE = 12;
 
 type ProductRow = {
+  id: string;
   slug: string;
   name: string;
   basePrice: { toString(): string };
   category: { name: string; slug: string };
   images: { url: string; alt: string | null }[];
+  variants: {
+    sku: string;
+    name: string;
+    priceDiff: { toString(): string };
+    stock: number;
+  }[];
 };
 
-function toProductCardData(product: ProductRow) {
+export function toProductCardData(product: ProductRow) {
+  const defaultVariant =
+    product.variants.find((variant) => variant.stock > 0) ??
+    product.variants[0];
   return {
+    id: product.id,
     slug: product.slug,
     name: product.name,
     basePrice: String(product.basePrice),
     category: { name: product.category.name, slug: product.category.slug },
     images: product.images.map((image) => ({ url: image.url, alt: image.alt })),
+    defaultVariant:
+      defaultVariant ?
+        {
+          sku: defaultVariant.sku,
+          name: defaultVariant.name,
+          priceDiff: String(defaultVariant.priceDiff),
+          stock: defaultVariant.stock,
+        }
+      : null,
   };
 }
 
-const productCardInclude = {
+export const productCardInclude = {
   images: { orderBy: { sortOrder: "asc" } },
   category: true,
+  variants: { orderBy: { priceDiff: "asc" } },
 } as const;
 
 export async function getFeaturedProducts() {
@@ -139,10 +160,7 @@ export async function getProductBySlug(slug: string) {
   cacheTag("products");
   const product = await prisma.product.findFirst({
     where: { slug, isActive: true },
-    include: {
-      ...productCardInclude,
-      variants: { orderBy: { priceDiff: "asc" } },
-    },
+    include: productCardInclude,
   });
   if (!product) return null;
   return toProductDetailData(product);

@@ -4,10 +4,8 @@ import { auth } from "@/lib/auth";
 
 const PROTECTED = [
   "/dashboard",
-  "/cart",
   "/checkout",
   "/orders",
-  "/wishlist",
   "/settings",
   "/profile",
 ];
@@ -42,10 +40,8 @@ export async function proxy(request: NextRequest) {
 export const config = {
   matcher: [
     "/dashboard",
-    "/cart",
     "/checkout",
     "/orders/:path*",
-    "/wishlist",
     "/settings",
     "/profile",
     "/admin",

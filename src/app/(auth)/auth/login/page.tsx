@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import type { Route } from "next";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import SignInForm from "@/components/auth/SignInForm";
@@ -16,17 +17,24 @@ export const metadata: Metadata = {
   description: "Sign in to your Unboxd account.",
 };
 
-const LoginPage = async () => {
+const LoginPage = async ({
+  searchParams,
+}: {
+  searchParams: Promise<{ callbackUrl?: string | string[] }>;
+}) => {
   const session = await auth.api.getSession({
     headers: await headers(),
   });
 
   if (session) {
-    redirect("/dashboard");
+    const sp = await searchParams;
+    const callbackUrl =
+      typeof sp.callbackUrl === "string" ? sp.callbackUrl : "/dashboard";
+    redirect(callbackUrl as Route);
   }
 
   return (
-    <div className="flex min-h-[calc(100svh-4rem)] items-center justify-center px-4 py-12">
+    <div className="flex min-h-svh items-center justify-center px-4 py-12">
       <Card className="w-full max-w-md">
         <CardHeader className="items-center justify-items-center text-center">
           <CardTitle className="text-lg">Sign in</CardTitle>

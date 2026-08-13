@@ -1,18 +1,18 @@
 "use client";
 
 import { useMemo } from "react";
-import { useSetAtom } from "jotai";
 import { parseAsString, useQueryState } from "nuqs";
 import { ShoppingCartIcon } from "lucide-react";
 import { Badge } from "@/components/shadcnui/badge";
 import { Button } from "@/components/shadcnui/button";
 import { Field, FieldGroup, FieldTitle } from "@/components/shadcnui/field";
+import WishlistButton from "@/components/product/wishlist-button";
 import {
   ToggleGroup,
   ToggleGroupItem,
 } from "@/components/shadcnui/toggle-group";
 import { toast } from "@/components/shadcnui/toast";
-import { cartAtom } from "@/lib/cart/atoms";
+import { addToCart } from "@/lib/cart/atoms";
 import { formatPrice } from "@/lib/format";
 
 export type ProductInfoVariant = {
@@ -48,7 +48,6 @@ const ProductInfo = ({
     "variant",
     parseAsString.withDefault(defaultSku ?? ""),
   );
-  const setCart = useSetAtom(cartAtom);
 
   const variant =
     variants.find((candidate) => candidate.sku === sku) ??
@@ -61,33 +60,16 @@ const ProductInfo = ({
   const lowStock = !outOfStock && variant.stock <= 5;
   const showsFrom = Number(priceFrom) < price;
 
-  const addToCart = () => {
-    setCart((items) => {
-      const existing = items.find(
-        (item) =>
-          item.productId === productId && item.variantId === variant.sku,
-      );
-      if (existing) {
-        return items.map((item) =>
-          item.productId === productId && item.variantId === variant.sku ?
-            { ...item, quantity: Math.min(item.quantity + 1, item.maxStock) }
-          : item,
-        );
-      }
-      return [
-        ...items,
-        {
-          productId,
-          variantId: variant.sku,
-          slug,
-          name,
-          variantName: variant.name,
-          price,
-          image,
-          quantity: 1,
-          maxStock: variant.stock,
-        },
-      ];
+  const handleAddToCart = () => {
+    addToCart({
+      productId,
+      variantId: variant.sku,
+      slug,
+      name,
+      variantName: variant.name,
+      price,
+      image,
+      maxStock: variant.stock,
     });
     toast.add({
       title: "Added to cart",
@@ -158,14 +140,18 @@ const ProductInfo = ({
         </FieldGroup>
       )}
 
-      <Button
-        size="lg"
-        disabled={outOfStock}
-        onClick={addToCart}
-        data-icon="inline-start">
-        <ShoppingCartIcon aria-hidden="true" />
-        {outOfStock ? "Out of Stock" : "Add to Cart"}
-      </Button>
+      <div className="flex gap-2">
+        <Button
+          size="lg"
+          className="flex-1"
+          disabled={outOfStock}
+          onClick={handleAddToCart}
+          data-icon="inline-start">
+          <ShoppingCartIcon aria-hidden="true" />
+          {outOfStock ? "Out of Stock" : "Add to Cart"}
+        </Button>
+        <WishlistButton productId={productId} />
+      </div>
     </div>
   );
 };

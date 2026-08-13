@@ -26,7 +26,7 @@ const RegisterPage = async () => {
   }
 
   return (
-    <div className="flex min-h-[calc(100svh-4rem)] items-center justify-center px-4 py-12">
+    <div className="flex min-h-svh items-center justify-center px-4 py-12">
       <Card className="w-full max-w-md">
         <CardHeader className="items-center justify-items-center text-center">
           <CardTitle className="text-lg">Create account</CardTitle>
