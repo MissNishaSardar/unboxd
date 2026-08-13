@@ -11,6 +11,7 @@
     "typecheck": "next typegen && tsc --noEmit",
     "prod": "prisma generate && next build && next start",
     "migrate": "prisma migrate dev && prisma generate",
+    "seed": "bun prisma/seed.ts",
     "studio": "prisma studio --browser none"
   },
   "dependencies": {
