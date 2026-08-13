@@ -26,3 +26,22 @@ export const signupSchema = z
   });
 
 export type signupType = z.infer<typeof signupSchema>;
+
+const queryString = <T extends z.ZodType<string>>(schema: T) =>
+  z
+    .union([schema, z.array(schema)])
+    .transform((value) => (Array.isArray(value) ? value[0] : value));
+
+export const productSortSchema = z.enum(["price_asc", "price_desc", "newest"]);
+
+export const productListSearchParamsSchema = z.object({
+  category: queryString(z.string().min(1).max(100)).optional(),
+  sort: productSortSchema.catch("newest"),
+  min: z.coerce.number().min(0).optional().catch(undefined),
+  max: z.coerce.number().min(0).optional().catch(undefined),
+  page: z.coerce.number().int().min(1).optional().catch(1),
+});
+
+export type productListSearchParamsType = z.infer<
+  typeof productListSearchParamsSchema
+>;

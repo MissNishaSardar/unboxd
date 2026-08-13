@@ -1,7 +1,35 @@
 import { getSessionCookie } from "better-auth/cookies";
 import { NextRequest, NextResponse } from "next/server";
+import { auth } from "@/lib/auth";
 
-export function proxy(request: NextRequest) {
+const PROTECTED = [
+  "/dashboard",
+  "/cart",
+  "/checkout",
+  "/orders",
+  "/wishlist",
+  "/settings",
+  "/profile",
+];
+const ADMIN = ["/admin"];
+
+export async function proxy(request: NextRequest) {
+  const { pathname } = request.nextUrl;
+
+  if (ADMIN.some((p) => pathname.startsWith(p))) {
+    const session = await auth.api.getSession({
+      headers: request.headers as unknown as Headers,
+    });
+    if (!session || session.user.role !== "admin") {
+      return NextResponse.redirect(new URL("/", request.url));
+    }
+    return NextResponse.next();
+  }
+
+  if (!PROTECTED.some((p) => pathname.startsWith(p))) {
+    return NextResponse.next();
+  }
+
   const sessionCookie = getSessionCookie(request);
 
   if (!sessionCookie) {
@@ -20,5 +48,7 @@ export const config = {
     "/wishlist",
     "/settings",
     "/profile",
+    "/admin",
+    "/admin/:path*",
   ],
 };

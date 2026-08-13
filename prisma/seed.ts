@@ -1,6 +1,7 @@
 import "dotenv/config";
 import { PrismaClient } from "@generated/prisma/client";
 import { PrismaLibSql } from "@prisma/adapter-libsql";
+import { auth } from "@/lib/auth";
 
 const prisma = new PrismaClient({
   adapter: new PrismaLibSql({ url: process.env.DATABASE_URL ?? "" }),
@@ -370,14 +371,39 @@ const products: SeedProduct[] = [
   },
 ];
 
-async function main() {
+const USERS = [
+  {
+    email: "admin@unboxd.com",
+    password: "Admin@123",
+    name: "Admin",
+    role: "admin" as const,
+  },
+  {
+    email: "customer1@unboxd.com",
+    password: "Customer@123",
+    name: "Priya Sharma",
+  },
+  {
+    email: "customer2@unboxd.com",
+    password: "Customer@123",
+    name: "Rahul Verma",
+  },
+];
+
+const WISHLIST_PRODUCT_SLUGS = [
+  "iphone-15-pro",
+  "sony-wh-1000xm5",
+  "anker-65w-gan",
+];
+
+async function seedCatalog() {
   const [existingProducts, existingCategories] = await Promise.all([
     prisma.product.count(),
     prisma.category.count(),
   ]);
   if (existingProducts > 0 || existingCategories > 0) {
     console.log(
-      `Seed skipped: ${existingProducts} products, ${existingCategories} categories already exist. ` +
+      `Catalog seed skipped: ${existingProducts} products, ${existingCategories} categories already exist. ` +
         "Reset the database (bunx prisma migrate reset) before re-seeding.",
     );
     return;
@@ -431,7 +457,57 @@ async function main() {
     variants: await prisma.productVariant.count(),
     images: await prisma.productImage.count(),
   };
-  console.log("Seed complete:", counts);
+  console.log("Catalog seed complete:", counts);
+}
+
+async function seedUsers() {
+  const existing = await prisma.user.count();
+  if (existing > 0) {
+    console.log(`User seed skipped: ${existing} users already exist.`);
+    return;
+  }
+
+  for (const user of USERS) {
+    const created = await auth.api.signUpEmail({
+      body: {
+        email: user.email,
+        password: user.password,
+        name: user.name,
+      },
+    });
+    if (user.role === "admin") {
+      await prisma.user.update({
+        where: { id: created.user.id },
+        data: { role: "admin" },
+      });
+    }
+  }
+
+  const customer1 = await prisma.user.findUnique({
+    where: { email: "customer1@unboxd.com" },
+  });
+  const wishlistProducts = await prisma.product.findMany({
+    where: { slug: { in: WISHLIST_PRODUCT_SLUGS } },
+  });
+  if (customer1 && wishlistProducts.length > 0) {
+    await prisma.wishlistItem.createMany({
+      data: wishlistProducts.map((product) => ({
+        userId: customer1.id,
+        productId: product.id,
+      })),
+    });
+  }
+
+  console.log(
+    `User seed complete: 1 admin, ${USERS.length - 1} customers, ` +
+      `${wishlistProducts.length} wishlist rows. ` +
+      "Credentials (dev only): admin@unboxd.com / Admin@123, customer1@unboxd.com / Customer@123.",
+  );
+}
+
+async function main() {
+  await seedCatalog();
+  await seedUsers();
 }
 
 main()
