@@ -1,9 +1,10 @@
+import Header from "@/components/Layout/Header";
 import { LayoutProps } from "@/lib/types";
 
 const PublicLayout = ({ children }: LayoutProps) => {
   return (
     <div>
-      <header>Header</header>
+      <Header />
       <main>{children}</main>
     </div>
   );
