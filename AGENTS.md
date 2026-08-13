@@ -35,6 +35,17 @@ Path aliases: `@/*` → `./src/*`, `@generated/*` → `./generated/*`.
 - **Full prod**: `bun prod` — `prisma generate && next build && next start` (before schema/env changes)
 - **Seed**: `bun run seed` (or `bunx --bun prisma db seed`) — idempotent; use `bunx --bun prisma migrate reset` to wipe + re-seed
 
+## Smoke testing (Playwright)
+
+`playwright-core` is a devDependency. Bun's WebSocket transport cannot connect to Chromium DevTools on this machine (launch pipe and `connectOverCDP` both time out). Workaround: launch Chrome headless manually, then connect and run the script with `node`:
+
+```powershell
+Start-Process "C:\Users\USER\AppData\Local\ms-playwright\chromium-1234\chrome-win64\chrome.exe" -ArgumentList "--headless=new","--remote-debugging-port=9222","--no-sandbox","--user-data-dir=C:\Users\USER\AppData\Local\Temp\opencode\cdp-profile","about:blank"
+node smoke.mjs   # uses chromium.connectOverCDP("http://127.0.0.1:9222")
+```
+
+Kill the chrome process and the `next start` listener (port 3000) after testing.
+
 ## Project structure
 
 ```

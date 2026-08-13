@@ -306,6 +306,8 @@ export function FilterBar() {
 
 **Deliverable:** `/products/iphone-15-pro` renders with variant switching, live price, and SEO meta.
 
+**✅ Executed (Day 4 complete):** `src/server/catalog.ts` gained `getProductBySlug` (cached, `cacheTag("products")`, DTO with `priceFrom` = min `basePrice+priceDiff`) and `getRelatedProducts` (same category, take 4, cached); `getProductSlugs` (uncached, build-time only) feeds `generateStaticParams` over all 26 products. `(public)/products/[slug]/page.tsx` renders breadcrumb + `ProductGallery` + `ProductInfo` + description + related grid, with `generateMetadata` (name/description) and `notFound()` on null. `ProductGallery` is a lightweight 1..n component (single hero now; thumbnail row auto-appears when `images.length > 1` — seed has 1 image/product, so it stays dormant until Day 8 uploads). `ProductInfo` (client) syncs `?variant=sku` via nuqs (default = first in-stock variant), price = `basePrice + priceDiff` with a "from ₹X" hint, stock badge (In Stock / Only N left ≤5 / Out of Stock), and an Add to Cart button wired to a minimal Jotai store (`src/lib/cart/atoms.ts`: `cartAtom` + `cartCountAtom` + `cartTotalAtom`, SSR-safe). Smoke-tested with Playwright (12/12): default price ₹1,19,900 → click Black Titanium/512GB → ₹1,34,900 + `?variant=` in URL → Add to Cart writes localStorage + toast; Xiaomi 14 white (stock 0) disabled; AirPods Pro 2 (single variant) shows no selector; bogus slug renders the not-found UI. **Deviations:** (1) `[slug]/loading.tsx` was **removed** — with PPR, `notFound()` thrown after a suspending `"use cache"` await inside the loading.tsx Suspense boundary streams the skeleton first and the 404 can never be set (Next docs: "Place `notFound()` before those boundaries and before any `await` that may suspend"). Result is the documented soft-404: HTTP 200 + not-found UI + `<meta name="robots" content="noindex">`. A hard 404 would need a slug-existence check in `proxy.ts` (docs suggest it, but warn to keep proxy fast — deferred). (2) `export const dynamicParams` is rejected by `cacheComponents` — removed (it's the default anyway). (3) `ProductInfo` is deferred to a client Suspense boundary because `useQueryState` uses `useSearchParams` (same as the Day 3 filter sidebar) — its markup is not in the initial HTML, only the serialized props; verified via Playwright, not curl. (4) Jotai `createJSONStorage` typing rejects `Storage | undefined` — the SSR fallback is a no-op storage object (`getItem: () => null`), not `undefined`. (5) **Playwright on this machine:** Bun's WebSocket transport cannot connect to Chromium DevTools (both the launch pipe and `connectOverCDP` time out). Workaround: launch Chrome headless manually with `--remote-debugging-port=9222 --headless=new --user-data-dir=<temp>`, then `chromium.connectOverCDP("http://127.0.0.1:9222")` and run the script with `node` (not `bun`). `playwright-core` added as a devDependency for this.
+
 ### Day 5 · Cart + Wishlist (Jotai + SSR-safe persistence)
 
 **Goal:** Hydration-safe cart that survives refresh and works for guests.
@@ -685,37 +687,11 @@ export const storage: StorageAdapter =
 
 **Deliverable:** The app feels fast, polished, and accessible.
 
-### Day 13 · Backblaze B2 + Postgres Migration + Testing
-
-**Goal:** Production-ready storage and database with a clean migration path.
-
-**Key tasks:**
-
-- Set up Backblaze B2 bucket + CORS rules (required for any direct browser uploads; the Route Handler approach avoids this, but configure it anyway for future presigned-URL uploads).【turn0search18】
-- Wire `B2Storage` adapter (from Day 8) with env vars. Test an admin image upload against B2 in a staging deploy.
-- **Postgres migration (the careful part):**
-  1. Change `provider = "sqlite"` → `"postgresql"` in `schema.prisma`.
-  2. Change `DATABASE_PROVIDER` env to `"postgresql"` in your Better Auth `prismaAdapter` config (two changes, not one).【turn1fetch0】
-  3. **Delete `prisma/migrations/` and `migration_lock.toml`** — migration SQL is provider-specific and will throw `P3014` otherwise.【turn0search7】
-  4. Run `prisma migrate dev --name init` against Postgres, re-seed.
-- Write a few critical tests: checkout transaction rollback on oversell, admin guard rejects non-admin, Zod schema rejects bad input.
-- Run `bun audit` and address vulnerabilities (especially the `sharp` advisory if Next bundles an old version).【turn0search3】
-
-**Deliverable:** App runs on Postgres + B2 with no code changes beyond env vars.
-
-### Day 14 · README + Deploy + Final Audit
-
 **Goal:** A GitHub repo that gets you interviews.
 
 **Key tasks:**
 
 - Write a killer `README.md`: architecture diagram (Excalidraw → PNG), feature list, tech stack with version pins, local setup steps, env var documentation (`.env.example`), screenshots/GIFs, live demo link.
-- Clean commit history: squash WIP commits, use conventional commits (`feat:`, `fix:`, `chore:`, `refactor:`).
-- Deploy to Vercel: set all env vars, configure the Postgres connection string, verify `sharp` loads in the Route Handler (the Turbopack issue is Server-Action-specific, so Route Handlers should be safe — verify in deployment logs).【turn0search0】
-- Final audit pass: test the full flow as a guest → signup → cart → checkout → order → admin fulfillment. Fix any hydration warnings, console errors, or Lighthouse regressions.
-- Add a `LICENSE` and pin versions in `package.json`.
-
-**Deliverable:** Live demo + polished repo ready for your portfolio.
 
 ---
 

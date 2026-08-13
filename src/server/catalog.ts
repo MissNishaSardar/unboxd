@@ -6,6 +6,29 @@ import { productSortSchema } from "@/lib/zodSchema";
 
 export const PRODUCTS_PER_PAGE = 12;
 
+type ProductRow = {
+  slug: string;
+  name: string;
+  basePrice: { toString(): string };
+  category: { name: string; slug: string };
+  images: { url: string; alt: string | null }[];
+};
+
+function toProductCardData(product: ProductRow) {
+  return {
+    slug: product.slug,
+    name: product.name,
+    basePrice: String(product.basePrice),
+    category: { name: product.category.name, slug: product.category.slug },
+    images: product.images.map((image) => ({ url: image.url, alt: image.alt })),
+  };
+}
+
+const productCardInclude = {
+  images: { orderBy: { sortOrder: "asc" } },
+  category: true,
+} as const;
+
 export async function getFeaturedProducts() {
   "use cache";
   cacheLife("hours");
@@ -14,18 +37,9 @@ export async function getFeaturedProducts() {
     where: { isActive: true, featured: true },
     orderBy: { createdAt: "desc" },
     take: 8,
-    include: {
-      images: { orderBy: { sortOrder: "asc" } },
-      category: true,
-    },
+    include: productCardInclude,
   });
-  return products.map((product) => ({
-    slug: product.slug,
-    name: product.name,
-    basePrice: String(product.basePrice),
-    category: { name: product.category.name, slug: product.category.slug },
-    images: product.images.map((image) => ({ url: image.url, alt: image.alt })),
-  }));
+  return products.map(toProductCardData);
 }
 
 export async function getCategoriesWithCounts() {
@@ -79,27 +93,118 @@ export async function getProducts(params: ProductListParams) {
       orderBy,
       skip: (page - 1) * PRODUCTS_PER_PAGE,
       take: PRODUCTS_PER_PAGE,
-      include: {
-        images: { orderBy: { sortOrder: "asc" } },
-        category: true,
-      },
+      include: productCardInclude,
     }),
     prisma.product.count({ where }),
   ]);
 
   return {
-    products: products.map((product) => ({
-      slug: product.slug,
-      name: product.name,
-      basePrice: String(product.basePrice),
-      category: { name: product.category.name, slug: product.category.slug },
-      images: product.images.map((image) => ({
-        url: image.url,
-        alt: image.alt,
-      })),
-    })),
+    products: products.map(toProductCardData),
     total,
     page,
     totalPages: Math.max(1, Math.ceil(total / PRODUCTS_PER_PAGE)),
+  };
+}
+
+export async function getProductSlugs() {
+  const products = await prisma.product.findMany({
+    where: { isActive: true },
+    select: { slug: true },
+  });
+  return products.map((product) => product.slug);
+}
+
+export type ProductDetailVariant = {
+  sku: string;
+  name: string;
+  priceDiff: string;
+  stock: number;
+};
+
+export type ProductDetailData = {
+  id: string;
+  slug: string;
+  name: string;
+  description: string;
+  basePrice: string;
+  priceFrom: string;
+  category: { name: string; slug: string };
+  images: { url: string; alt: string | null }[];
+  variants: ProductDetailVariant[];
+};
+
+export async function getProductBySlug(slug: string) {
+  "use cache";
+  cacheLife("hours");
+  cacheTag("products");
+  const product = await prisma.product.findFirst({
+    where: { slug, isActive: true },
+    include: {
+      ...productCardInclude,
+      variants: { orderBy: { priceDiff: "asc" } },
+    },
+  });
+  if (!product) return null;
+  return toProductDetailData(product);
+}
+
+export async function getRelatedProducts(slug: string, categorySlug: string) {
+  "use cache";
+  cacheLife("hours");
+  cacheTag("products");
+  const products = await prisma.product.findMany({
+    where: {
+      isActive: true,
+      slug: { not: slug },
+      category: { slug: categorySlug },
+    },
+    orderBy: [{ createdAt: "desc" }, { id: "asc" }],
+    take: 4,
+    include: productCardInclude,
+  });
+  return products.map(toProductCardData);
+}
+
+function toProductDetailData(product: {
+  id: string;
+  slug: string;
+  name: string;
+  description: string;
+  basePrice: { toString(): string };
+  category: { name: string; slug: string };
+  images: { url: string; alt: string | null }[];
+  variants: {
+    sku: string;
+    name: string;
+    priceDiff: { toString(): string };
+    stock: number;
+  }[];
+}): ProductDetailData {
+  const variants = product.variants.map((variant) => ({
+    sku: variant.sku,
+    name: variant.name,
+    priceDiff: String(variant.priceDiff),
+    stock: variant.stock,
+  }));
+  const priceFrom =
+    variants.length > 0 ?
+      String(
+        Math.min(
+          ...variants.map(
+            (variant) => Number(product.basePrice) + Number(variant.priceDiff),
+          ),
+        ),
+      )
+    : String(product.basePrice);
+  return {
+    id: product.id,
+    slug: product.slug,
+    name: product.name,
+    description: product.description,
+    basePrice: String(product.basePrice),
+    priceFrom,
+    category: { name: product.category.name, slug: product.category.slug },
+    images: product.images.map((image) => ({ url: image.url, alt: image.alt })),
+    variants,
   };
 }
