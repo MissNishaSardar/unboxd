@@ -37,8 +37,6 @@ export const cartTotalAtom = atom((get) =>
 
 export const cartDrawerOpenAtom = atom(false);
 
-export const FREE_SHIPPING_THRESHOLD = 999;
-
 const store = getDefaultStore();
 
 export const openCart = () => {

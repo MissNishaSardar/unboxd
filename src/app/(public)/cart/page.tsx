@@ -13,12 +13,11 @@ import {
 } from "lucide-react";
 import { authClient } from "@/lib/auth-client";
 import { useMounted } from "@/hooks/use-mounted";
+import { cartAtom, cartTotalAtom, clearCart } from "@/lib/cart/atoms";
 import {
   FREE_SHIPPING_THRESHOLD,
-  cartAtom,
-  cartTotalAtom,
-  clearCart,
-} from "@/lib/cart/atoms";
+  SHIPPING_FLAT_RATE,
+} from "@/lib/cart/shipping";
 import { formatPrice } from "@/lib/format";
 import { Button } from "@/components/shadcnui/button";
 import CartItemRow from "@/components/cart/cart-item-row";
@@ -147,7 +146,9 @@ const CartPage = () => {
               <div className="flex items-center justify-between">
                 <span className="text-muted-foreground text-sm">Shipping</span>
                 <span className="text-sm font-medium tabular-nums">
-                  {session ? "Free" : "Calculated at checkout"}
+                  {total >= FREE_SHIPPING_THRESHOLD ?
+                    "Free"
+                  : formatPrice(SHIPPING_FLAT_RATE)}
                 </span>
               </div>
             </div>
@@ -200,7 +201,7 @@ const CartPage = () => {
 
             <p className="text-muted-foreground text-center text-xs">
               {session ?
-                "Shipping calculated at checkout."
+                `Free shipping on orders over ${formatPrice(FREE_SHIPPING_THRESHOLD)}.`
               : "Sign in at checkout to place your order."}
             </p>
           </aside>

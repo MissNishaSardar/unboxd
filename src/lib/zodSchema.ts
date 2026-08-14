@@ -1,23 +1,23 @@
 import { z } from "zod";
 
 export const signinSchema = z.object({
-  email: z.email("Enter a valid email"),
+  email: z.email({ error: "Enter a valid email" }),
   password: z
     .string()
-    .min(8, "Password must be at least 8 characters")
-    .max(128, "Password must be at most 128 characters"),
+    .min(8, { error: "Password must be at least 8 characters" })
+    .max(128, { error: "Password must be at most 128 characters" }),
 });
 
 export type signinType = z.infer<typeof signinSchema>;
 
 export const signupSchema = z
   .object({
-    name: z.string().min(2, "Name must be at least 2 characters"),
-    email: z.email("Enter a valid email"),
+    name: z.string().min(2, { error: "Name must be at least 2 characters" }),
+    email: z.email({ error: "Enter a valid email" }),
     password: z
       .string()
-      .min(8, "Password must be at least 8 characters")
-      .max(128, "Password must be at most 128 characters"),
+      .min(8, { error: "Password must be at least 8 characters" })
+      .max(128, { error: "Password must be at most 128 characters" }),
     confirmPassword: z.string(),
   })
   .refine((data) => data.password === data.confirmPassword, {
@@ -45,3 +45,31 @@ export const productListSearchParamsSchema = z.object({
 export type productListSearchParamsType = z.infer<
   typeof productListSearchParamsSchema
 >;
+
+export const checkoutSchema = z.object({
+  name: z
+    .string()
+    .trim()
+    .min(2, { error: "Name must be at least 2 characters" })
+    .max(80),
+  phone: z
+    .string()
+    .trim()
+    .regex(/^[0-9+\-\s]{10,15}$/, { error: "Enter a valid phone number" }),
+  addressLine: z
+    .string()
+    .trim()
+    .min(5, { error: "Address must be at least 5 characters" })
+    .max(200),
+  city: z
+    .string()
+    .trim()
+    .min(2, { error: "City must be at least 2 characters" })
+    .max(80),
+  pincode: z
+    .string()
+    .trim()
+    .regex(/^[0-9]{6}$/, { error: "Enter a valid 6-digit pincode" }),
+});
+
+export type checkoutType = z.infer<typeof checkoutSchema>;
