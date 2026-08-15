@@ -2,8 +2,10 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { motion } from "motion/react";
 import { ShoppingCartIcon } from "lucide-react";
+import { authClient } from "@/lib/auth-client";
 import { Badge } from "@/components/shadcnui/badge";
 import { Button } from "@/components/shadcnui/button";
 import { Card, CardContent, CardFooter } from "@/components/shadcnui/card";
@@ -33,8 +35,18 @@ const ProductCard = ({ product }: { product: ProductCardData }) => {
   const price =
     Number(product.basePrice) + (variant ? Number(variant.priceDiff) : 0);
   const outOfStock = !variant || variant.stock === 0;
+  const { data: session } = authClient.useSession();
+  const router = useRouter();
 
   const handleAddToCart = () => {
+    if (!session) {
+      toast.add({
+        title: "Sign in to add items to your cart",
+        type: "error",
+      });
+      router.push(`/auth/login?callbackUrl=/products/${product.slug}`);
+      return;
+    }
     if (!variant || !image) return;
     addToCart({
       productId: product.id,

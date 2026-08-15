@@ -27,6 +27,15 @@ const Header = () => {
     });
   };
 
+  const handleCartClick = () => {
+    if (!mounted) return;
+    if (session) {
+      setCartOpen(true);
+    } else {
+      router.push("/auth/login?callbackUrl=/cart");
+    }
+  };
+
   return (
     <header className="flex items-center justify-between border-b px-6 py-3">
       <Link
@@ -48,7 +57,7 @@ const Header = () => {
           size="icon"
           aria-label="Open cart"
           className="relative"
-          onClick={() => setCartOpen(true)}>
+          onClick={handleCartClick}>
           <ShoppingCartIcon aria-hidden="true" />
           {mounted && cartCount > 0 && (
             <span className="bg-primary text-primary-foreground absolute -top-0.5 -right-0.5 flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[10px] font-semibold tabular-nums">

@@ -2,7 +2,9 @@
 
 import { useMemo } from "react";
 import { parseAsString, useQueryState } from "nuqs";
+import { useRouter } from "next/navigation";
 import { ShoppingCartIcon } from "lucide-react";
+import { authClient } from "@/lib/auth-client";
 import { Badge } from "@/components/shadcnui/badge";
 import { Button } from "@/components/shadcnui/button";
 import { Field, FieldGroup, FieldTitle } from "@/components/shadcnui/field";
@@ -48,6 +50,8 @@ const ProductInfo = ({
     "variant",
     parseAsString.withDefault(defaultSku ?? ""),
   );
+  const { data: session } = authClient.useSession();
+  const router = useRouter();
 
   const variant =
     variants.find((candidate) => candidate.sku === sku) ??
@@ -61,6 +65,14 @@ const ProductInfo = ({
   const showsFrom = Number(priceFrom) < price;
 
   const handleAddToCart = () => {
+    if (!session) {
+      toast.add({
+        title: "Sign in to add items to your cart",
+        type: "error",
+      });
+      router.push(`/auth/login?callbackUrl=/products/${slug}`);
+      return;
+    }
     addToCart({
       productId,
       variantId: variant.sku,

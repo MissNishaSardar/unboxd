@@ -8,6 +8,7 @@ const PROTECTED = [
   "/orders",
   "/settings",
   "/profile",
+  "/cart",
 ];
 const ADMIN = ["/admin"];
 
@@ -36,7 +37,9 @@ export async function proxy(request: NextRequest) {
   const sessionCookie = getSessionCookie(request);
 
   if (!sessionCookie) {
-    return NextResponse.redirect(new URL("/", request.url));
+    const loginUrl = new URL("/auth/login", request.url);
+    loginUrl.searchParams.set("callbackUrl", pathname + request.nextUrl.search);
+    return NextResponse.redirect(loginUrl);
   }
 
   return NextResponse.next();
