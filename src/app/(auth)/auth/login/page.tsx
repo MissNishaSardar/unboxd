@@ -29,7 +29,9 @@ const LoginPage = async ({
   if (session) {
     const sp = await searchParams;
     const callbackUrl =
-      typeof sp.callbackUrl === "string" ? sp.callbackUrl : "/dashboard";
+      typeof sp.callbackUrl === "string" ? sp.callbackUrl
+      : session.user.role === "admin" ? "/admin"
+      : "/dashboard";
     redirect(callbackUrl as Route);
   }
 

@@ -59,13 +59,24 @@ const Header = () => {
         {isPending ?
           null
         : session ?
-          <Button
-            variant="outline"
-            size="sm"
-            className="ml-1"
-            onClick={handleSignOut}>
-            Sign out
-          </Button>
+          <>
+            {session.user.role === "admin" && (
+              <Button
+                variant="ghost"
+                size="sm"
+                render={<Link href="/admin" />}
+                nativeButton={false}>
+                Admin
+              </Button>
+            )}
+            <Button
+              variant="outline"
+              size="sm"
+              className="ml-1"
+              onClick={handleSignOut}>
+              Sign out
+            </Button>
+          </>
         : <Button
             render={<Link href="/auth/login" />}
             nativeButton={false}

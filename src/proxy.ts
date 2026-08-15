@@ -18,8 +18,13 @@ export async function proxy(request: NextRequest) {
     const session = await auth.api.getSession({
       headers: request.headers as unknown as Headers,
     });
-    if (!session || session.user.role !== "admin") {
-      return NextResponse.redirect(new URL("/", request.url));
+    if (!session) {
+      const loginUrl = new URL("/auth/login", request.url);
+      loginUrl.searchParams.set("callbackUrl", pathname);
+      return NextResponse.redirect(loginUrl);
+    }
+    if (session.user.role !== "admin") {
+      return NextResponse.redirect(new URL("/forbidden", request.url));
     }
     return NextResponse.next();
   }

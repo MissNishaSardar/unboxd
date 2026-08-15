@@ -37,7 +37,7 @@ const SignInForm = () => {
   });
 
   const onSubmit = async (values: signinType) => {
-    const { error } = await authClient.signIn.email({
+    const { data, error } = await authClient.signIn.email({
       email: values.email,
       password: values.password,
     });
@@ -58,7 +58,10 @@ const SignInForm = () => {
       return;
     }
 
-    router.push(callbackUrl as Route);
+    const fallback = data?.user.role === "admin" ? "/admin" : "/dashboard";
+    const target =
+      callbackUrl && callbackUrl !== "/dashboard" ? callbackUrl : fallback;
+    router.push(target as Route);
   };
 
   return (
