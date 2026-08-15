@@ -50,7 +50,7 @@ const ProductInfo = ({
     "variant",
     parseAsString.withDefault(defaultSku ?? ""),
   );
-  const { data: session } = authClient.useSession();
+  const { data: session, isPending } = authClient.useSession();
   const router = useRouter();
 
   const variant =
@@ -65,6 +65,7 @@ const ProductInfo = ({
   const showsFrom = Number(priceFrom) < price;
 
   const handleAddToCart = () => {
+    if (isPending) return;
     if (!session) {
       toast.add({
         title: "Sign in to add items to your cart",

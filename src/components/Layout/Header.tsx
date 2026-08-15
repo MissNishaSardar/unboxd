@@ -28,7 +28,7 @@ const Header = () => {
   };
 
   const handleCartClick = () => {
-    if (!mounted) return;
+    if (!mounted || isPending) return;
     if (session) {
       setCartOpen(true);
     } else {

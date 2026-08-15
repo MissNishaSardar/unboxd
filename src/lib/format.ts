@@ -9,3 +9,13 @@ export function formatPrice(
 ): string {
   return inrFormatter.format(Number(value));
 }
+
+const dateFormatter = new Intl.DateTimeFormat("en-IN", {
+  day: "numeric",
+  month: "short",
+  year: "numeric",
+});
+
+export function formatDate(value: Date | string): string {
+  return dateFormatter.format(new Date(value));
+}

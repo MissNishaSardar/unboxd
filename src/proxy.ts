@@ -52,6 +52,7 @@ export const config = {
     "/orders/:path*",
     "/settings",
     "/profile",
+    "/cart",
     "/admin",
     "/admin/:path*",
   ],

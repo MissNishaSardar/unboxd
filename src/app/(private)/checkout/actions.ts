@@ -5,6 +5,7 @@ import { revalidateTag } from "next/cache";
 import { z } from "zod";
 import { auth } from "@/lib/auth";
 import prisma from "@/lib/dbClient/prisma";
+import type { Product, ProductVariant } from "@generated/prisma/client";
 import { checkoutSchema } from "@/lib/zodSchema";
 import {
   FREE_SHIPPING_THRESHOLD,
@@ -13,7 +14,7 @@ import {
 
 const cartLineSchema = z.object({
   variantId: z.string().min(1),
-  quantity: z.number().int().min(1),
+  quantity: z.number().int().min(1).max(99),
 });
 
 const placeOrderInputSchema = z.object({
@@ -50,11 +51,11 @@ export async function placeOrder(input: unknown): Promise<PlaceOrderResult> {
   try {
     const order = await prisma.$transaction(
       async (tx) => {
-        const variants = [];
+        const variants: (ProductVariant & { product: Product })[] = [];
         for (const line of cart) {
           variants.push(
             await tx.productVariant.findUniqueOrThrow({
-              where: { id: line.variantId },
+              where: { sku: line.variantId },
               include: { product: true },
             }),
           );
@@ -62,7 +63,7 @@ export async function placeOrder(input: unknown): Promise<PlaceOrderResult> {
 
         for (const line of cart) {
           const result = await tx.productVariant.updateMany({
-            where: { id: line.variantId, stock: { gte: line.quantity } },
+            where: { sku: line.variantId, stock: { gte: line.quantity } },
             data: { stock: { decrement: line.quantity } },
           });
           if (result.count === 0) {

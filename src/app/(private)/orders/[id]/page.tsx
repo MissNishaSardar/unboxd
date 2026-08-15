@@ -1,13 +1,16 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { CheckCircle2Icon, PackageIcon } from "lucide-react";
+import { ArrowLeftIcon, CalendarClockIcon, PackageIcon } from "lucide-react";
 import { auth } from "@/lib/auth";
 import prisma from "@/lib/dbClient/prisma";
-import { formatPrice } from "@/lib/format";
+import { formatDate, formatPrice } from "@/lib/format";
+import { getEstimatedDelivery } from "@/lib/orders/status";
 import { headers } from "next/headers";
 import { Badge } from "@/components/shadcnui/badge";
 import { Button } from "@/components/shadcnui/button";
+import OrderStatusBadge from "@/components/orders/order-status-badge";
+import OrderTimeline from "@/components/orders/order-timeline";
 
 type Props = {
   params: Promise<{ id: string }>;
@@ -33,19 +36,29 @@ const OrderPage = async ({ params }: Props) => {
 
   if (!order) notFound();
 
+  const showEta = order.status === "CONFIRMED" || order.status === "SHIPPED";
+  const eta = getEstimatedDelivery(order.createdAt);
+
   return (
     <div className="mx-auto flex max-w-2xl flex-col gap-8">
-      <div className="flex flex-col items-center gap-3 text-center">
-        <CheckCircle2Icon
-          aria-hidden="true"
-          className="text-primary size-12"
-        />
-        <h1 className="font-heading text-2xl font-semibold tracking-tight md:text-3xl">
-          Order placed
-        </h1>
-        <p className="text-muted-foreground text-sm">
-          Thanks for your order. We&apos;ll confirm it shortly.
-        </p>
+      <div className="flex flex-col gap-4">
+        <Button
+          variant="ghost"
+          size="sm"
+          render={<Link href="/orders" />}
+          nativeButton={false}
+          className="w-fit">
+          <ArrowLeftIcon aria-hidden="true" />
+          Back to orders
+        </Button>
+        <div className="flex flex-col gap-1">
+          <h1 className="font-heading text-2xl font-semibold tracking-tight">
+            Order {order.id}
+          </h1>
+          <p className="text-muted-foreground text-sm">
+            Placed {formatDate(order.createdAt)}
+          </p>
+        </div>
       </div>
 
       <div className="flex flex-col gap-4 rounded-2xl border border-zinc-800 bg-zinc-950 p-5">
@@ -55,22 +68,30 @@ const OrderPage = async ({ params }: Props) => {
               aria-hidden="true"
               className="text-muted-foreground size-4"
             />
-            <span className="text-sm font-medium">Order</span>
+            <span className="text-sm font-medium">Status</span>
           </div>
-          <span className="text-muted-foreground text-sm">{order.id}</span>
+          <OrderStatusBadge status={order.status} />
         </div>
-        <div className="flex items-center justify-between">
-          <span className="text-muted-foreground text-sm">Status</span>
-          <Badge variant="secondary">{order.status}</Badge>
-        </div>
-        <div className="flex items-center justify-between">
-          <span className="text-muted-foreground text-sm">Payment</span>
-          <span className="text-sm font-medium">{order.paymentMethod}</span>
-        </div>
+        <OrderTimeline status={order.status} />
+        {showEta && (
+          <div className="flex items-center gap-2 border-t border-zinc-800 pt-4">
+            <CalendarClockIcon
+              aria-hidden="true"
+              className="text-muted-foreground size-4"
+            />
+            <p className="text-sm">
+              Estimated delivery by{" "}
+              <span className="font-medium">{formatDate(eta)}</span>
+            </p>
+          </div>
+        )}
       </div>
 
       <div className="flex flex-col gap-4 rounded-2xl border border-zinc-800 bg-zinc-950 p-5">
-        <h2 className="font-heading text-sm font-semibold">Items</h2>
+        <div className="flex items-center justify-between">
+          <h2 className="font-heading text-sm font-semibold">Items</h2>
+          <Badge variant="secondary">{order.paymentMethod}</Badge>
+        </div>
         <ul className="flex flex-col divide-y divide-zinc-800">
           {order.items.map((item) => (
             <li

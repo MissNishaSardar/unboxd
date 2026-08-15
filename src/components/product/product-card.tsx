@@ -35,10 +35,11 @@ const ProductCard = ({ product }: { product: ProductCardData }) => {
   const price =
     Number(product.basePrice) + (variant ? Number(variant.priceDiff) : 0);
   const outOfStock = !variant || variant.stock === 0;
-  const { data: session } = authClient.useSession();
+  const { data: session, isPending } = authClient.useSession();
   const router = useRouter();
 
   const handleAddToCart = () => {
+    if (isPending) return;
     if (!session) {
       toast.add({
         title: "Sign in to add items to your cart",

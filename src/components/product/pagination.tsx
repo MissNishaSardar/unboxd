@@ -8,9 +8,11 @@ import { cn } from "@/lib/utils";
 const Pagination = ({
   currentPage,
   totalPages,
+  pathname = "/products",
 }: {
   currentPage: number;
   totalPages: number;
+  pathname?: string;
 }) => {
   const searchParams = useSearchParams();
 
@@ -18,7 +20,7 @@ const Pagination = ({
     const params = new URLSearchParams(searchParams);
     params.set("page", String(page));
     return {
-      pathname: "/products",
+      pathname,
       query: Object.fromEntries(params),
     } as const;
   };

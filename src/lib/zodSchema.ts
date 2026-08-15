@@ -46,6 +46,14 @@ export type productListSearchParamsType = z.infer<
   typeof productListSearchParamsSchema
 >;
 
+export const orderListSearchParamsSchema = z.object({
+  page: z.coerce.number().int().min(1).optional().catch(1),
+});
+
+export type orderListSearchParamsType = z.infer<
+  typeof orderListSearchParamsSchema
+>;
+
 export const checkoutSchema = z.object({
   name: z
     .string()
