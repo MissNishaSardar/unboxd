@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
-import SignUpForm from "@/components/auth/SignUpForm";
+import SignUpForm from "@/components/Auth/SignUpForm";
 import { auth } from "@/lib/auth";
 import {
   Card,

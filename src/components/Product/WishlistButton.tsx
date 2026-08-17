@@ -2,6 +2,7 @@
 
 import { useAtomValue, useSetAtom } from "jotai";
 import { HeartIcon } from "lucide-react";
+import { usePathname, useRouter } from "next/navigation";
 import { authClient } from "@/lib/auth-client";
 import { wishlistAtom } from "@/lib/wishlist/atoms";
 import { toggleWishlist } from "@/server/wishlist";
@@ -19,30 +20,33 @@ const WishlistButton = ({
 }) => {
   const ids = useAtomValue(wishlistAtom);
   const setIds = useSetAtom(wishlistAtom);
-  const { data: session } = authClient.useSession();
+  const { data: session, isPending } = authClient.useSession();
   const mounted = useMounted();
+  const router = useRouter();
+  const pathname = usePathname();
 
   const isWishlisted = mounted && ids.includes(productId);
 
   const handleToggle = async () => {
-    if (session) {
-      const added = await toggleWishlist(productId);
-      setIds((current) =>
-        added ?
-          [...current, productId]
-        : current.filter((id) => id !== productId),
-      );
+    if (isPending) return;
+    if (!session) {
       toast.add({
-        title: added ? "Added to wishlist" : "Removed from wishlist",
-        type: "success",
+        title: "Sign in to save items to your wishlist",
+        type: "error",
       });
-    } else {
-      setIds((current) =>
-        isWishlisted ?
-          current.filter((id) => id !== productId)
-        : [...current, productId],
-      );
+      router.push(`/auth/login?callbackUrl=${pathname}`);
+      return;
     }
+    const added = await toggleWishlist(productId);
+    setIds((current) =>
+      added ?
+        [...current, productId]
+      : current.filter((id) => id !== productId),
+    );
+    toast.add({
+      title: added ? "Added to wishlist" : "Removed from wishlist",
+      type: "success",
+    });
   };
 
   return (

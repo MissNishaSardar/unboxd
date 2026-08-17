@@ -1,4 +1,4 @@
-import SignOutButton from "@/components/auth/SignOutButton";
+import SignOutButton from "@/components/Auth/SignOutButton";
 import { auth } from "@/lib/auth";
 import { LayoutProps } from "@/lib/types";
 import { headers } from "next/headers";

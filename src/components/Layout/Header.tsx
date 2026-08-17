@@ -6,7 +6,7 @@ import { useAtomValue, useSetAtom } from "jotai";
 import { HeartIcon, ShoppingCartIcon } from "lucide-react";
 import { authClient } from "@/lib/auth-client";
 import { Button } from "@/components/shadcnui/button";
-import { cartCountAtom, cartDrawerOpenAtom } from "@/lib/cart/atoms";
+import { cartCountAtom, cartDrawerOpenAtom, clearCart } from "@/lib/cart/atoms";
 import { useMounted } from "@/hooks/use-mounted";
 
 const Header = () => {
@@ -20,6 +20,7 @@ const Header = () => {
     await authClient.signOut({
       fetchOptions: {
         onSuccess: () => {
+          clearCart();
           router.push("/");
           router.refresh();
         },

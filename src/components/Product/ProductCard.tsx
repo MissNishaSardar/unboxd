@@ -9,7 +9,7 @@ import { authClient } from "@/lib/auth-client";
 import { Badge } from "@/components/shadcnui/badge";
 import { Button } from "@/components/shadcnui/button";
 import { Card, CardContent, CardFooter } from "@/components/shadcnui/card";
-import WishlistButton from "@/components/product/wishlist-button";
+import WishlistButton from "@/components/Product/WishlistButton";
 import { toast } from "@/components/shadcnui/toast";
 import { addToCart } from "@/lib/cart/atoms";
 import { formatPrice } from "@/lib/format";
@@ -51,7 +51,7 @@ const ProductCard = ({ product }: { product: ProductCardData }) => {
     if (!variant || !image) return;
     addToCart({
       productId: product.id,
-      variantId: variant.sku,
+      sku: variant.sku,
       slug: product.slug,
       name: product.name,
       variantName: variant.name,

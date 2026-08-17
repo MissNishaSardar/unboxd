@@ -582,50 +582,7 @@ export async function POST(req: Request) {
 
 ```ts
 // src/lib/storage/adapter.ts — env-driven swap
-import { writeFile, mkdir } from "node:fs/promises";
-import path from "node:path";
-import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3"; // B2 is S3-compatible
 
-export interface StorageAdapter {
-  save(buffer: Buffer, filename: string): Promise<string>;
-}
-
-class LocalStorage implements StorageAdapter {
-  async save(buffer: Buffer, filename: string) {
-    const dir = path.join(process.cwd(), "public", "uploads");
-    await mkdir(dir, { recursive: true });
-    await writeFile(path.join(dir, filename), buffer);
-    return `/uploads/${filename}`;
-  }
-}
-
-class B2Storage implements StorageAdapter {
-  private s3 = new S3Client({
-    endpoint: process.env.B2_ENDPOINT!, // https://s3.us-west-004.backblazeb2.com
-    region: process.env.B2_REGION!,
-    credentials: {
-      accessKeyId: process.env.B2_KEY_ID!,
-      secretAccessKey: process.env.B2_APP_KEY!,
-    },
-  });
-  async save(buffer: Buffer, filename: string) {
-    await this.s3.send(
-      new PutObjectCommand({
-        Bucket: process.env.B2_BUCKET!,
-        Key: filename,
-        Body: buffer,
-        ContentType: "image/webp",
-      }),
-    );
-    return `${process.env.B2_PUBLIC_BASE}/${filename}`;
-  }
-}
-
-export const storage: StorageAdapter =
-  process.env.NODE_ENV === "production" ? new B2Storage() : new LocalStorage();
-```
-
-</details>
 
 ---
 
@@ -717,3 +674,4 @@ export const storage: StorageAdapter =
 ## Daily Routine
 
 Each day, follow this loop: **schema/action → UI component → manual test the happy path → handle the error edge case → commit with a conventional message.** Resist the urge to build features ahead of their day — the sequence is dependency-ordered so each day's deliverable unblocks the next. If you finish a day early, spend the surplus on the polish tasks from Day 12 rather than jumping ahead.
+```

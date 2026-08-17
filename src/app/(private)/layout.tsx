@@ -1,12 +1,19 @@
-import SignOutButton from "@/components/auth/SignOutButton";
+import SignOutButton from "@/components/Auth/SignOutButton";
 import { auth } from "@/lib/auth";
 import { LayoutProps } from "@/lib/types";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 
 const PrivateLayout = async ({ children }: LayoutProps) => {
+  const headerList = await headers();
+  const shell = headerList.get("x-route-shell");
+
+  if (shell === "admin") {
+    return <>{children}</>;
+  }
+
   const session = await auth.api.getSession({
-    headers: await headers(),
+    headers: headerList,
   });
 
   if (!session) {

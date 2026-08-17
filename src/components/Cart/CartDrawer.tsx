@@ -9,7 +9,7 @@ import { ShoppingCartIcon, XIcon } from "lucide-react";
 import { authClient } from "@/lib/auth-client";
 import { cartAtom, cartDrawerOpenAtom, cartTotalAtom } from "@/lib/cart/atoms";
 import { formatPrice } from "@/lib/format";
-import CartItemRow from "@/components/cart/cart-item-row";
+import CartItemRow from "@/components/Cart/CartItemRow";
 import { Button } from "@/components/shadcnui/button";
 import {
   Empty,
@@ -91,7 +91,7 @@ const CartDrawer = () => {
             : <>
                 <ul className="flex-1 divide-y overflow-y-auto px-4">
                   {items.map((item) => (
-                    <li key={`${item.productId}-${item.variantId}`}>
+                    <li key={`${item.productId}-${item.sku}`}>
                       <CartItemRow
                         item={item}
                         size="sm"

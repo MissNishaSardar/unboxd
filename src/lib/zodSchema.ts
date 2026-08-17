@@ -20,9 +20,14 @@ export const signupSchema = z
       .max(128, { error: "Password must be at most 128 characters" }),
     confirmPassword: z.string(),
   })
-  .refine((data) => data.password === data.confirmPassword, {
-    message: "Passwords do not match",
-    path: ["confirmPassword"],
+  .superRefine((data, ctx) => {
+    if (data.password !== data.confirmPassword) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["confirmPassword"],
+        message: "Passwords do not match",
+      });
+    }
   });
 
 export type signupType = z.infer<typeof signupSchema>;

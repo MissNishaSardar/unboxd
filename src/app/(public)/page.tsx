@@ -1,6 +1,8 @@
-import type { Metadata } from "next";
+import ProductGrid from "@/components/Product/ProductGrid";
+import { Badge } from "@/components/shadcnui/badge";
+import { Button } from "@/components/shadcnui/button";
+import { getCategoriesWithCounts, getFeaturedProducts } from "@/server/catalog";
 import type { LucideIcon } from "lucide-react";
-import Link from "next/link";
 import {
   ArrowRightIcon,
   AudioLinesIcon,
@@ -15,10 +17,8 @@ import {
   TagIcon,
   TruckIcon,
 } from "lucide-react";
-import { Badge } from "@/components/shadcnui/badge";
-import { Button } from "@/components/shadcnui/button";
-import ProductGrid from "@/components/product/product-grid";
-import { getCategoriesWithCounts, getFeaturedProducts } from "@/server/catalog";
+import type { Metadata } from "next";
+import Link from "next/link";
 
 export const metadata: Metadata = {
   title: "Unboxd — Electronics, Unboxed",

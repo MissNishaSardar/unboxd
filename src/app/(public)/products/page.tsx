@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
-import FilterSidebar from "@/components/product/filter-sidebar";
-import Pagination from "@/components/product/pagination";
-import ProductGrid from "@/components/product/product-grid";
+import FilterSidebar from "@/components/Product/FilterSidebar";
+import Pagination from "@/components/Product/Pagination";
+import ProductGrid from "@/components/Product/ProductGrid";
 import { productListSearchParamsSchema } from "@/lib/zodSchema";
 import { getCategoriesWithCounts, getProducts } from "@/server/catalog";
 

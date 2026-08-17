@@ -30,7 +30,8 @@ Path aliases: `@/*` → `./src/*`, `@generated/*` → `./generated/*`.
 
 ## Verification
 
-- **Primary**: `bun lint` — runs `next typegen && tsc --noEmit && eslint`
+- **Lint**: `bun lint` — runs `eslint` only (the package.json `lint` script; no typegen/tsc)
+- **Type check**: `bun run typecheck` — `next typegen && tsc --noEmit`
 - **Build gate**: `bun run build` — `prisma generate && next build`
 - **Full prod**: `bun prod` — `prisma generate && next build && next start` (before schema/env changes)
 - **Seed**: `bun run seed` (or `bunx --bun prisma db seed`) — idempotent; use `bunx --bun prisma migrate reset` to wipe + re-seed
@@ -51,23 +52,32 @@ Kill the chrome process and the `next start` listener (port 3000) after testing.
 ```
 src/
   app/              # App Router (layout.tsx, page.tsx, globals.css)
-    (public)/       # Guest routes: home, products, product detail, auth, about, contact, search
-    (private)/      # Authed routes: cart, checkout, orders, dashboard, profile, settings, wishlist
+    (public)/       # Public shell (Header + cart/wishlist providers): home, products, categories, search, about, contact, wishlist, forbidden
+      (auth)/       # Nested group, bare layout (AuthBackButton only): /auth/login, /auth/register
+    (private)/      # Authed shell (sidebar + sign out): cart, checkout, dashboard, orders, profile, settings
+      admin/        # /admin keeps its own "unboxd Admin" layout
   components/
+    Auth/           # AuthBackButton, SignInForm, SignOutButton, SignUpForm
+    Cart/           # CartDrawer, CartItemRow, CartProvider
     Layout/         # Header, ThemeToggleButton
+    Orders/         # OrderStatusBadge, OrderTimeline
+    Product/        # FilterSidebar, Pagination, ProductCard, ProductGallery, ProductGrid, ProductInfo, WishlistButton (card actions are private: guests redirected to /auth/login)
     Providers/      # ThemeProvider (next-themes)
+    Wishlist/       # WishlistProvider
     shadcnui/       # shadcn primitives (button.tsx, toast.tsx)
-  hooks/            # Custom hooks (currently empty)
+  hooks/            # use-mounted.ts
   lib/
-    auth.ts         # Better Auth server config (email/password + nextCookies)
+    auth.ts         # Better Auth server config (email/password + admin RBAC + nextCookies)
     auth-client.ts  # Better Auth client
+    cart/atoms.ts   # jotai cart store, addToCart(), FREE_SHIPPING_THRESHOLD; items keyed (productId, sku), localStorage 'cart-v2'
     dbClient/       # Prisma singleton with libSQL adapter
     env/            # serverEnv.ts, clientEnv.ts (t3-env)
     fonts.ts        # next/font (Geist, Inter)
     types.ts        # LayoutProps
     utils.ts        # cn() helper (clsx + tailwind-merge)
-  server/           # API routes placeholder (empty)
-  proxy.ts          # Route protection (Next 16 middleware replacement) — session-cookie redirect only, no admin check yet
+    wishlist/atoms.ts  # wishlistAtom (server-synced, no guest local state)
+  server/           # Server actions: catalog.ts, wishlist.ts
+  proxy.ts          # Route protection (Next 16 middleware replacement): PROTECTED session-cookie redirect, ADMIN role check → /forbidden, AUTH + ADMIN set x-route-shell header for group-layout pass-through
 prisma/
   schema.prisma     # Auth + catalog + orders + wishlist models
   seed.ts           # 26 products / 11 categories, idempotent (see DB conventions)

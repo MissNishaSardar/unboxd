@@ -11,9 +11,22 @@ const PROTECTED = [
   "/cart",
 ];
 const ADMIN = ["/admin"];
+const AUTH = ["/auth"];
+
+function withShell(request: NextRequest, shell: string) {
+  const requestHeaders = new Headers(request.headers);
+  requestHeaders.set("x-route-shell", shell);
+  return NextResponse.next({
+    request: new NextRequest(request.url, { headers: requestHeaders }),
+  });
+}
 
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
+
+  if (AUTH.some((p) => pathname.startsWith(p))) {
+    return withShell(request, "auth");
+  }
 
   if (ADMIN.some((p) => pathname.startsWith(p))) {
     const session = await auth.api.getSession({
@@ -27,7 +40,7 @@ export async function proxy(request: NextRequest) {
     if (session.user.role !== "admin") {
       return NextResponse.redirect(new URL("/forbidden", request.url));
     }
-    return NextResponse.next();
+    return withShell(request, "admin");
   }
 
   if (!PROTECTED.some((p) => pathname.startsWith(p))) {
@@ -55,5 +68,6 @@ export const config = {
     "/cart",
     "/admin",
     "/admin/:path*",
+    "/auth/:path*",
   ],
 };

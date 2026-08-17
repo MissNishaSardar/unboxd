@@ -1,15 +1,3 @@
-import { atomWithStorage, createJSONStorage } from "jotai/utils";
+import { atom } from "jotai";
 
-const storage = createJSONStorage<string[]>(() =>
-  typeof window !== "undefined" ?
-    window.localStorage
-  : {
-      getItem: () => null,
-      setItem: () => {},
-      removeItem: () => {},
-    },
-);
-
-export const wishlistAtom = atomWithStorage<string[]>("wishlist", [], storage, {
-  getOnInit: true,
-});
+export const wishlistAtom = atom<string[]>([]);

@@ -1,7 +1,7 @@
 import { PackageSearchIcon } from "lucide-react";
 import ProductCard, {
   ProductCardData,
-} from "@/components/product/product-card";
+} from "@/components/Product/ProductCard";
 import {
   Empty,
   EmptyDescription,

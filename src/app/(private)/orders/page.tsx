@@ -15,8 +15,8 @@ import {
   EmptyMedia,
   EmptyTitle,
 } from "@/components/shadcnui/empty";
-import OrderStatusBadge from "@/components/orders/order-status-badge";
-import Pagination from "@/components/product/pagination";
+import OrderStatusBadge from "@/components/Orders/OrderStatusBadge";
+import Pagination from "@/components/Product/Pagination";
 
 const ORDERS_PER_PAGE = 10;
 

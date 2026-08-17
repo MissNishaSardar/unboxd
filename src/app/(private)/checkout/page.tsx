@@ -68,7 +68,7 @@ const CheckoutPage = () => {
     const result = await placeOrder({
       address: values,
       cart: items.map((item) => ({
-        variantId: item.variantId,
+        sku: item.sku,
         quantity: item.quantity,
       })),
     });
@@ -252,7 +252,7 @@ const CheckoutPage = () => {
             <ul className="flex flex-col gap-3">
               {items.map((item) => (
                 <li
-                  key={`${item.productId}-${item.variantId}`}
+                  key={`${item.productId}-${item.sku}`}
                   className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
                     <p className="truncate text-sm font-medium">{item.name}</p>

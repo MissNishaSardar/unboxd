@@ -8,7 +8,7 @@ import { authClient } from "@/lib/auth-client";
 import { Badge } from "@/components/shadcnui/badge";
 import { Button } from "@/components/shadcnui/button";
 import { Field, FieldGroup, FieldTitle } from "@/components/shadcnui/field";
-import WishlistButton from "@/components/product/wishlist-button";
+import WishlistButton from "@/components/Product/WishlistButton";
 import {
   ToggleGroup,
   ToggleGroupItem,
@@ -76,7 +76,7 @@ const ProductInfo = ({
     }
     addToCart({
       productId,
-      variantId: variant.sku,
+      sku: variant.sku,
       slug,
       name,
       variantName: variant.name,

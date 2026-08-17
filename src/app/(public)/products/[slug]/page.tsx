@@ -2,9 +2,9 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ChevronRightIcon } from "lucide-react";
-import ProductGallery from "@/components/product/product-gallery";
-import ProductGrid from "@/components/product/product-grid";
-import ProductInfo from "@/components/product/product-info";
+import ProductGallery from "@/components/Product/ProductGallery";
+import ProductGrid from "@/components/Product/ProductGrid";
+import ProductInfo from "@/components/Product/ProductInfo";
 import {
   getProductBySlug,
   getProductSlugs,

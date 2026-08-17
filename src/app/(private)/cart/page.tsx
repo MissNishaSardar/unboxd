@@ -20,7 +20,7 @@ import {
 } from "@/lib/cart/shipping";
 import { formatPrice } from "@/lib/format";
 import { Button } from "@/components/shadcnui/button";
-import CartItemRow from "@/components/cart/cart-item-row";
+import CartItemRow from "@/components/Cart/CartItemRow";
 import {
   Empty,
   EmptyDescription,
@@ -103,7 +103,7 @@ const CartPage = () => {
               <AnimatePresence initial={false}>
                 {items.map((item) => (
                   <motion.li
-                    key={`${item.productId}-${item.variantId}`}
+                    key={`${item.productId}-${item.sku}`}
                     layout
                     initial={{ opacity: 0, x: -16 }}
                     animate={{ opacity: 1, x: 0 }}

@@ -1,6 +1,6 @@
 "use client";
 
-import CartDrawer from "@/components/cart/cart-drawer";
+import CartDrawer from "@/components/Cart/CartDrawer";
 
 const CartProvider = () => {
   return <CartDrawer />;

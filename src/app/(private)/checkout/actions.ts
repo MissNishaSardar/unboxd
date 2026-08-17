@@ -13,7 +13,7 @@ import {
 } from "@/lib/cart/shipping";
 
 const cartLineSchema = z.object({
-  variantId: z.string().min(1),
+  sku: z.string().min(1),
   quantity: z.number().int().min(1).max(99),
 });
 
@@ -55,7 +55,7 @@ export async function placeOrder(input: unknown): Promise<PlaceOrderResult> {
         for (const line of cart) {
           variants.push(
             await tx.productVariant.findUniqueOrThrow({
-              where: { sku: line.variantId },
+              where: { sku: line.sku },
               include: { product: true },
             }),
           );
@@ -63,7 +63,7 @@ export async function placeOrder(input: unknown): Promise<PlaceOrderResult> {
 
         for (const line of cart) {
           const result = await tx.productVariant.updateMany({
-            where: { sku: line.variantId, stock: { gte: line.quantity } },
+            where: { sku: line.sku, stock: { gte: line.quantity } },
             data: { stock: { decrement: line.quantity } },
           });
           if (result.count === 0) {

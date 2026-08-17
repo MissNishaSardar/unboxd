@@ -21,7 +21,11 @@ import { toast } from "@/components/shadcnui/toast";
 const SignInForm = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const callbackUrl = searchParams.get("callbackUrl") ?? "/dashboard";
+  const rawCallbackUrl = searchParams.get("callbackUrl");
+  const callbackUrl =
+    rawCallbackUrl?.startsWith("/") && !rawCallbackUrl.startsWith("//") ?
+      rawCallbackUrl
+    : "/dashboard";
 
   const {
     handleSubmit,

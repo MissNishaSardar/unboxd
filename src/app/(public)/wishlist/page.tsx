@@ -4,8 +4,8 @@ import { useEffect, useState } from "react";
 import { useAtomValue, useSetAtom } from "jotai";
 import Link from "next/link";
 import { HeartIcon } from "lucide-react";
-import ProductGrid from "@/components/product/product-grid";
-import type { ProductCardData } from "@/components/product/product-card";
+import ProductGrid from "@/components/Product/ProductGrid";
+import type { ProductCardData } from "@/components/Product/ProductCard";
 import {
   Empty,
   EmptyDescription,
@@ -74,7 +74,7 @@ const WishlistPage = () => {
             </EmptyMedia>
             <EmptyTitle>Your wishlist is empty</EmptyTitle>
             <EmptyDescription>
-              Tap the heart on any product to save it here.
+              Sign in and tap the heart on any product to save it here.
             </EmptyDescription>
           </EmptyHeader>
           <Button

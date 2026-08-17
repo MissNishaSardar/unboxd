@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { authClient } from "@/lib/auth-client";
+import { clearCart } from "@/lib/cart/atoms";
 import { Button } from "@/components/shadcnui/button";
 
 const SignOutButton = () => {
@@ -11,6 +12,7 @@ const SignOutButton = () => {
     await authClient.signOut({
       fetchOptions: {
         onSuccess: () => {
+          clearCart();
           router.push("/");
           router.refresh();
         },

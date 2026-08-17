@@ -47,7 +47,7 @@ const CartItemRow = ({ item, size = "md", onNavigate }: CartItemRowProps) => {
             size={iconSize}
             aria-label={`Remove ${item.name}`}
             className="hover:text-destructive"
-            onClick={() => removeCartItem(item.productId, item.variantId)}>
+            onClick={() => removeCartItem(item.productId, item.sku)}>
             <Trash2Icon aria-hidden="true" />
           </Button>
         </div>
@@ -59,11 +59,7 @@ const CartItemRow = ({ item, size = "md", onNavigate }: CartItemRowProps) => {
               aria-label="Decrease quantity"
               disabled={item.quantity <= 1}
               onClick={() =>
-                updateQuantity(
-                  item.productId,
-                  item.variantId,
-                  item.quantity - 1,
-                )
+                updateQuantity(item.productId, item.sku, item.quantity - 1)
               }>
               <MinusIcon aria-hidden="true" />
             </Button>
@@ -76,11 +72,7 @@ const CartItemRow = ({ item, size = "md", onNavigate }: CartItemRowProps) => {
               aria-label="Increase quantity"
               disabled={item.quantity >= item.maxStock}
               onClick={() =>
-                updateQuantity(
-                  item.productId,
-                  item.variantId,
-                  item.quantity + 1,
-                )
+                updateQuantity(item.productId, item.sku, item.quantity + 1)
               }>
               <PlusIcon aria-hidden="true" />
             </Button>

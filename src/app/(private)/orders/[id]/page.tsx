@@ -9,8 +9,8 @@ import { getEstimatedDelivery } from "@/lib/orders/status";
 import { headers } from "next/headers";
 import { Badge } from "@/components/shadcnui/badge";
 import { Button } from "@/components/shadcnui/button";
-import OrderStatusBadge from "@/components/orders/order-status-badge";
-import OrderTimeline from "@/components/orders/order-timeline";
+import OrderStatusBadge from "@/components/Orders/OrderStatusBadge";
+import OrderTimeline from "@/components/Orders/OrderTimeline";
 
 type Props = {
   params: Promise<{ id: string }>;
