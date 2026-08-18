@@ -10,6 +10,7 @@ import {
 } from "use-file-picker/validators";
 import { Button } from "@/components/shadcnui/button";
 import { toast } from "@/components/shadcnui/toast";
+import { uploadImage } from "@/server/admin/upload";
 import { cn } from "@/lib/utils";
 
 const MAX_SIZE = 5 * 1024 * 1024;
@@ -52,18 +53,22 @@ const ImageUploader = ({
 
       setUploading(true);
       try {
-        const formData = new FormData();
-        formData.append("file", file);
-        const res = await fetch("/api/upload", {
-          method: "POST",
-          body: formData,
-        });
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.error ?? "Upload failed");
-        onChange(data.url as string);
+        const result = await uploadImage(file);
+        if (!result.ok) {
+          throw new Error(result.error);
+        }
+        onChange(result.url);
         toast.add({ title: "Image uploaded", type: "success" });
-      } catch {
-        toast.add({ title: "Upload failed", type: "error" });
+      } catch (error) {
+        toast.add({
+          title:
+            error instanceof Error && error.message === "FORBIDDEN" ?
+              "You do not have permission to upload images"
+            : error instanceof Error && error.message === "INVALID_INPUT" ?
+              "Only JPG, PNG, or WebP images under 5MB are accepted"
+            : "Upload failed",
+          type: "error",
+        });
       } finally {
         setUploading(false);
       }

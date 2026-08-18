@@ -35,6 +35,7 @@ Path aliases: `@/*` → `./src/*`, `@generated/*` → `./generated/*`.
 - **Build gate**: `bun run build` — `prisma generate && next build`
 - **Full prod**: `bun prod` — `prisma generate && next build && next start` (before schema/env changes)
 - **Seed**: `bun run seed` (or `bunx --bun prisma db seed`) — idempotent; use `bunx --bun prisma migrate reset` to wipe + re-seed
+- **Gotcha**: a running `next dev` server writes `.next/dev/types` concurrently with `next typegen`/`tsc`, producing torn files and cascading false LSP/type errors (e.g. "Property 'refresh' does not exist on AppRouterInstance"). Fix: kill the dev server, `Remove-Item -Recurse -Force .next/dev/types`, re-run typegen.
 
 ## Smoke testing (Playwright)
 

@@ -1,7 +1,13 @@
+import Link from "next/link";
 import SignOutButton from "@/components/Auth/SignOutButton";
 import { auth } from "@/lib/auth";
 import { LayoutProps } from "@/lib/types";
 import { headers } from "next/headers";
+
+const NAV_LINKS = [
+  { href: "/admin", label: "Dashboard" },
+  { href: "/admin/products", label: "Products" },
+] as const;
 
 const AdminLayout = async ({ children }: LayoutProps) => {
   const session = await auth.api.getSession({
@@ -12,6 +18,16 @@ const AdminLayout = async ({ children }: LayoutProps) => {
     <div className="flex min-h-screen">
       <aside className="flex w-64 flex-col gap-4 border-r p-4">
         <p className="text-lg font-semibold">unboxd Admin</p>
+        <nav className="flex flex-col gap-1">
+          {NAV_LINKS.map((link) => (
+            <Link
+              key={link.href}
+              href={link.href}
+              className="text-muted-foreground hover:bg-muted hover:text-foreground rounded-md px-3 py-2 text-sm font-medium transition-colors">
+              {link.label}
+            </Link>
+          ))}
+        </nav>
         {session && (
           <div>
             <p className="font-medium">{session.user.name}</p>
