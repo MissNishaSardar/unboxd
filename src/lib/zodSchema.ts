@@ -86,3 +86,90 @@ export const checkoutSchema = z.object({
 });
 
 export type checkoutType = z.infer<typeof checkoutSchema>;
+
+const money = (label: string) =>
+  z.preprocess(
+    (value) => (value === "" ? undefined : value),
+    z.coerce
+      .number()
+      .min(0, { error: `${label} must be 0 or more` })
+      .max(999999, { error: `${label} must be at most 999999` }),
+  );
+
+export const productVariantFormSchema = z.object({
+  name: z
+    .string()
+    .trim()
+    .min(1, { error: "Variant name is required" })
+    .max(100, { error: "Variant name must be at most 100 characters" }),
+  stock: z.coerce.number().int().min(0, { error: "Stock must be 0 or more" }),
+});
+
+export type productVariantFormType = z.infer<typeof productVariantFormSchema>;
+
+export const productImageFormSchema = z.object({
+  url: z.string().min(1, { error: "Image URL is required" }),
+  alt: z.string().max(200).optional().or(z.literal("")),
+  sortOrder: z.coerce.number().int().min(0).default(0),
+});
+
+export type productImageFormType = z.infer<typeof productImageFormSchema>;
+
+export const productFormSchema = z
+  .object({
+    name: z
+      .string()
+      .trim()
+      .min(2, { error: "Name must be at least 2 characters" })
+      .max(120, { error: "Name must be at most 120 characters" }),
+    description: z
+      .string()
+      .trim()
+      .min(10, { error: "Description must be at least 10 characters" })
+      .max(2000, { error: "Description must be at most 2000 characters" }),
+    basePrice: money("Base price"),
+    categoryId: z.string().min(1, { error: "Select a category" }),
+    isActive: z.boolean().default(true),
+    variants: z
+      .array(productVariantFormSchema)
+      .min(1, { error: "Add at least one variant" }),
+    images: z
+      .array(productImageFormSchema)
+      .min(1, { error: "Add at least one image" }),
+  })
+  .superRefine((data, ctx) => {
+    const seen = new Set<string>();
+    data.variants.forEach((variant, index) => {
+      const key = variant.name.trim().toLowerCase();
+      if (seen.has(key)) {
+        ctx.addIssue({
+          code: "custom",
+          path: ["variants", index, "name"],
+          message: "Variant names must be unique",
+        });
+      }
+      seen.add(key);
+    });
+  });
+
+export type productFormType = z.infer<typeof productFormSchema>;
+export type productFormInputType = z.input<typeof productFormSchema>;
+
+export const adminProductSortSchema = z.enum([
+  "newest",
+  "oldest",
+  "price_asc",
+  "price_desc",
+  "name_asc",
+]);
+
+export const adminProductListSearchParamsSchema = z.object({
+  search: queryString(z.string().min(1).max(100)).optional(),
+  sort: adminProductSortSchema.catch("newest"),
+  status: z.enum(["all", "active", "inactive"]).catch("all"),
+  page: z.coerce.number().int().min(1).optional().catch(1),
+});
+
+export type adminProductListSearchParamsType = z.infer<
+  typeof adminProductListSearchParamsSchema
+>;

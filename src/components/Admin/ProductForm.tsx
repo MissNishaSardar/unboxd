@@ -4,7 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader2Icon } from "lucide-react";
 import type { Route } from "next";
 import { useRouter } from "next/navigation";
-import { useRef } from "react";
+import { useState } from "react";
 import { FormProvider, useForm } from "react-hook-form";
 import ProductDetailsFields from "@/components/Admin/ProductDetailsFields";
 import ProductImagesFields from "@/components/Admin/ProductImagesFields";
@@ -40,14 +40,12 @@ type ProductFormProps = {
   productId?: string;
   initialData?: {
     name: string;
-    slug: string;
     description: string;
     basePrice: string;
     categoryId: string;
     isActive: boolean;
-    featured: boolean;
     images: { url: string; alt: string | null }[];
-    variants: { sku: string; name: string; priceDiff: string; stock: number }[];
+    variants: { name: string; stock: number }[];
   };
   categories: { id: string; name: string }[];
 };
@@ -59,7 +57,7 @@ const ProductForm = ({
   categories,
 }: ProductFormProps) => {
   const router = useRouter();
-  const slugTouched = useRef(mode === "edit");
+  const [activeTab, setActiveTab] = useState("details");
 
   const methods = useForm<productFormInputType, undefined, productFormType>({
     resolver: zodResolver(productFormSchema),
@@ -68,15 +66,13 @@ const ProductForm = ({
       initialData ?
         {
           name: initialData.name,
-          slug: initialData.slug,
           description: initialData.description,
           basePrice: Number(initialData.basePrice),
           categoryId: initialData.categoryId,
           isActive: initialData.isActive,
-          featured: initialData.featured,
           variants: initialData.variants.map((variant) => ({
-            ...variant,
-            priceDiff: Number(variant.priceDiff),
+            name: variant.name,
+            stock: variant.stock,
           })),
           images: initialData.images.map((image, index) => ({
             url: image.url,
@@ -86,13 +82,11 @@ const ProductForm = ({
         }
       : {
           name: "",
-          slug: "",
           description: "",
           basePrice: 0,
           categoryId: "",
           isActive: true,
-          featured: false,
-          variants: [{ sku: "", name: "", priceDiff: 0, stock: 0 }],
+          variants: [{ name: "", stock: 0 }],
           images: [{ url: "", alt: "", sortOrder: 0 }],
         },
   });
@@ -107,7 +101,6 @@ const ProductForm = ({
 
   const detailsErrorCount = [
     "name",
-    "slug",
     "description",
     "basePrice",
     "categoryId",
@@ -150,7 +143,9 @@ const ProductForm = ({
         onSubmit={handleSubmit(onSubmit)}
         noValidate
         className="flex flex-col gap-6">
-        <Tabs defaultValue="details">
+        <Tabs
+          value={activeTab}
+          onValueChange={setActiveTab}>
           <TabsList>
             <TabsTrigger value="details">
               Details
@@ -174,11 +169,11 @@ const ProductForm = ({
           <TabsContent value="details">
             <ProductDetailsFields
               categories={categories}
-              slugTouchedRef={slugTouched}
+              onNext={() => setActiveTab("variants")}
             />
           </TabsContent>
           <TabsContent value="variants">
-            <ProductVariantsFields />
+            <ProductVariantsFields onNext={() => setActiveTab("images")} />
           </TabsContent>
           <TabsContent value="images">
             <ProductImagesFields />

@@ -85,12 +85,10 @@ export async function getAdminProductForEdit(id: string) {
   return {
     id: product.id,
     name: product.name,
-    slug: product.slug,
     description: product.description,
     basePrice: String(product.basePrice),
     categoryId: product.categoryId,
     isActive: product.isActive,
-    featured: product.featured,
     categoryName: product.category.name,
     images: product.images.map((image) => ({
       url: image.url,
@@ -98,9 +96,7 @@ export async function getAdminProductForEdit(id: string) {
       sortOrder: image.sortOrder,
     })),
     variants: product.variants.map((variant) => ({
-      sku: variant.sku,
       name: variant.name,
-      priceDiff: variant.priceDiff.toString(),
       stock: variant.stock,
     })),
   };

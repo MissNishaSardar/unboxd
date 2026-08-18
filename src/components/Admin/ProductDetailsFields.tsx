@@ -1,13 +1,13 @@
 "use client";
 
-import { Wand2Icon } from "lucide-react";
-import { useEffect } from "react";
-import { Controller, useFormContext, useWatch } from "react-hook-form";
+import { ArrowRightIcon } from "lucide-react";
+import { Controller, useFormContext } from "react-hook-form";
 import { Button } from "@/components/shadcnui/button";
 import {
   Card,
   CardContent,
   CardDescription,
+  CardFooter,
   CardHeader,
   CardTitle,
 } from "@/components/shadcnui/card";
@@ -31,27 +31,19 @@ import {
   type productFormInputType,
   type productFormType,
 } from "@/lib/zodSchema";
-import { slugify } from "@/lib/utils";
 
 const ProductDetailsFields = ({
   categories,
-  slugTouchedRef,
+  onNext,
 }: {
   categories: { id: string; name: string }[];
-  slugTouchedRef: { current: boolean };
+  onNext?: () => void;
 }) => {
-  const { control, setValue } = useFormContext<
+  const { control } = useFormContext<
     productFormInputType,
     undefined,
     productFormType
   >();
-  const name = useWatch({ control, name: "name" });
-
-  useEffect(() => {
-    if (!slugTouchedRef.current) {
-      setValue("slug", slugify(name), { shouldValidate: false });
-    }
-  }, [name, setValue, slugTouchedRef]);
 
   return (
     <Card>
@@ -74,43 +66,6 @@ const ProductDetailsFields = ({
                   id={field.name}
                   aria-invalid={fieldState.invalid}
                 />
-                {fieldState.invalid && (
-                  <FieldError errors={[fieldState.error]} />
-                )}
-              </Field>
-            )}
-          />
-
-          <Controller
-            name="slug"
-            control={control}
-            render={({ field, fieldState }) => (
-              <Field data-invalid={fieldState.invalid}>
-                <FieldLabel htmlFor={field.name}>Slug</FieldLabel>
-                <div className="flex gap-2">
-                  <Input
-                    {...field}
-                    id={field.name}
-                    aria-invalid={fieldState.invalid}
-                    onChange={(event) => {
-                      slugTouchedRef.current = true;
-                      field.onChange(event);
-                    }}
-                  />
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => {
-                      slugTouchedRef.current = false;
-                      field.onChange(slugify(name));
-                    }}>
-                    <Wand2Icon
-                      data-icon="inline-start"
-                      aria-hidden="true"
-                    />
-                    Generate
-                  </Button>
-                </div>
                 {fieldState.invalid && (
                   <FieldError errors={[fieldState.error]} />
                 )}
@@ -212,28 +167,21 @@ const ProductDetailsFields = ({
                 </Field>
               )}
             />
-
-            <Controller
-              name="featured"
-              control={control}
-              render={({ field }) => (
-                <Field>
-                  <div className="flex items-center gap-2">
-                    <Checkbox
-                      id={field.name}
-                      checked={field.value}
-                      onCheckedChange={(checked) =>
-                        field.onChange(checked === true)
-                      }
-                    />
-                    <FieldLabel htmlFor={field.name}>Featured</FieldLabel>
-                  </div>
-                </Field>
-              )}
-            />
           </div>
         </FieldGroup>
       </CardContent>
+      {onNext && (
+        <CardFooter className="justify-end">
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            onClick={onNext}
+            aria-label="Next: Variants">
+            <ArrowRightIcon aria-hidden="true" />
+          </Button>
+        </CardFooter>
+      )}
     </Card>
   );
 };

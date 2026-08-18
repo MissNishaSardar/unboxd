@@ -42,6 +42,25 @@ async function withUniqueSlug<T>(
   }
 }
 
+type SkuDb = {
+  productVariant: {
+    findUnique: (args: {
+      where: { sku: string };
+    }) => Promise<{ sku: string } | null>;
+  };
+};
+
+async function makeSku(db: SkuDb, base: string): Promise<string> {
+  const candidate = slugify(base) || "variant";
+  let sku = candidate;
+  let suffix = 2;
+  while (await db.productVariant.findUnique({ where: { sku } })) {
+    sku = `${candidate}-${suffix}`;
+    suffix += 1;
+  }
+  return sku;
+}
+
 export async function createProduct(
   input: unknown,
 ): Promise<AdminProductResult> {
@@ -62,16 +81,20 @@ export async function createProduct(
     basePrice,
     categoryId,
     isActive,
-    featured,
     variants,
     images,
   } = parsed.data;
 
   try {
     const { slug, result: product } = await withUniqueSlug(
-      parsed.data.slug || name,
-      (candidate) =>
-        prisma.product.create({
+      name,
+      async (candidate) => {
+        const skus = await Promise.all(
+          variants.map((variant) =>
+            makeSku(prisma, `${candidate}-${variant.name}`),
+          ),
+        );
+        return prisma.product.create({
           data: {
             name,
             slug: candidate,
@@ -79,12 +102,11 @@ export async function createProduct(
             basePrice: new Prisma.Decimal(basePrice),
             categoryId,
             isActive,
-            featured,
             variants: {
-              create: variants.map((variant) => ({
-                sku: variant.sku.trim(),
+              create: variants.map((variant, index) => ({
+                sku: skus[index],
                 name: variant.name,
-                priceDiff: new Prisma.Decimal(variant.priceDiff),
+                priceDiff: new Prisma.Decimal(0),
                 stock: variant.stock,
               })),
             },
@@ -96,7 +118,8 @@ export async function createProduct(
               })),
             },
           },
-        }),
+        });
+      },
     );
 
     revalidateTag("products", "max");
@@ -129,7 +152,6 @@ export async function updateProduct(
     basePrice,
     categoryId,
     isActive,
-    featured,
     variants,
     images,
   } = parsed.data;
@@ -138,7 +160,7 @@ export async function updateProduct(
     const existing = await prisma.product.findUnique({
       where: { id },
       include: {
-        variants: { select: { id: true, sku: true } },
+        variants: { select: { id: true, name: true } },
         images: { select: { url: true } },
       },
     });
@@ -149,86 +171,86 @@ export async function updateProduct(
     const oldImageUrls = existing.images.map((image) => image.url);
     const newImageUrls = images.map((image) => image.url);
 
-    const { slug } = await withUniqueSlug(
-      parsed.data.slug || name,
-      (candidate) =>
-        prisma.$transaction(async (tx) => {
-          const submittedSkus = variants.map((variant) => variant.sku.trim());
-          const existingBySku = new Map(
-            existing.variants.map((variant) => [variant.sku, variant]),
-          );
+    await prisma.$transaction(async (tx) => {
+      const submittedNames = variants.map((variant) =>
+        variant.name.trim().toLowerCase(),
+      );
+      const existingByName = new Map(
+        existing.variants.map((variant) => [
+          variant.name.trim().toLowerCase(),
+          variant,
+        ]),
+      );
 
-          const toDelete = existing.variants.filter(
-            (variant) => !submittedSkus.includes(variant.sku),
-          );
-          if (toDelete.length > 0) {
-            const referenced = await tx.orderItem.findMany({
-              where: {
-                variantId: { in: toDelete.map((variant) => variant.id) },
-              },
-              select: { variantId: true },
-            });
-            const referencedIds = new Set(
-              referenced.map((item) => item.variantId),
-            );
-            const deletable = toDelete.filter(
-              (variant) => !referencedIds.has(variant.id),
-            );
-            if (deletable.length > 0) {
-              await tx.productVariant.deleteMany({
-                where: { id: { in: deletable.map((variant) => variant.id) } },
-              });
-            }
-          }
-
-          for (const variant of variants) {
-            const existingVariant = existingBySku.get(variant.sku.trim());
-            if (existingVariant) {
-              await tx.productVariant.update({
-                where: { id: existingVariant.id },
-                data: {
-                  name: variant.name,
-                  priceDiff: new Prisma.Decimal(variant.priceDiff),
-                  stock: variant.stock,
-                },
-              });
-            } else {
-              await tx.productVariant.create({
-                data: {
-                  productId: id,
-                  sku: variant.sku.trim(),
-                  name: variant.name,
-                  priceDiff: new Prisma.Decimal(variant.priceDiff),
-                  stock: variant.stock,
-                },
-              });
-            }
-          }
-
-          await tx.productImage.deleteMany({ where: { productId: id } });
-          await tx.productImage.createMany({
-            data: images.map((image, index) => ({
-              productId: id,
-              url: image.url,
-              alt: image.alt || null,
-              sortOrder: index,
-            })),
+      const toDelete = existing.variants.filter(
+        (variant) =>
+          !submittedNames.includes(variant.name.trim().toLowerCase()),
+      );
+      if (toDelete.length > 0) {
+        const referenced = await tx.orderItem.findMany({
+          where: {
+            variantId: { in: toDelete.map((variant) => variant.id) },
+          },
+          select: { variantId: true },
+        });
+        const referencedIds = new Set(referenced.map((item) => item.variantId));
+        const deletable = toDelete.filter(
+          (variant) => !referencedIds.has(variant.id),
+        );
+        if (deletable.length > 0) {
+          await tx.productVariant.deleteMany({
+            where: { id: { in: deletable.map((variant) => variant.id) } },
           });
+        }
+      }
 
-          await tx.product.update({
-            where: { id },
+      for (const variant of variants) {
+        const existingVariant = existingByName.get(
+          variant.name.trim().toLowerCase(),
+        );
+        if (existingVariant) {
+          await tx.productVariant.update({
+            where: { id: existingVariant.id },
             data: {
-              name,
-              slug: candidate,
-              description,
-              basePrice: new Prisma.Decimal(basePrice),
-              categoryId,
-              isActive,
-              featured,
+              stock: variant.stock,
+              priceDiff: new Prisma.Decimal(0),
             },
           });
-        }),
-    );
+        } else {
+          const sku = await makeSku(tx, `${existing.slug}-${variant.name}`);
+          await tx.productVariant.create({
+            data: {
+              productId: id,
+              sku,
+              name: variant.name,
+              priceDiff: new Prisma.Decimal(0),
+              stock: variant.stock,
+            },
+          });
+        }
+      }
+
+      await tx.productImage.deleteMany({ where: { productId: id } });
+      await tx.productImage.createMany({
+        data: images.map((image, index) => ({
+          productId: id,
+          url: image.url,
+          alt: image.alt || null,
+          sortOrder: index,
+        })),
+      });
+
+      await tx.product.update({
+        where: { id },
+        data: {
+          name,
+          description,
+          basePrice: new Prisma.Decimal(basePrice),
+          categoryId,
+          isActive,
+        },
+      });
+    });
 
     const orphaned = oldImageUrls.filter((url) => !newImageUrls.includes(url));
     await Promise.all(
@@ -241,7 +263,7 @@ export async function updateProduct(
 
     revalidateTag("products", "max");
     revalidatePath("/products/[slug]", "page");
-    return { ok: true, id, slug };
+    return { ok: true, id, slug: existing.slug };
   } catch (e) {
     console.error("updateProduct failed", e);
     return { ok: false, error: "SERVER_ERROR" };

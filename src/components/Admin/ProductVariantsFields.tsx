@@ -1,12 +1,13 @@
 "use client";
 
-import { PlusIcon, Trash2Icon } from "lucide-react";
+import { ArrowRightIcon, PlusIcon, Trash2Icon } from "lucide-react";
 import { Controller, useFieldArray, useFormContext } from "react-hook-form";
 import { Button } from "@/components/shadcnui/button";
 import {
   Card,
   CardContent,
   CardDescription,
+  CardFooter,
   CardHeader,
   CardTitle,
 } from "@/components/shadcnui/card";
@@ -23,7 +24,7 @@ import {
   type productFormType,
 } from "@/lib/zodSchema";
 
-const ProductVariantsFields = () => {
+const ProductVariantsFields = ({ onNext }: { onNext?: () => void }) => {
   const { control } = useFormContext<
     productFormInputType,
     undefined,
@@ -48,25 +49,7 @@ const ProductVariantsFields = () => {
         <FieldSet>
           {fields.map((variant, index) => (
             <FieldGroup key={variant.id}>
-              <div className="grid gap-2 sm:grid-cols-[1fr_1.5fr_8rem_8rem_2.5rem] sm:items-end">
-                <Controller
-                  name={`variants.${index}.sku`}
-                  control={control}
-                  render={({ field, fieldState }) => (
-                    <Field data-invalid={fieldState.invalid}>
-                      <FieldLabel htmlFor={field.name}>SKU</FieldLabel>
-                      <Input
-                        {...field}
-                        id={field.name}
-                        aria-invalid={fieldState.invalid}
-                        placeholder="XL-BLK-001"
-                      />
-                      {fieldState.invalid && (
-                        <FieldError errors={[fieldState.error]} />
-                      )}
-                    </Field>
-                  )}
-                />
+              <div className="grid gap-2 sm:grid-cols-[1fr_8rem_2.5rem] sm:items-end">
                 <Controller
                   name={`variants.${index}.name`}
                   control={control}
@@ -78,27 +61,6 @@ const ProductVariantsFields = () => {
                         id={field.name}
                         aria-invalid={fieldState.invalid}
                         placeholder="8GB / 256GB / Black"
-                      />
-                      {fieldState.invalid && (
-                        <FieldError errors={[fieldState.error]} />
-                      )}
-                    </Field>
-                  )}
-                />
-                <Controller
-                  name={`variants.${index}.priceDiff`}
-                  control={control}
-                  render={({ field, fieldState }) => (
-                    <Field data-invalid={fieldState.invalid}>
-                      <FieldLabel htmlFor={field.name}>Price diff</FieldLabel>
-                      <Input
-                        {...field}
-                        id={field.name}
-                        type="number"
-                        step="0.01"
-                        min="0"
-                        value={field.value as number}
-                        aria-invalid={fieldState.invalid}
                       />
                       {fieldState.invalid && (
                         <FieldError errors={[fieldState.error]} />
@@ -142,9 +104,7 @@ const ProductVariantsFields = () => {
             type="button"
             variant="outline"
             size="sm"
-            onClick={() =>
-              append({ sku: "", name: "", priceDiff: 0, stock: 0 })
-            }>
+            onClick={() => append({ name: "", stock: 0 })}>
             <PlusIcon
               data-icon="inline-start"
               aria-hidden="true"
@@ -153,6 +113,18 @@ const ProductVariantsFields = () => {
           </Button>
         </FieldSet>
       </CardContent>
+      {onNext && (
+        <CardFooter className="justify-end">
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            onClick={onNext}
+            aria-label="Next: Images">
+            <ArrowRightIcon aria-hidden="true" />
+          </Button>
+        </CardFooter>
+      )}
     </Card>
   );
 };
