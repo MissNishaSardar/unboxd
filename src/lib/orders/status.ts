@@ -64,6 +64,35 @@ export const orderStatusConfig: Record<OrderStatus, StatusConfig> = {
   },
 };
 
+export const ORDER_STATUS_TRANSITIONS: Record<OrderStatus, OrderStatus[]> = {
+  PENDING: ["CONFIRMED", "CANCELLED"],
+  CONFIRMED: ["SHIPPED", "CANCELLED", "RETURNED"],
+  SHIPPED: ["DELIVERED", "CANCELLED", "RETURNED"],
+  DELIVERED: ["RETURNED"],
+  CANCELLED: [],
+  RETURNED: [],
+};
+
+export function canTransition(from: string, to: string): boolean {
+  if (!isOrderStatus(from) || !isOrderStatus(to)) return false;
+  return ORDER_STATUS_TRANSITIONS[from].includes(to);
+}
+
+export function isTerminalStatus(status: string): boolean {
+  return status === "CANCELLED" || status === "RETURNED";
+}
+
+export function getNextStatus(status: string): OrderStatus | null {
+  if (!isOrderStatus(status)) return null;
+  const flowIndex = ORDER_STATUS_FLOW.indexOf(
+    status as (typeof ORDER_STATUS_FLOW)[number],
+  );
+  if (flowIndex >= 0 && flowIndex < ORDER_STATUS_FLOW.length - 1) {
+    return ORDER_STATUS_FLOW[flowIndex + 1];
+  }
+  return null;
+}
+
 export function isOrderStatus(value: string): value is OrderStatus {
   return value in orderStatusConfig;
 }

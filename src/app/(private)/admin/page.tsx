@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
+import SalesSummaryCard from "@/components/Admin/SalesSummaryCard";
 import { Button } from "@/components/shadcnui/button";
 import {
   Card,
@@ -16,7 +17,16 @@ const SECTIONS = [
     description: "Manage catalog, variants, stock",
     href: "/admin/products" as const,
   },
-  { title: "Orders", description: "Update order statuses (Day 10)" },
+  {
+    title: "Orders",
+    description: "Fulfill orders and update statuses",
+    href: "/admin/orders" as const,
+  },
+  {
+    title: "Inventory",
+    description: "Low-stock dashboard and quick edits",
+    href: "/admin/inventory" as const,
+  },
   { title: "Categories", description: "Manage category tree (Day 11)" },
   { title: "Users", description: "Roles, bans, impersonation (Day 11)" },
 ];
@@ -53,6 +63,8 @@ const AdminPage = async () => {
           </Card>
         ))}
       </div>
+
+      <SalesSummaryCard />
     </div>
   );
 };

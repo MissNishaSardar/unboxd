@@ -173,3 +173,46 @@ export const adminProductListSearchParamsSchema = z.object({
 export type adminProductListSearchParamsType = z.infer<
   typeof adminProductListSearchParamsSchema
 >;
+
+export const orderStatusSchema = z.enum([
+  "PENDING",
+  "CONFIRMED",
+  "SHIPPED",
+  "DELIVERED",
+  "CANCELLED",
+  "RETURNED",
+]);
+
+export type orderStatusType = z.infer<typeof orderStatusSchema>;
+
+const dateStringSchema = z.string().regex(/^\d{4}-\d{2}-\d{2}$/);
+
+export const adminOrderListSearchParamsSchema = z.object({
+  search: queryString(z.string().min(1).max(100)).optional(),
+  status: queryString(orderStatusSchema).optional(),
+  date: queryString(dateStringSchema).optional(),
+  page: z.coerce.number().int().min(1).optional().catch(1),
+});
+
+export type adminOrderListSearchParamsType = z.infer<
+  typeof adminOrderListSearchParamsSchema
+>;
+
+export const updateOrderStatusSchema = z.object({
+  status: orderStatusSchema,
+});
+
+export type updateOrderStatusType = z.infer<typeof updateOrderStatusSchema>;
+
+export const bulkOrderStatusSchema = z.object({
+  orderIds: z.array(z.string().min(1)).min(1),
+  status: z.enum(["SHIPPED", "CANCELLED"]),
+});
+
+export type bulkOrderStatusType = z.infer<typeof bulkOrderStatusSchema>;
+
+export const updateVariantStockSchema = z.object({
+  stock: z.coerce.number().int().min(0),
+});
+
+export type updateVariantStockType = z.infer<typeof updateVariantStockSchema>;

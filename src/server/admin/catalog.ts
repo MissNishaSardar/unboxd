@@ -6,7 +6,7 @@ import prisma from "@/lib/dbClient/prisma";
 import { requireAdmin } from "@/lib/guard";
 import { storage } from "@/lib/storage/adapter";
 import { slugify } from "@/lib/utils";
-import { productFormSchema } from "@/lib/zodSchema";
+import { productFormSchema, updateVariantStockSchema } from "@/lib/zodSchema";
 
 export type AdminProductResult =
   | { ok: true; id: string; slug: string }
@@ -324,6 +324,50 @@ export async function restoreProduct(id: string): Promise<AdminProductResult> {
     return { ok: true, id: product.id, slug: product.slug };
   } catch (e) {
     console.error("restoreProduct failed", e);
+    return { ok: false, error: "SERVER_ERROR" };
+  }
+}
+
+export type AdminVariantStockResult =
+  | { ok: true; id: string; stock: number }
+  | {
+      ok: false;
+      error: "FORBIDDEN" | "INVALID_INPUT" | "NOT_FOUND" | "SERVER_ERROR";
+    };
+
+export async function updateVariantStock(
+  id: string,
+  input: unknown,
+): Promise<AdminVariantStockResult> {
+  try {
+    await requireAdmin();
+  } catch {
+    return { ok: false, error: "FORBIDDEN" };
+  }
+
+  const parsed = updateVariantStockSchema.safeParse(input);
+  if (!parsed.success) {
+    return { ok: false, error: "INVALID_INPUT" };
+  }
+
+  try {
+    const existing = await prisma.productVariant.findUnique({
+      where: { id },
+      select: { id: true },
+    });
+    if (!existing) {
+      return { ok: false, error: "NOT_FOUND" };
+    }
+    const variant = await prisma.productVariant.update({
+      where: { id },
+      data: { stock: parsed.data.stock },
+    });
+
+    revalidateTag("products", "max");
+    revalidatePath("/admin/inventory", "page");
+    return { ok: true, id: variant.id, stock: variant.stock };
+  } catch (e) {
+    console.error("updateVariantStock failed", e);
     return { ok: false, error: "SERVER_ERROR" };
   }
 }
