@@ -8,7 +8,6 @@ import { authClient } from "@/lib/auth-client";
 import { Badge } from "@/components/shadcnui/badge";
 import { Button } from "@/components/shadcnui/button";
 import { Field, FieldGroup, FieldTitle } from "@/components/shadcnui/field";
-import WishlistButton from "@/components/Product/WishlistButton";
 import {
   ToggleGroup,
   ToggleGroupItem,
@@ -163,7 +162,6 @@ const ProductInfo = ({
           <ShoppingCartIcon aria-hidden="true" />
           {outOfStock ? "Out of Stock" : "Add to Cart"}
         </Button>
-        <WishlistButton productId={productId} />
       </div>
     </div>
   );

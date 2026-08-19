@@ -53,7 +53,7 @@ Kill the chrome process and the `next start` listener (port 3000) after testing.
 ```
 src/
   app/              # App Router (layout.tsx, page.tsx, globals.css)
-    (public)/       # Public shell (Header + cart/wishlist providers): home, products, categories, search, about, contact, wishlist, forbidden
+    (public)/       # Public shell (Header + cart provider): home, products, categories, search, about, contact, forbidden
       (auth)/       # Nested group, bare layout (AuthBackButton only): /auth/login, /auth/register
     (private)/      # Authed shell (sidebar + sign out): cart, checkout, dashboard, orders, profile, settings
       admin/        # /admin keeps its own "unboxd Admin" layout
@@ -62,9 +62,8 @@ src/
     Cart/           # CartDrawer, CartItemRow, CartProvider
     Layout/         # Header, ThemeToggleButton
     Orders/         # OrderStatusBadge, OrderTimeline
-    Product/        # FilterSidebar, Pagination, ProductCard, ProductGallery, ProductGrid, ProductInfo, WishlistButton (card actions are private: guests redirected to /auth/login)
+    Product/        # FilterSidebar, Pagination, ProductCard, ProductGallery, ProductGrid, ProductInfo
     Providers/      # ThemeProvider (next-themes)
-    Wishlist/       # WishlistProvider
     shadcnui/       # shadcn primitives (button.tsx, toast.tsx)
   hooks/            # use-mounted.ts
   lib/
@@ -76,11 +75,10 @@ src/
     fonts.ts        # next/font (Geist, Inter)
     types.ts        # LayoutProps
     utils.ts        # cn() helper (clsx + tailwind-merge)
-    wishlist/atoms.ts  # wishlistAtom (server-synced, no guest local state)
-  server/           # Server actions: catalog.ts, wishlist.ts
+  server/           # Server actions: catalog.ts, admin/
   proxy.ts          # Route protection (Next 16 middleware replacement): PROTECTED session-cookie redirect, ADMIN role check → /forbidden, AUTH + ADMIN set x-route-shell header for group-layout pass-through
 prisma/
-  schema.prisma     # Auth + catalog + orders + wishlist models
+  schema.prisma     # Auth + catalog + orders models
   seed.ts           # 26 products / 11 categories, idempotent (see DB conventions)
   migrations/       # SQLite migrations; delete before the Day 13 Postgres migration (P3014)
 generated/prisma/   # Prisma client output (gitignored)
@@ -94,7 +92,6 @@ public/uploads/     # User uploads (all files ignored except .gitkeep)
 - **Seed**: configured via `migrations.seed` in `prisma.config.ts` (`bun prisma/seed.ts`). Guard skips if products OR categories exist (partial-state safety); full reset requires `migrate reset`.
 - **Money**: `Decimal` everywhere (basePrice, priceDiff, order totals, snapshots). `OrderItem` freezes `nameSnapshot` + `priceSnapshot` at purchase — never reference live product data on receipts.
 - **Order.status**: `PENDING | CONFIRMED | SHIPPED | DELIVERED | CANCELLED | RETURNED` (COD-first; RETURNED covers delivery refusals).
-- **WishlistItem**: `@@unique([userId, productId])` → idempotent `upsert` toggle (Day 5).
 - **Seed images** are `placehold.co` placeholders — swap for real uploads when the Day 8 pipeline lands.
 
 ## Gitignore pattern: uploads

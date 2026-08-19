@@ -390,12 +390,6 @@ const USERS = [
   },
 ];
 
-const WISHLIST_PRODUCT_SLUGS = [
-  "iphone-15-pro",
-  "sony-wh-1000xm5",
-  "anker-65w-gan",
-];
-
 async function seedCatalog() {
   const [existingProducts, existingCategories] = await Promise.all([
     prisma.product.count(),
@@ -483,24 +477,8 @@ async function seedUsers() {
     }
   }
 
-  const customer1 = await prisma.user.findUnique({
-    where: { email: "customer1@unboxd.com" },
-  });
-  const wishlistProducts = await prisma.product.findMany({
-    where: { slug: { in: WISHLIST_PRODUCT_SLUGS } },
-  });
-  if (customer1 && wishlistProducts.length > 0) {
-    await prisma.wishlistItem.createMany({
-      data: wishlistProducts.map((product) => ({
-        userId: customer1.id,
-        productId: product.id,
-      })),
-    });
-  }
-
   console.log(
-    `User seed complete: 1 admin, ${USERS.length - 1} customers, ` +
-      `${wishlistProducts.length} wishlist rows. ` +
+    `User seed complete: 1 admin, ${USERS.length - 1} customers. ` +
       "Credentials (dev only): admin@unboxd.com / Admin@123, customer1@unboxd.com / Customer@123.",
   );
 }

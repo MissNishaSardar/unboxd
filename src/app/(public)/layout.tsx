@@ -1,6 +1,5 @@
 import CartProvider from "@/components/Cart/CartProvider";
 import Header from "@/components/Layout/Header";
-import WishlistProvider from "@/components/Wishlist/WishlistProvider";
 import { LayoutProps } from "@/lib/types";
 import { headers } from "next/headers";
 
@@ -16,7 +15,6 @@ const PublicLayout = async ({ children }: LayoutProps) => {
       <Header />
       <main>{children}</main>
       <CartProvider />
-      <WishlistProvider />
     </div>
   );
 };

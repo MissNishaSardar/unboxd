@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAtomValue, useSetAtom } from "jotai";
-import { HeartIcon, ShoppingCartIcon } from "lucide-react";
+import { ShoppingCartIcon } from "lucide-react";
 import { authClient } from "@/lib/auth-client";
 import { Button } from "@/components/shadcnui/button";
 import { cartCountAtom, cartDrawerOpenAtom, clearCart } from "@/lib/cart/atoms";
@@ -45,14 +45,6 @@ const Header = () => {
         Unboxd
       </Link>
       <div className="flex items-center gap-1">
-        <Button
-          variant="ghost"
-          size="icon"
-          aria-label="Wishlist"
-          render={<Link href="/wishlist" />}
-          nativeButton={false}>
-          <HeartIcon aria-hidden="true" />
-        </Button>
         <Button
           variant="ghost"
           size="icon"

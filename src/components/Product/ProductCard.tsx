@@ -9,7 +9,6 @@ import { authClient } from "@/lib/auth-client";
 import { Badge } from "@/components/shadcnui/badge";
 import { Button } from "@/components/shadcnui/button";
 import { Card, CardContent, CardFooter } from "@/components/shadcnui/card";
-import WishlistButton from "@/components/Product/WishlistButton";
 import { toast } from "@/components/shadcnui/toast";
 import { addToCart } from "@/lib/cart/atoms";
 import { formatPrice } from "@/lib/format";
@@ -110,10 +109,6 @@ const ProductCard = ({ product }: { product: ProductCardData }) => {
             {outOfStock ? "Out of stock" : "Add"}
           </Button>
         </CardFooter>
-        <WishlistButton
-          productId={product.id}
-          className="absolute top-2 right-2"
-        />
       </Card>
     </motion.div>
   );
