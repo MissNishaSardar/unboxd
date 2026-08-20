@@ -1,8 +1,10 @@
 import prisma from "@/lib/dbClient/prisma";
+import { auth } from "@/lib/auth";
 import { adminProductListSearchParamsType } from "@/lib/zodSchema";
 import { startOfWeek } from "date-fns";
 
 export const ADMIN_PRODUCTS_PER_PAGE = 10;
+export const ADMIN_USERS_PER_PAGE = 10;
 export const LOW_STOCK_THRESHOLD = 5;
 
 const productOrderByMap: Record<
@@ -112,6 +114,62 @@ export async function getAdminCategories() {
   return categories;
 }
 
+export type AdminCategoryNode = {
+  id: string;
+  name: string;
+  slug: string;
+  parentId: string | null;
+  productCount: number;
+  children: AdminCategoryNode[];
+};
+
+export async function getAdminCategoryTree(): Promise<AdminCategoryNode[]> {
+  const categories = await prisma.category.findMany({
+    where: { deletedAt: null },
+    orderBy: { name: "asc" },
+    include: { _count: { select: { products: true } } },
+  });
+
+  const nodes = new Map<string, AdminCategoryNode>();
+  for (const category of categories) {
+    nodes.set(category.id, {
+      id: category.id,
+      name: category.name,
+      slug: category.slug,
+      parentId: category.parentId,
+      productCount: category._count.products,
+      children: [],
+    });
+  }
+
+  const roots: AdminCategoryNode[] = [];
+  for (const node of nodes.values()) {
+    if (node.parentId && nodes.has(node.parentId)) {
+      nodes.get(node.parentId)!.children.push(node);
+    } else {
+      roots.push(node);
+    }
+  }
+  return roots;
+}
+
+export async function getAdminCategoryForEdit(id: string) {
+  const category = await prisma.category.findUnique({
+    where: { id, deletedAt: null },
+    select: { id: true, name: true, parentId: true },
+  });
+  return category;
+}
+
+export async function getAdminCategoryOptions() {
+  const categories = await prisma.category.findMany({
+    where: { deletedAt: null },
+    orderBy: { name: "asc" },
+    select: { id: true, name: true, parentId: true },
+  });
+  return categories;
+}
+
 export async function getInventoryLowStock() {
   const variants = await prisma.productVariant.findMany({
     where: { stock: { lt: LOW_STOCK_THRESHOLD } },
@@ -151,5 +209,53 @@ export async function getSalesSummary() {
     totalOrders,
     weekOrders,
     weekRevenue: String(weekAggregate._sum.total ?? 0),
+  };
+}
+
+export async function getAdminUsers(params: {
+  search?: string;
+  role?: string;
+  page?: number;
+}) {
+  const { search, role = "all", page = 1 } = params;
+  const limit = ADMIN_USERS_PER_PAGE;
+  const offset = (page - 1) * limit;
+
+  const result = await auth.api.listUsers({
+    query: {
+      limit,
+      offset,
+      sortBy: "createdAt",
+      sortDirection: "desc",
+      ...(search ?
+        {
+          searchValue: search,
+          searchField: "name" as const,
+          searchOperator: "contains" as const,
+        }
+      : {}),
+      ...(role !== "all" ?
+        {
+          filterField: "role",
+          filterValue: role,
+          filterOperator: "eq" as const,
+        }
+      : {}),
+    },
+  });
+
+  return {
+    users: result.users.map((user) => ({
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      role: user.role ?? "user",
+      banned: user.banned ?? false,
+      banReason: user.banReason ?? null,
+      createdAt: user.createdAt.toISOString(),
+    })),
+    total: result.total,
+    page,
+    totalPages: Math.max(1, Math.ceil(result.total / limit)),
   };
 }

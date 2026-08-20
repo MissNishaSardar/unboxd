@@ -23,7 +23,7 @@ const SignUpForm = () => {
   const {
     handleSubmit,
     control,
-    formState: { isSubmitting },
+    formState: { isSubmitting, isDirty },
   } = useForm<signupType>({
     resolver: zodResolver(signupSchema),
     defaultValues: {
@@ -139,7 +139,7 @@ const SignUpForm = () => {
         />
         <Button
           type="submit"
-          disabled={isSubmitting}>
+          disabled={isSubmitting || !isDirty}>
           {isSubmitting && (
             <Loader2Icon
               data-icon="inline-start"

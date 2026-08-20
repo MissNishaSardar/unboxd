@@ -27,8 +27,16 @@ const SECTIONS = [
     description: "Low-stock dashboard and quick edits",
     href: "/admin/inventory" as const,
   },
-  { title: "Categories", description: "Manage category tree (Day 11)" },
-  { title: "Users", description: "Roles, bans, impersonation (Day 11)" },
+  {
+    title: "Categories",
+    description: "Manage the category tree",
+    href: "/admin/categories" as const,
+  },
+  {
+    title: "Users",
+    description: "Roles, bans, impersonation",
+    href: "/admin/users" as const,
+  },
 ];
 
 const AdminPage = async () => {

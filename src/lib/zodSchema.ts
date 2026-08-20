@@ -216,3 +216,34 @@ export const updateVariantStockSchema = z.object({
 });
 
 export type updateVariantStockType = z.infer<typeof updateVariantStockSchema>;
+
+export const categoryFormSchema = z.object({
+  name: z
+    .string()
+    .trim()
+    .min(2, { error: "Name must be at least 2 characters" })
+    .max(80, { error: "Name must be at most 80 characters" }),
+  parentId: z.string().min(1).optional().or(z.literal("")),
+});
+
+export type categoryFormType = z.infer<typeof categoryFormSchema>;
+
+export const reassignCategorySchema = z.object({
+  targetCategoryId: z.string().min(1),
+});
+
+export type reassignCategoryType = z.infer<typeof reassignCategorySchema>;
+
+export const userRoleSchema = z.enum(["admin", "user"]);
+
+export type userRoleType = z.infer<typeof userRoleSchema>;
+
+export const adminUserListSearchParamsSchema = z.object({
+  search: queryString(z.string().min(1).max(100)).optional(),
+  role: z.enum(["all", "admin", "user"]).catch("all"),
+  page: z.coerce.number().int().min(1).optional().catch(1),
+});
+
+export type adminUserListSearchParamsType = z.infer<
+  typeof adminUserListSearchParamsSchema
+>;

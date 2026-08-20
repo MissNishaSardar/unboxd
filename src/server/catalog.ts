@@ -68,6 +68,7 @@ export async function getCategoriesWithCounts() {
   cacheLife("hours");
   cacheTag("products");
   const categories = await prisma.category.findMany({
+    where: { deletedAt: null },
     orderBy: { name: "asc" },
     include: {
       _count: { select: { products: { where: { isActive: true } } } },
@@ -94,7 +95,7 @@ export async function getProducts(params: ProductListParams) {
   const { category, sort = "newest", min, max, page = 1 } = params;
   const where = {
     isActive: true,
-    ...(category && { category: { slug: category } }),
+    ...(category && { category: { slug: category, deletedAt: null } }),
     ...((min !== undefined || max !== undefined) && {
       basePrice: {
         gte: min,
@@ -174,7 +175,7 @@ export async function getRelatedProducts(slug: string, categorySlug: string) {
     where: {
       isActive: true,
       slug: { not: slug },
-      category: { slug: categorySlug },
+      category: { slug: categorySlug, deletedAt: null },
     },
     orderBy: [{ createdAt: "desc" }, { id: "asc" }],
     take: 4,

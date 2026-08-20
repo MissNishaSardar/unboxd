@@ -1,4 +1,5 @@
 import SignOutButton from "@/components/Auth/SignOutButton";
+import ImpersonationBanner from "@/components/Admin/ImpersonationBanner";
 import { auth } from "@/lib/auth";
 import { LayoutProps } from "@/lib/types";
 import { headers } from "next/headers";
@@ -29,7 +30,12 @@ const PrivateLayout = async ({ children }: LayoutProps) => {
         </div>
         <SignOutButton />
       </aside>
-      <main className="flex-1 p-6">{children}</main>
+      <div className="flex flex-1 flex-col">
+        {session.session.impersonatedBy && (
+          <ImpersonationBanner name={session.user.name} />
+        )}
+        <main className="flex-1 p-6">{children}</main>
+      </div>
     </div>
   );
 };

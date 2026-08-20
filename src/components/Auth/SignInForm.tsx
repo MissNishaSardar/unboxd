@@ -30,7 +30,7 @@ const SignInForm = () => {
   const {
     handleSubmit,
     control,
-    formState: { isSubmitting },
+    formState: { isSubmitting, isDirty },
   } = useForm<signinType>({
     resolver: zodResolver(signinSchema),
     defaultValues: {
@@ -110,7 +110,7 @@ const SignInForm = () => {
         />
         <Button
           type="submit"
-          disabled={isSubmitting}>
+          disabled={isSubmitting || !isDirty}>
           {isSubmitting && (
             <Loader2Icon
               data-icon="inline-start"

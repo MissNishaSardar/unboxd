@@ -9,6 +9,8 @@ const NAV_LINKS = [
   { href: "/admin/orders", label: "Orders" },
   { href: "/admin/inventory", label: "Inventory" },
   { href: "/admin/products", label: "Products" },
+  { href: "/admin/categories", label: "Categories" },
+  { href: "/admin/users", label: "Users" },
 ] as const;
 
 const AdminLayout = async ({ children }: LayoutProps) => {

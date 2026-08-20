@@ -49,7 +49,7 @@ const CheckoutPage = () => {
   const {
     handleSubmit,
     control,
-    formState: { isSubmitting },
+    formState: { isSubmitting, isDirty },
   } = useForm<checkoutType>({
     resolver: zodResolver(checkoutSchema),
     defaultValues: {
@@ -296,7 +296,7 @@ const CheckoutPage = () => {
             <Button
               type="submit"
               size="lg"
-              disabled={isSubmitting}>
+              disabled={isSubmitting || !isDirty}>
               {isSubmitting && (
                 <Loader2Icon
                   data-icon="inline-start"
