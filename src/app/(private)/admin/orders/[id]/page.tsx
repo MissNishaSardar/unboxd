@@ -132,7 +132,19 @@ const AdminOrderDetailPage = async ({
               {order.items.map((item) => (
                 <TableRow key={item.id}>
                   <TableCell className="font-medium">
-                    {item.nameSnapshot}
+                    <div className="flex items-center gap-3">
+                      {item.imageUrl && (
+                        <div className="size-10 shrink-0 overflow-hidden rounded-md bg-zinc-900">
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img
+                            src={item.imageUrl}
+                            alt={item.nameSnapshot}
+                            className="size-full object-cover"
+                          />
+                        </div>
+                      )}
+                      {item.nameSnapshot}
+                    </div>
                   </TableCell>
                   <TableCell className="text-muted-foreground">
                     {item.sku ?? "—"}

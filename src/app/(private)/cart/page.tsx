@@ -43,6 +43,7 @@ const CartPage = () => {
 
   const remaining = Math.max(0, FREE_SHIPPING_THRESHOLD - total);
   const progress = Math.min(1, total / FREE_SHIPPING_THRESHOLD);
+  const shipping = total >= FREE_SHIPPING_THRESHOLD ? 0 : SHIPPING_FLAT_RATE;
 
   return (
     <div className="mx-auto flex max-w-5xl flex-col gap-8 px-6 py-10">
@@ -146,9 +147,7 @@ const CartPage = () => {
               <div className="flex items-center justify-between">
                 <span className="text-muted-foreground text-sm">Shipping</span>
                 <span className="text-sm font-medium tabular-nums">
-                  {total >= FREE_SHIPPING_THRESHOLD ?
-                    "Free"
-                  : formatPrice(SHIPPING_FLAT_RATE)}
+                  {shipping === 0 ? "Free" : formatPrice(shipping)}
                 </span>
               </div>
             </div>
@@ -172,7 +171,7 @@ const CartPage = () => {
             <div className="flex items-center justify-between">
               <span className="text-sm font-medium">Total</span>
               <span className="text-lg font-semibold tabular-nums">
-                {formatPrice(total)}
+                {formatPrice(total + shipping)}
               </span>
             </div>
 

@@ -1,10 +1,10 @@
 "use server";
 
 import { revalidatePath, revalidateTag } from "next/cache";
-import type { Prisma } from "@generated/prisma/client";
 import prisma from "@/lib/dbClient/prisma";
 import { requireAdmin } from "@/lib/guard";
 import { canTransition, isTerminalStatus } from "@/lib/orders/status";
+import { restockItems } from "@/lib/orders/restock";
 import {
   bulkOrderStatusSchema,
   updateOrderStatusSchema,
@@ -28,19 +28,6 @@ export type AdminBulkOrderResult =
 
 class NotFoundError extends Error {}
 class InvalidTransitionError extends Error {}
-
-async function restockItems(
-  tx: Prisma.TransactionClient,
-  items: { variantId: string | null; quantity: number }[],
-) {
-  for (const item of items) {
-    if (!item.variantId) continue;
-    await tx.productVariant.updateMany({
-      where: { id: item.variantId },
-      data: { stock: { increment: item.quantity } },
-    });
-  }
-}
 
 export async function updateOrderStatus(
   orderId: string,

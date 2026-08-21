@@ -11,6 +11,7 @@ import { Badge } from "@/components/shadcnui/badge";
 import { Button } from "@/components/shadcnui/button";
 import OrderStatusBadge from "@/components/Orders/OrderStatusBadge";
 import OrderTimeline from "@/components/Orders/OrderTimeline";
+import CancelOrderButton from "@/components/Orders/CancelOrderButton";
 
 type Props = {
   params: Promise<{ id: string }>;
@@ -35,6 +36,21 @@ const OrderPage = async ({ params }: Props) => {
   });
 
   if (!order) notFound();
+
+  const productIds = [...new Set(order.items.map((item) => item.productId))];
+  const products =
+    productIds.length > 0 ?
+      await prisma.product.findMany({
+        where: { id: { in: productIds } },
+        select: {
+          id: true,
+          images: { orderBy: { sortOrder: "asc" }, take: 1 },
+        },
+      })
+    : [];
+  const imageByProductId = new Map(
+    products.map((product) => [product.id, product.images[0]?.url ?? null]),
+  );
 
   const showEta = order.status === "CONFIRMED" || order.status === "SHIPPED";
   const eta = getEstimatedDelivery(order.createdAt);
@@ -85,6 +101,12 @@ const OrderPage = async ({ params }: Props) => {
             </p>
           </div>
         )}
+        <div className="flex justify-end">
+          <CancelOrderButton
+            orderId={order.id}
+            status={order.status}
+          />
+        </div>
       </div>
 
       <div className="flex flex-col gap-4 rounded-2xl border border-zinc-800 bg-zinc-950 p-5">
@@ -97,13 +119,23 @@ const OrderPage = async ({ params }: Props) => {
             <li
               key={item.id}
               className="flex items-start justify-between gap-3 py-3">
-              <div className="min-w-0">
-                <p className="truncate text-sm font-medium">
-                  {item.nameSnapshot}
-                </p>
-                <p className="text-muted-foreground text-xs">
-                  Qty {item.quantity}
-                </p>
+              <div className="flex min-w-0 items-start gap-3">
+                <div className="size-10 shrink-0 overflow-hidden rounded-md bg-zinc-900">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={imageByProductId.get(item.productId) ?? undefined}
+                    alt={item.nameSnapshot}
+                    className="size-full object-cover"
+                  />
+                </div>
+                <div className="min-w-0">
+                  <p className="truncate text-sm font-medium">
+                    {item.nameSnapshot}
+                  </p>
+                  <p className="text-muted-foreground text-xs">
+                    Qty {item.quantity}
+                  </p>
+                </div>
               </div>
               <span className="text-sm tabular-nums">
                 {formatPrice(Number(item.priceSnapshot) * item.quantity)}

@@ -104,6 +104,21 @@ export async function getAdminOrderDetail(id: string) {
     : [];
   const skuById = new Map(variants.map((variant) => [variant.id, variant.sku]));
 
+  const productIds = [...new Set(order.items.map((item) => item.productId))];
+  const products =
+    productIds.length > 0 ?
+      await prisma.product.findMany({
+        where: { id: { in: productIds } },
+        select: {
+          id: true,
+          images: { orderBy: { sortOrder: "asc" }, take: 1 },
+        },
+      })
+    : [];
+  const imageByProductId = new Map(
+    products.map((product) => [product.id, product.images[0]?.url ?? null]),
+  );
+
   return {
     id: order.id,
     status: order.status,
@@ -121,6 +136,7 @@ export async function getAdminOrderDetail(id: string) {
       priceSnapshot: String(item.priceSnapshot),
       quantity: item.quantity,
       sku: item.variantId ? (skuById.get(item.variantId) ?? null) : null,
+      imageUrl: imageByProductId.get(item.productId) ?? null,
     })),
   };
 }

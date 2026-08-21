@@ -254,11 +254,23 @@ const CheckoutPage = () => {
                 <li
                   key={`${item.productId}-${item.sku}`}
                   className="flex items-start justify-between gap-3">
-                  <div className="min-w-0">
-                    <p className="truncate text-sm font-medium">{item.name}</p>
-                    <p className="text-muted-foreground text-xs">
-                      {item.variantName} · Qty {item.quantity}
-                    </p>
+                  <div className="flex min-w-0 items-start gap-3">
+                    <div className="size-10 shrink-0 overflow-hidden rounded-md bg-zinc-900">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={item.image}
+                        alt={item.name}
+                        className="size-full object-cover"
+                      />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-medium">
+                        {item.name}
+                      </p>
+                      <p className="text-muted-foreground text-xs">
+                        {item.variantName} · Qty {item.quantity}
+                      </p>
+                    </div>
                   </div>
                   <span className="text-sm tabular-nums">
                     {formatPrice(item.price * item.quantity)}

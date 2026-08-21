@@ -6,7 +6,7 @@ import { useAtomValue, useSetAtom } from "jotai";
 import { ShoppingCartIcon } from "lucide-react";
 import { authClient } from "@/lib/auth-client";
 import { Button } from "@/components/shadcnui/button";
-import { cartCountAtom, cartDrawerOpenAtom, clearCart } from "@/lib/cart/atoms";
+import { cartCountAtom, cartDrawerOpenAtom } from "@/lib/cart/atoms";
 import { useMounted } from "@/hooks/use-mounted";
 
 const Header = () => {
@@ -15,18 +15,6 @@ const Header = () => {
   const setCartOpen = useSetAtom(cartDrawerOpenAtom);
   const router = useRouter();
   const mounted = useMounted();
-
-  const handleSignOut = async () => {
-    await authClient.signOut({
-      fetchOptions: {
-        onSuccess: () => {
-          clearCart();
-          router.push("/");
-          router.refresh();
-        },
-      },
-    });
-  };
 
   const handleCartClick = () => {
     if (!mounted || isPending) return;
@@ -75,8 +63,9 @@ const Header = () => {
               variant="outline"
               size="sm"
               className="ml-1"
-              onClick={handleSignOut}>
-              Sign out
+              render={<Link href="/dashboard" />}
+              nativeButton={false}>
+              Dashboard
             </Button>
           </>
         : <Button

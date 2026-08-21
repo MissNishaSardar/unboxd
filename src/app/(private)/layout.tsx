@@ -1,5 +1,6 @@
 import SignOutButton from "@/components/Auth/SignOutButton";
 import ImpersonationBanner from "@/components/Admin/ImpersonationBanner";
+import PrivateNav from "@/components/Layout/PrivateNav";
 import { auth } from "@/lib/auth";
 import { LayoutProps } from "@/lib/types";
 import { headers } from "next/headers";
@@ -28,6 +29,7 @@ const PrivateLayout = async ({ children }: LayoutProps) => {
           <p className="font-medium">{session.user.name}</p>
           <p className="text-muted-foreground text-sm">{session.user.email}</p>
         </div>
+        <PrivateNav />
         <SignOutButton />
       </aside>
       <div className="flex flex-1 flex-col">
