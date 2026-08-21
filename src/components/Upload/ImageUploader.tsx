@@ -85,6 +85,7 @@ const ImageUploader = ({
             src={preview}
             alt="Product image preview"
             fill
+            unoptimized
             sizes="8rem"
             className="object-cover"
           />

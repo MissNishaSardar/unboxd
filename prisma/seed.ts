@@ -47,7 +47,7 @@ const products: SeedProduct[] = [
       "Titanium-framed flagship with the A17 Pro chip, a 48MP pro camera system and an always-on ProMotion display.",
     basePrice: 119900,
     featured: true,
-    images: ["https://placehold.co/800x800/111/fff?text=iPhone+15+Pro"],
+    images: ["https://placehold.co/800x800/111/fff/png?text=iPhone+15+Pro"],
     variants: [
       { name: "Natural Titanium / 256GB", priceDiff: 0, stock: 12 },
       { name: "Blue Titanium / 256GB", priceDiff: 0, stock: 8 },
@@ -62,7 +62,7 @@ const products: SeedProduct[] = [
       "Galaxy AI-powered flagship with a 200MP camera, built-in S Pen and a 6.8-inch QHD+ AMOLED display.",
     basePrice: 129999,
     featured: true,
-    images: ["https://placehold.co/800x800/111/fff?text=S24+Ultra"],
+    images: ["https://placehold.co/800x800/111/fff/png?text=S24+Ultra"],
     variants: [
       { name: "Titanium Gray / 256GB", priceDiff: 0, stock: 15 },
       { name: "Titanium Violet / 512GB", priceDiff: 12000, stock: 6 },
@@ -76,7 +76,7 @@ const products: SeedProduct[] = [
     description:
       "Pixel's best camera with Magic Editor, 7 years of OS updates and the Tensor G3 chip.",
     basePrice: 109999,
-    images: ["https://placehold.co/800x800/111/fff?text=Pixel+8+Pro"],
+    images: ["https://placehold.co/800x800/111/fff/png?text=Pixel+8+Pro"],
     variants: [
       { name: "Obsidian / 128GB", priceDiff: 0, stock: 10 },
       { name: "Porcelain / 256GB", priceDiff: 9000, stock: 4 },
@@ -89,7 +89,7 @@ const products: SeedProduct[] = [
     description:
       "Snapdragon 8 Gen 3, 2K 120Hz LTPO display and 100W SUPERVOOC charging with a 5400mAh battery.",
     basePrice: 64999,
-    images: ["https://placehold.co/800x800/111/fff?text=OnePlus+12"],
+    images: ["https://placehold.co/800x800/111/fff/png?text=OnePlus+12"],
     variants: [
       { name: "Flowy Emerald / 12GB+256GB", priceDiff: 0, stock: 20 },
       { name: "Silky Black / 16GB+512GB", priceDiff: 8000, stock: 9 },
@@ -102,7 +102,7 @@ const products: SeedProduct[] = [
     description:
       "Compact flagship with a Leica-tuned camera system, Snapdragon 8 Gen 3 and a 1.5K LTPO display.",
     basePrice: 59999,
-    images: ["https://placehold.co/800x800/111/fff?text=Xiaomi+14"],
+    images: ["https://placehold.co/800x800/111/fff/png?text=Xiaomi+14"],
     variants: [
       { name: "Black / 12GB+256GB", priceDiff: 0, stock: 14 },
       { name: "White / 12GB+512GB", priceDiff: 6000, stock: 0 },
@@ -115,7 +115,7 @@ const products: SeedProduct[] = [
     description:
       "Budget-friendly Nothing with the signature Glyph interface and a clean, bloat-free OS.",
     basePrice: 27999,
-    images: ["https://placehold.co/800x800/111/fff?text=Phone+2a"],
+    images: ["https://placehold.co/800x800/111/fff/png?text=Phone+2a"],
     variants: [
       { name: "Black / 8GB+128GB", priceDiff: 0, stock: 25 },
       { name: "Milk / 12GB+256GB", priceDiff: 4000, stock: 11 },
@@ -129,7 +129,7 @@ const products: SeedProduct[] = [
       "Ultra-thin M3 laptop with an 18-hour battery, Liquid Retina display and silent fanless design.",
     basePrice: 114900,
     featured: true,
-    images: ["https://placehold.co/800x800/111/fff?text=MacBook+Air+M3"],
+    images: ["https://placehold.co/800x800/111/fff/png?text=MacBook+Air+M3"],
     variants: [
       { name: "Midnight / 8GB+256GB", priceDiff: 0, stock: 7 },
       { name: "Starlight / 8GB+512GB", priceDiff: 15000, stock: 5 },
@@ -144,7 +144,7 @@ const products: SeedProduct[] = [
       "Pro-grade power in a 14-inch frame: M3 Pro, 120Hz Liquid Retina XDR and up to 18 hours of battery.",
     basePrice: 199900,
     featured: true,
-    images: ["https://placehold.co/800x800/111/fff?text=MacBook+Pro+14"],
+    images: ["https://placehold.co/800x800/111/fff/png?text=MacBook+Pro+14"],
     variants: [
       { name: "Space Black / 18GB+512GB", priceDiff: 0, stock: 4 },
       { name: "Silver / 36GB+1TB", priceDiff: 50000, stock: 2 },
@@ -157,7 +157,7 @@ const products: SeedProduct[] = [
     description:
       "Premium ultrabook with an edge-to-edge display, Intel Core Ultra 7 and a CNC aluminium chassis.",
     basePrice: 149990,
-    images: ["https://placehold.co/800x800/111/fff?text=Dell+XPS+13"],
+    images: ["https://placehold.co/800x800/111/fff/png?text=Dell+XPS+13"],
     variants: [
       { name: "Platinum / 16GB+512GB", priceDiff: 0, stock: 6 },
       { name: "Graphite / 32GB+1TB", priceDiff: 25000, stock: 3 },
@@ -170,7 +170,7 @@ const products: SeedProduct[] = [
     description:
       "Business-class 1.08kg ultrabook with the legendary ThinkPad keyboard and MIL-SPEC durability.",
     basePrice: 169990,
-    images: ["https://placehold.co/800x800/111/fff?text=X1+Carbon"],
+    images: ["https://placehold.co/800x800/111/fff/png?text=X1+Carbon"],
     variants: [
       { name: "Black / 16GB+512GB", priceDiff: 0, stock: 5 },
       { name: "Black / 32GB+1TB", priceDiff: 28000, stock: 2 },
@@ -184,7 +184,7 @@ const products: SeedProduct[] = [
       "14-inch gaming powerhouse: Ryzen 9, RTX 4060 and a 165Hz ROG Nebula display in a 1.65kg body.",
     basePrice: 149990,
     featured: true,
-    images: ["https://placehold.co/800x800/111/fff?text=ROG+Zephyrus+G14"],
+    images: ["https://placehold.co/800x800/111/fff/png?text=ROG+Zephyrus+G14"],
     variants: [
       { name: "Moonlight White / RTX 4060 / 1TB", priceDiff: 0, stock: 8 },
       { name: "Moonlight White / RTX 4070 / 1TB", priceDiff: 30000, stock: 3 },
@@ -197,7 +197,7 @@ const products: SeedProduct[] = [
     description:
       "2-in-1 convertible with an OLED touch display, Intel Core Ultra 7 and a 9MP IR webcam.",
     basePrice: 139990,
-    images: ["https://placehold.co/800x800/111/fff?text=Spectre+x360"],
+    images: ["https://placehold.co/800x800/111/fff/png?text=Spectre+x360"],
     variants: [
       { name: "Nocturne Blue / 16GB+1TB", priceDiff: 0, stock: 4 },
       { name: "Poseidon Blue / 32GB+1TB", priceDiff: 20000, stock: 1 },
@@ -211,7 +211,7 @@ const products: SeedProduct[] = [
       "Industry-leading noise cancelling, 30-hour battery and crystal-clear call quality with the V1 processor.",
     basePrice: 29990,
     featured: true,
-    images: ["https://placehold.co/800x800/111/fff?text=WH-1000XM5"],
+    images: ["https://placehold.co/800x800/111/fff/png?text=WH-1000XM5"],
     variants: [
       { name: "Black", priceDiff: 0, stock: 18 },
       { name: "Silver", priceDiff: 0, stock: 7 },
@@ -224,7 +224,7 @@ const products: SeedProduct[] = [
     description:
       "Audiophile open-back reference headphones with a warm, natural sound signature.",
     basePrice: 38990,
-    images: ["https://placehold.co/800x800/111/fff?text=HD+650"],
+    images: ["https://placehold.co/800x800/111/fff/png?text=HD+650"],
     variants: [{ name: "Matte Black", priceDiff: 0, stock: 9 }],
   },
   {
@@ -234,7 +234,7 @@ const products: SeedProduct[] = [
     description:
       "Bose Immersive Audio, world-class ANC and spatial sound in a premium over-ear package.",
     basePrice: 39900,
-    images: ["https://placehold.co/800x800/111/fff?text=QC+Ultra"],
+    images: ["https://placehold.co/800x800/111/fff/png?text=QC+Ultra"],
     variants: [
       { name: "Black", priceDiff: 0, stock: 6 },
       { name: "White Smoke", priceDiff: 0, stock: 0 },
@@ -248,7 +248,7 @@ const products: SeedProduct[] = [
       "Twice the active noise cancellation, Adaptive Audio and a USB-C MagSafe charging case.",
     basePrice: 24900,
     featured: true,
-    images: ["https://placehold.co/800x800/111/fff?text=AirPods+Pro+2"],
+    images: ["https://placehold.co/800x800/111/fff/png?text=AirPods+Pro+2"],
     variants: [{ name: "White", priceDiff: 0, stock: 22 }],
   },
   {
@@ -258,7 +258,7 @@ const products: SeedProduct[] = [
     description:
       "Hi-Fi 24-bit audio with intelligent ANC and a comfortable, secure in-ear fit.",
     basePrice: 19999,
-    images: ["https://placehold.co/800x800/111/fff?text=Buds+2+Pro"],
+    images: ["https://placehold.co/800x800/111/fff/png?text=Buds+2+Pro"],
     variants: [
       { name: "Graphite", priceDiff: 0, stock: 13 },
       { name: "Bora Purple", priceDiff: 0, stock: 5 },
@@ -271,7 +271,7 @@ const products: SeedProduct[] = [
     description:
       "Transparent-design earbuds with dual-chamber acoustics, active noise cancellation and LDAC support.",
     basePrice: 14999,
-    images: ["https://placehold.co/800x800/111/fff?text=Nothing+Ear+2"],
+    images: ["https://placehold.co/800x800/111/fff/png?text=Nothing+Ear+2"],
     variants: [{ name: "White", priceDiff: 0, stock: 16 }],
   },
   {
@@ -281,7 +281,7 @@ const products: SeedProduct[] = [
     description:
       "Punchy portable Bluetooth speaker with deep bass, IP67 waterproofing and 12-hour playtime.",
     basePrice: 11999,
-    images: ["https://placehold.co/800x800/111/fff?text=JBL+Flip+6"],
+    images: ["https://placehold.co/800x800/111/fff/png?text=JBL+Flip+6"],
     variants: [
       { name: "Black", priceDiff: 0, stock: 19 },
       { name: "Red", priceDiff: 0, stock: 4 },
@@ -295,7 +295,7 @@ const products: SeedProduct[] = [
     description:
       "Smart speaker with rich room-filling sound, Voice control and Apple AirPlay 2 support.",
     basePrice: 23999,
-    images: ["https://placehold.co/800x800/111/fff?text=Sonos+One"],
+    images: ["https://placehold.co/800x800/111/fff/png?text=Sonos+One"],
     variants: [
       { name: "Black", priceDiff: 0, stock: 8 },
       { name: "White", priceDiff: 0, stock: 6 },
@@ -308,7 +308,7 @@ const products: SeedProduct[] = [
     description:
       "Budget-friendly ANC headphones with 40-hour playtime and Hi-Res certified audio.",
     basePrice: 5999,
-    images: ["https://placehold.co/800x800/111/fff?text=Soundcore+Q30"],
+    images: ["https://placehold.co/800x800/111/fff/png?text=Soundcore+Q30"],
     variants: [{ name: "Black", priceDiff: 0, stock: 30 }],
   },
   {
@@ -319,7 +319,7 @@ const products: SeedProduct[] = [
       "Two-port USB-C GaN wall charger that powers a laptop and phone simultaneously in a pocketable size.",
     basePrice: 2999,
     featured: true,
-    images: ["https://placehold.co/800x800/111/fff?text=GaN+65W"],
+    images: ["https://placehold.co/800x800/111/fff/png?text=GaN+65W"],
     variants: [{ name: "Black", priceDiff: 0, stock: 40 }],
   },
   {
@@ -329,7 +329,7 @@ const products: SeedProduct[] = [
     description:
       "Fast charging for iPhone and iPad with USB-C. Compact and travel friendly.",
     basePrice: 1999,
-    images: ["https://placehold.co/800x800/111/fff?text=Apple+20W"],
+    images: ["https://placehold.co/800x800/111/fff/png?text=Apple+20W"],
     variants: [{ name: "White", priceDiff: 0, stock: 35 }],
   },
   {
@@ -339,7 +339,7 @@ const products: SeedProduct[] = [
     description:
       "2m braided cable supporting 240W charging, USB 2.0 data and E-marker certification.",
     basePrice: 1499,
-    images: ["https://placehold.co/800x800/111/fff?text=USB-C+240W"],
+    images: ["https://placehold.co/800x800/111/fff/png?text=USB-C+240W"],
     variants: [
       { name: "Black / 2m", priceDiff: 0, stock: 50 },
       { name: "Blue / 2m", priceDiff: 0, stock: 12 },
@@ -352,7 +352,7 @@ const products: SeedProduct[] = [
     description:
       "Crystal-clear back with a tough bumper frame, Mil-Grade drop protection and anti-yellowing coating.",
     basePrice: 1999,
-    images: ["https://placehold.co/800x800/111/fff?text=Ultra+Hybrid"],
+    images: ["https://placehold.co/800x800/111/fff/png?text=Ultra+Hybrid"],
     variants: [
       { name: "Clear / iPhone 15 Pro", priceDiff: 0, stock: 27 },
       { name: "Matte Black / iPhone 15 Pro", priceDiff: 0, stock: 9 },
@@ -366,7 +366,7 @@ const products: SeedProduct[] = [
     description:
       "Compact USB-C fast charger for Galaxy devices. Includes 1.2m Type-C cable.",
     basePrice: 2499,
-    images: ["https://placehold.co/800x800/111/fff?text=Samsung+25W"],
+    images: ["https://placehold.co/800x800/111/fff/png?text=Samsung+25W"],
     variants: [{ name: "Black", priceDiff: 0, stock: 18 }],
   },
 ];

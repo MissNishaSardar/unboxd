@@ -155,6 +155,7 @@ const AdminProductsPage = async ({
                             alt={product.name}
                             width={40}
                             height={40}
+                            unoptimized
                             className="size-10 shrink-0 rounded-md object-cover"
                           />
                         : <div className="bg-muted flex size-10 shrink-0 items-center justify-center rounded-md">

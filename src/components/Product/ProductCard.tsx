@@ -80,6 +80,7 @@ const ProductCard = ({ product }: { product: ProductCardData }) => {
                 src={image.url}
                 alt={image.alt ?? product.name}
                 fill
+                unoptimized
                 sizes="(max-width: 768px) 50vw, 25vw"
                 className="object-cover transition-transform duration-300 group-hover:scale-105"
               />

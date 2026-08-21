@@ -24,6 +24,7 @@ const ProductGallery = ({
           src={image.url}
           alt={image.alt ?? name}
           fill
+          unoptimized
           priority
           sizes="(max-width: 768px) 100vw, 50vw"
           className="object-cover"
@@ -48,6 +49,7 @@ const ProductGallery = ({
                 src={img.url}
                 alt={img.alt ?? name}
                 fill
+                unoptimized
                 sizes="64px"
                 className="object-cover"
               />
