@@ -1,14 +1,29 @@
 "use client";
 
+import ThemeToggleButton from "@/components/Layout/ThemeToggleButton";
+import { Button } from "@/components/shadcnui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/shadcnui/dropdown-menu";
+import { useMounted } from "@/hooks/use-mounted";
+import { authClient } from "@/lib/auth-client";
+import { cartCountAtom, cartDrawerOpenAtom, clearCart } from "@/lib/cart/atoms";
+import { wishlistAtom } from "@/lib/wishlist/atoms";
+import { useAtomValue, useSetAtom } from "jotai";
+import {
+  HeartIcon,
+  LayoutDashboardIcon,
+  LogOutIcon,
+  ShoppingCartIcon,
+} from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useAtomValue, useSetAtom } from "jotai";
-import { HeartIcon, ShoppingCartIcon } from "lucide-react";
-import { authClient } from "@/lib/auth-client";
-import { Button } from "@/components/shadcnui/button";
-import { cartCountAtom, cartDrawerOpenAtom } from "@/lib/cart/atoms";
-import { wishlistAtom } from "@/lib/wishlist/atoms";
-import { useMounted } from "@/hooks/use-mounted";
 
 const Header = () => {
   const { data: session, isPending } = authClient.useSession();
@@ -50,7 +65,10 @@ const Header = () => {
           aria-label="Wishlist"
           className="relative"
           onClick={handleWishlistClick}>
-          <HeartIcon aria-hidden="true" />
+          <HeartIcon
+            aria-hidden="true"
+            size={32}
+          />
           {mounted && session && wishlistCount > 0 && (
             <span className="bg-primary text-primary-foreground absolute -top-0.5 -right-0.5 flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[10px] font-semibold tabular-nums">
               {wishlistCount}
@@ -63,13 +81,19 @@ const Header = () => {
           aria-label="Open cart"
           className="relative"
           onClick={handleCartClick}>
-          <ShoppingCartIcon aria-hidden="true" />
+          <ShoppingCartIcon
+            aria-hidden="true"
+            size={32}
+          />
           {mounted && cartCount > 0 && (
             <span className="bg-primary text-primary-foreground absolute -top-0.5 -right-0.5 flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[10px] font-semibold tabular-nums">
               {cartCount}
             </span>
           )}
         </Button>
+        <div className="ml-1 flex items-center">
+          <ThemeToggleButton />
+        </div>
         {isPending ?
           null
         : session ?
@@ -83,14 +107,71 @@ const Header = () => {
                 Admin
               </Button>
             )}
-            <Button
-              variant="outline"
-              size="sm"
-              className="ml-1"
-              render={<Link href="/dashboard" />}
-              nativeButton={false}>
-              Dashboard
-            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger
+                className="focus-visible:ring-ring ml-2 flex size-8 shrink-0 items-center justify-center overflow-hidden rounded-full border focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
+                aria-label="User menu">
+                {session.user.image ?
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={session.user.image}
+                    alt=""
+                    aria-hidden="true"
+                    width={32}
+                    height={32}
+                    className="size-full object-cover"
+                  />
+                : <span className="bg-muted text-muted-foreground flex size-full items-center justify-center text-xs font-semibold">
+                    {session.user.name
+                      .trim()
+                      .split(/\s+/)
+                      .slice(0, 2)
+                      .map((p) => p[0]?.toUpperCase() ?? "")
+                      .join("") || "?"}
+                  </span>
+                }
+              </DropdownMenuTrigger>
+              <DropdownMenuContent
+                align="end"
+                className="w-56">
+                <DropdownMenuGroup>
+                  <DropdownMenuLabel>
+                    <span className="block truncate text-sm font-medium">
+                      {session.user.name}
+                    </span>
+                    <span className="text-muted-foreground block truncate text-xs font-normal">
+                      {session.user.email}
+                    </span>
+                  </DropdownMenuLabel>
+                </DropdownMenuGroup>
+                <DropdownMenuSeparator />
+                <DropdownMenuGroup>
+                  <DropdownMenuItem
+                    onClick={() => router.push("/dashboard" as never)}>
+                    <LayoutDashboardIcon aria-hidden="true" />
+                    Dashboard
+                  </DropdownMenuItem>
+                </DropdownMenuGroup>
+                <DropdownMenuSeparator />
+                <DropdownMenuGroup>
+                  <DropdownMenuItem
+                    onClick={async () => {
+                      await authClient.signOut({
+                        fetchOptions: {
+                          onSuccess: () => {
+                            clearCart();
+                            router.push("/");
+                            router.refresh();
+                          },
+                        },
+                      });
+                    }}>
+                    <LogOutIcon aria-hidden="true" />
+                    Log out
+                  </DropdownMenuItem>
+                </DropdownMenuGroup>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </>
         : <Button
             render={<Link href="/auth/login" />}

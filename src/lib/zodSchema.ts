@@ -254,6 +254,31 @@ export const profileUpdateSchema = z.object({
     .trim()
     .min(2, { error: "Name must be at least 2 characters" })
     .max(80, { error: "Name must be at most 80 characters" }),
+  image: z.string().trim().nullable().optional(),
 });
 
 export type profileUpdateType = z.infer<typeof profileUpdateSchema>;
+
+export const changePasswordSchema = z
+  .object({
+    currentPassword: z
+      .string()
+      .min(8, { error: "Current password must be at least 8 characters" })
+      .max(128),
+    newPassword: z
+      .string()
+      .min(8, { error: "New password must be at least 8 characters" })
+      .max(128),
+    confirmPassword: z.string().min(1, { error: "Confirm your new password" }),
+  })
+  .superRefine((data, ctx) => {
+    if (data.newPassword !== data.confirmPassword) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["confirmPassword"],
+        message: "Passwords do not match",
+      });
+    }
+  });
+
+export type changePasswordType = z.infer<typeof changePasswordSchema>;

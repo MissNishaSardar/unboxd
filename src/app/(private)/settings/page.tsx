@@ -9,16 +9,7 @@ export const metadata: Metadata = {
 };
 import prisma from "@/lib/dbClient/prisma";
 import { formatDate } from "@/lib/format";
-import { Badge } from "@/components/shadcnui/badge";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/shadcnui/card";
-import { Separator } from "@/components/shadcnui/separator";
-import ProfileForm from "@/components/Settings/ProfileForm";
+import SettingsTabs from "@/components/Settings/SettingsTabs";
 
 const SettingsPage = async () => {
   const session = await auth.api.getSession({
@@ -57,62 +48,16 @@ const SettingsPage = async () => {
           Manage your profile and account
         </p>
       </div>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Profile</CardTitle>
-          <CardDescription>Update your display name</CardDescription>
-        </CardHeader>
-        <CardContent className="flex flex-col gap-6">
-          <div className="flex items-center gap-4">
-            <div
-              aria-hidden="true"
-              className="bg-muted text-muted-foreground flex size-12 shrink-0 items-center justify-center rounded-full text-sm font-semibold">
-              {initials || "?"}
-            </div>
-            <div className="min-w-0">
-              <p className="text-sm leading-none font-medium">{user.name}</p>
-              <p className="text-muted-foreground truncate text-sm">
-                {user.email}
-              </p>
-            </div>
-          </div>
-          <Separator />
-          <ProfileForm defaultName={user.name} />
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Account</CardTitle>
-          <CardDescription>Read-only account details</CardDescription>
-        </CardHeader>
-        <CardContent className="flex flex-col gap-3 text-sm">
-          <div className="flex items-center justify-between gap-4">
-            <span className="text-muted-foreground">Email</span>
-            <span className="font-medium">{user.email}</span>
-          </div>
-          <div className="flex items-center justify-between gap-4">
-            <span className="text-muted-foreground">Verified</span>
-            <Badge variant={user.emailVerified ? "secondary" : "outline"}>
-              {user.emailVerified ? "Verified" : "Not verified"}
-            </Badge>
-          </div>
-          <div className="flex items-center justify-between gap-4">
-            <span className="text-muted-foreground">Role</span>
-            <Badge variant={user.role === "admin" ? "default" : "secondary"}>
-              {user.role}
-            </Badge>
-          </div>
-          <div className="flex items-center justify-between gap-4">
-            <span className="text-muted-foreground">Member since</span>
-            <span className="font-medium">{formatDate(user.createdAt)}</span>
-          </div>
-          {user.banned && (
-            <p className="text-destructive text-sm">This account is banned.</p>
-          )}
-        </CardContent>
-      </Card>
+      <SettingsTabs
+        defaultName={user.name}
+        defaultImage={user.image ?? null}
+        email={user.email}
+        emailVerified={user.emailVerified}
+        role={user.role}
+        banned={user.banned}
+        memberSince={formatDate(user.createdAt)}
+        initials={initials}
+      />
     </div>
   );
 };

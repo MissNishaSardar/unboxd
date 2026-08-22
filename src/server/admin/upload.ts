@@ -33,12 +33,9 @@ export async function uploadImage(file: File): Promise<UploadResult> {
 
   try {
     const buffer = Buffer.from(await file.arrayBuffer());
-    const processed = await sharp(buffer)
-      .resize(1200, 1200, { fit: "inside", withoutEnlargement: true })
-      .webp({ quality: 80 })
-      .toBuffer();
+    const processed = await sharp(buffer).jpeg({ quality: 92 }).toBuffer();
 
-    const filename = `${randomUUID()}.webp`;
+    const filename = `${randomUUID()}.jpg`;
     const url = await storage.save(processed, filename);
 
     return { ok: true, url };

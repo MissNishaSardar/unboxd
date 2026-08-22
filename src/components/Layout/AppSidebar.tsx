@@ -1,22 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
-import {
-  Heart,
-  LayoutDashboard,
-  LogOut,
-  Package,
-  Settings,
-} from "lucide-react";
-import { authClient } from "@/lib/auth-client";
-import { clearCart } from "@/lib/cart/atoms";
-import SignOutButton from "@/components/Auth/SignOutButton";
-import { Button } from "@/components/shadcnui/button";
+import { usePathname } from "next/navigation";
+import { Heart, LayoutDashboard, Package, Settings } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
-  SidebarFooter,
   SidebarGroup,
   SidebarGroupContent,
   SidebarGroupLabel,
@@ -27,10 +16,6 @@ import {
   SidebarRail,
 } from "@/components/shadcnui/sidebar";
 
-type AppSidebarProps = {
-  user: { name: string; email: string };
-};
-
 const NAV_ITEMS = [
   { href: "/dashboard" as const, label: "Dashboard", icon: LayoutDashboard },
   { href: "/orders" as const, label: "Orders", icon: Package },
@@ -38,21 +23,8 @@ const NAV_ITEMS = [
   { href: "/settings" as const, label: "Settings", icon: Settings },
 ] as const;
 
-const AppSidebar = ({ user }: AppSidebarProps) => {
+const AppSidebar = () => {
   const pathname = usePathname();
-  const router = useRouter();
-
-  const handleSignOut = async () => {
-    await authClient.signOut({
-      fetchOptions: {
-        onSuccess: () => {
-          clearCart();
-          router.push("/");
-          router.refresh();
-        },
-      },
-    });
-  };
 
   return (
     <Sidebar collapsible="icon">
@@ -63,10 +35,10 @@ const AppSidebar = ({ user }: AppSidebarProps) => {
           </div>
           <div className="flex min-w-0 flex-col group-data-[collapsible=icon]:hidden">
             <span className="truncate text-sm leading-none font-medium">
-              {user.name}
+              Unboxd
             </span>
             <span className="text-muted-foreground truncate text-xs">
-              {user.email}
+              Dashboard
             </span>
           </div>
         </div>
@@ -100,24 +72,6 @@ const AppSidebar = ({ user }: AppSidebarProps) => {
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
-      <SidebarFooter>
-        <SidebarMenu>
-          <SidebarMenuItem>
-            <div className="px-1 py-1 group-data-[collapsible=icon]:hidden">
-              <SignOutButton />
-            </div>
-            <div className="hidden justify-center py-1 group-data-[collapsible=icon]:flex">
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={handleSignOut}
-                aria-label="Sign out">
-                <LogOut />
-              </Button>
-            </div>
-          </SidebarMenuItem>
-        </SidebarMenu>
-      </SidebarFooter>
       <SidebarRail />
     </Sidebar>
   );

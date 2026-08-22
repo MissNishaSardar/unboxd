@@ -6,6 +6,8 @@ import { useRouter } from "next/navigation";
 import { Controller, useForm } from "react-hook-form";
 import { authClient } from "@/lib/auth-client";
 import { profileUpdateSchema, profileUpdateType } from "@/lib/zodSchema";
+import { deleteAvatarFile } from "@/server/user/uploadAvatar";
+import AvatarUploader from "@/components/Settings/AvatarUploader";
 import { Button } from "@/components/shadcnui/button";
 import {
   Field,
@@ -18,21 +20,25 @@ import { toast } from "@/components/shadcnui/toast";
 
 type ProfileFormProps = {
   defaultName: string;
+  defaultImage: string | null;
 };
 
-const ProfileForm = ({ defaultName }: ProfileFormProps) => {
+const ProfileForm = ({ defaultName, defaultImage }: ProfileFormProps) => {
   const router = useRouter();
 
   const { handleSubmit, control, formState, reset } =
     useForm<profileUpdateType>({
       resolver: zodResolver(profileUpdateSchema),
-      defaultValues: { name: defaultName },
+      defaultValues: { name: defaultName, image: defaultImage ?? null },
       mode: "all",
     });
 
   const onSubmit = async (values: profileUpdateType) => {
+    const prevImage = defaultImage;
+    const nextImage = values.image ?? null;
     const { error } = await authClient.updateUser({
       name: values.name,
+      image: (nextImage ?? null) as string | null,
     });
 
     if (error) {
@@ -48,6 +54,13 @@ const ProfileForm = ({ defaultName }: ProfileFormProps) => {
       title: "Profile updated",
       type: "success",
     });
+    if (
+      prevImage &&
+      prevImage !== nextImage &&
+      prevImage.startsWith("/uploads/")
+    ) {
+      void deleteAvatarFile(prevImage);
+    }
     reset(values);
     router.refresh();
   };
@@ -57,6 +70,25 @@ const ProfileForm = ({ defaultName }: ProfileFormProps) => {
       onSubmit={handleSubmit(onSubmit)}
       noValidate>
       <FieldGroup>
+        <Controller
+          name="image"
+          control={control}
+          render={({ field }) => (
+            <Field>
+              <FieldLabel>Avatar</FieldLabel>
+              <AvatarUploader
+                value={field.value ?? null}
+                onChange={field.onChange}
+                disabled={formState.isSubmitting}
+              />
+              {field.value !== defaultImage && (
+                <p className="text-muted-foreground text-xs">
+                  Save changes to apply new avatar. Old file will be removed.
+                </p>
+              )}
+            </Field>
+          )}
+        />
         <Controller
           name="name"
           control={control}

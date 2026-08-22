@@ -30,9 +30,7 @@ const PrivateLayout = async ({ children }: LayoutProps) => {
   return (
     <TooltipProvider>
       <SidebarProvider defaultOpen={defaultOpen}>
-        <AppSidebar
-          user={{ name: session.user.name, email: session.user.email }}
-        />
+        <AppSidebar />
         <SidebarInset>
           <PrivateHeader />
           {session.session.impersonatedBy && (
