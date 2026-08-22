@@ -2,14 +2,7 @@ import { getSessionCookie } from "better-auth/cookies";
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 
-const PROTECTED = [
-  "/dashboard",
-  "/checkout",
-  "/orders",
-  "/settings",
-  "/profile",
-  "/cart",
-];
+const PROTECTED = ["/dashboard", "/checkout", "/orders", "/settings", "/cart"];
 const ADMIN = ["/admin"];
 const AUTH = ["/auth"];
 
@@ -64,7 +57,6 @@ export const config = {
     "/checkout",
     "/orders/:path*",
     "/settings",
-    "/profile",
     "/cart",
     "/admin",
     "/admin/:path*",

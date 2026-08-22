@@ -1,10 +1,12 @@
-import SignOutButton from "@/components/Auth/SignOutButton";
+import { cookies, headers } from "next/headers";
+import { redirect } from "next/navigation";
 import ImpersonationBanner from "@/components/Admin/ImpersonationBanner";
-import PrivateNav from "@/components/Layout/PrivateNav";
+import AppSidebar from "@/components/Layout/AppSidebar";
+import PrivateHeader from "@/components/Layout/PrivateHeader";
+import { SidebarInset, SidebarProvider } from "@/components/shadcnui/sidebar";
+import { TooltipProvider } from "@/components/shadcnui/tooltip";
 import { auth } from "@/lib/auth";
 import { LayoutProps } from "@/lib/types";
-import { headers } from "next/headers";
-import { redirect } from "next/navigation";
 
 const PrivateLayout = async ({ children }: LayoutProps) => {
   const headerList = await headers();
@@ -22,23 +24,24 @@ const PrivateLayout = async ({ children }: LayoutProps) => {
     redirect("/");
   }
 
+  const cookieStore = await cookies();
+  const defaultOpen = cookieStore.get("sidebar_state")?.value !== "false";
+
   return (
-    <div className="flex min-h-screen">
-      <aside className="flex w-64 flex-col gap-4 border-r p-4">
-        <div>
-          <p className="font-medium">{session.user.name}</p>
-          <p className="text-muted-foreground text-sm">{session.user.email}</p>
-        </div>
-        <PrivateNav />
-        <SignOutButton />
-      </aside>
-      <div className="flex flex-1 flex-col">
-        {session.session.impersonatedBy && (
-          <ImpersonationBanner name={session.user.name} />
-        )}
-        <main className="flex-1 p-6">{children}</main>
-      </div>
-    </div>
+    <TooltipProvider>
+      <SidebarProvider defaultOpen={defaultOpen}>
+        <AppSidebar
+          user={{ name: session.user.name, email: session.user.email }}
+        />
+        <SidebarInset>
+          <PrivateHeader />
+          {session.session.impersonatedBy && (
+            <ImpersonationBanner name={session.user.name} />
+          )}
+          <main className="flex-1 p-6">{children}</main>
+        </SidebarInset>
+      </SidebarProvider>
+    </TooltipProvider>
   );
 };
 

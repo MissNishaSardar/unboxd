@@ -25,13 +25,8 @@ const SECTIONS = [
     href: "/orders" as const,
   },
   {
-    title: "Profile",
-    description: "Your account details",
-    href: "/profile" as const,
-  },
-  {
     title: "Settings",
-    description: "Account preferences",
+    description: "Your account and preferences",
     href: "/settings" as const,
   },
 ];

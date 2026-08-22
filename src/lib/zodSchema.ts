@@ -247,3 +247,13 @@ export const adminUserListSearchParamsSchema = z.object({
 export type adminUserListSearchParamsType = z.infer<
   typeof adminUserListSearchParamsSchema
 >;
+
+export const profileUpdateSchema = z.object({
+  name: z
+    .string()
+    .trim()
+    .min(2, { error: "Name must be at least 2 characters" })
+    .max(80, { error: "Name must be at most 80 characters" }),
+});
+
+export type profileUpdateType = z.infer<typeof profileUpdateSchema>;
