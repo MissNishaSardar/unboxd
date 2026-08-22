@@ -9,15 +9,14 @@ const SignOutButton = () => {
   const router = useRouter();
 
   const handleSignOut = async () => {
-    await authClient.signOut({
-      fetchOptions: {
-        onSuccess: () => {
-          clearCart();
-          router.push("/");
-          router.refresh();
-        },
-      },
-    });
+    try {
+      await authClient.signOut();
+    } catch {
+      // ignore server unexpected response, still clear local state
+    }
+    clearCart();
+    router.push("/");
+    router.refresh();
   };
 
   return (

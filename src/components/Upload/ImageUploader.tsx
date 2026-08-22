@@ -4,13 +4,10 @@ import Image from "next/image";
 import { Loader2Icon, Trash2Icon, UploadIcon } from "lucide-react";
 import { useState } from "react";
 import { useFilePicker } from "use-file-picker";
-import {
-  FileSizeValidator,
-  FileTypeValidator,
-} from "use-file-picker/validators";
+import { FileSizeValidator } from "use-file-picker/validators";
 import { Button } from "@/components/shadcnui/button";
 import { toast } from "@/components/shadcnui/toast";
-import { uploadImage } from "@/server/admin/upload";
+import { deleteProductImageFile, uploadImage } from "@/server/admin/upload";
 import { cn } from "@/lib/utils";
 
 const MAX_SIZE = 5 * 1024 * 1024;
@@ -32,10 +29,7 @@ const ImageUploader = ({
     accept: "image/*",
     multiple: false,
     readAs: "DataURL",
-    validators: [
-      new FileTypeValidator(["jpeg", "png", "webp"]),
-      new FileSizeValidator({ maxFileSize: MAX_SIZE }),
-    ],
+    validators: [new FileSizeValidator({ maxFileSize: MAX_SIZE })],
     onFilesRejected: ({ errors }) => {
       const error = errors[0];
       const reason = error && "reason" in error ? error.reason : undefined;
@@ -43,7 +37,7 @@ const ImageUploader = ({
         title:
           reason === "FILE_SIZE_TOO_LARGE" ?
             "Image must be under 5MB"
-          : "Only JPG, PNG, or WebP images are accepted",
+          : "Only images are accepted",
         type: "error",
       });
     },
@@ -51,11 +45,15 @@ const ImageUploader = ({
       const file = plainFiles[0];
       if (!file) return;
 
+      const previous = value;
       setUploading(true);
       try {
         const result = await uploadImage(file);
         if (!result.ok) {
           throw new Error(result.error);
+        }
+        if (previous && previous.startsWith("/uploads/")) {
+          void deleteProductImageFile(previous);
         }
         onChange(result.url);
         toast.add({ title: "Image uploaded", type: "success" });
@@ -65,7 +63,7 @@ const ImageUploader = ({
             error instanceof Error && error.message === "FORBIDDEN" ?
               "You do not have permission to upload images"
             : error instanceof Error && error.message === "INVALID_INPUT" ?
-              "Only JPG, PNG, or WebP images under 5MB are accepted"
+              "Only images under 5MB are accepted"
             : "Upload failed",
           type: "error",
         });
@@ -110,7 +108,13 @@ const ImageUploader = ({
             type="button"
             variant="ghost"
             size="sm"
-            onClick={() => onChange(null)}
+            onClick={() => {
+              const previous = value;
+              onChange(null);
+              if (previous.startsWith("/uploads/")) {
+                void deleteProductImageFile(previous);
+              }
+            }}
             disabled={disabled || uploading}>
             <Trash2Icon aria-hidden="true" />
             Remove

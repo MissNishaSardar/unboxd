@@ -19,11 +19,12 @@ import {
   type productFormInputType,
   type productFormType,
 } from "@/lib/zodSchema";
+import { deleteProductImageFile } from "@/server/admin/upload";
 import { ArrowDownIcon, ArrowUpIcon, PlusIcon, Trash2Icon } from "lucide-react";
 import { Controller, useFieldArray, useFormContext } from "react-hook-form";
 
 const ProductImagesFields = () => {
-  const { control } = useFormContext<
+  const { control, getValues } = useFormContext<
     productFormInputType,
     undefined,
     productFormType
@@ -101,7 +102,13 @@ const ProductImagesFields = () => {
                       type="button"
                       variant="ghost"
                       size="icon-sm"
-                      onClick={() => remove(index)}
+                      onClick={() => {
+                        const url = getValues(`images.${index}.url`);
+                        remove(index);
+                        if (url && url.startsWith("/uploads/")) {
+                          void deleteProductImageFile(url);
+                        }
+                      }}
                       disabled={fields.length <= 1}
                       aria-label="Remove image">
                       <Trash2Icon aria-hidden="true" />

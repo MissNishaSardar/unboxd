@@ -1,3 +1,4 @@
+import { headers } from "next/headers";
 import prisma from "@/lib/dbClient/prisma";
 import { auth } from "@/lib/auth";
 import { adminProductListSearchParamsType } from "@/lib/zodSchema";
@@ -242,6 +243,7 @@ export async function getAdminUsers(params: {
         }
       : {}),
     },
+    headers: await headers(),
   });
 
   return {

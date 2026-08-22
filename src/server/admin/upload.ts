@@ -6,7 +6,6 @@ import { requireAdmin } from "@/lib/guard";
 import { storage } from "@/lib/storage/adapter";
 
 const MAX_SIZE = 5 * 1024 * 1024;
-const ACCEPTED_TYPES = ["image/jpeg", "image/png", "image/webp"];
 
 export type UploadResult =
   | { ok: true; url: string }
@@ -23,17 +22,16 @@ export async function uploadImage(file: File): Promise<UploadResult> {
     return { ok: false, error: "INVALID_INPUT" };
   }
 
-  if (!ACCEPTED_TYPES.includes(file.type)) {
-    return { ok: false, error: "INVALID_INPUT" };
-  }
-
   if (file.size > MAX_SIZE) {
     return { ok: false, error: "INVALID_INPUT" };
   }
 
   try {
     const buffer = Buffer.from(await file.arrayBuffer());
-    const processed = await sharp(buffer).jpeg({ quality: 92 }).toBuffer();
+    const processed = await sharp(buffer)
+      .resize({ width: 1080, height: 1080, fit: "cover" })
+      .jpeg({ quality: 97, mozjpeg: true })
+      .toBuffer();
 
     const filename = `${randomUUID()}.jpg`;
     const url = await storage.save(processed, filename);
@@ -42,4 +40,21 @@ export async function uploadImage(file: File): Promise<UploadResult> {
   } catch {
     return { ok: false, error: "SERVER_ERROR" };
   }
+}
+
+export async function deleteProductImageFile(
+  url: string,
+): Promise<{ ok: boolean }> {
+  try {
+    await requireAdmin();
+  } catch {
+    return { ok: false };
+  }
+  if (!url.startsWith("/uploads/")) return { ok: true };
+  try {
+    await storage.delete(url);
+  } catch (e) {
+    console.error("deleteProductImageFile failed", url, e);
+  }
+  return { ok: true };
 }

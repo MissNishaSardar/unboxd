@@ -1,49 +1,33 @@
-import Link from "next/link";
-import SignOutButton from "@/components/Auth/SignOutButton";
+import { cookies, headers } from "next/headers";
+import ImpersonationBanner from "@/components/Admin/ImpersonationBanner";
+import AdminHeader from "@/components/Layout/AdminHeader";
+import AdminSidebar from "@/components/Layout/AdminSidebar";
+import { SidebarInset, SidebarProvider } from "@/components/shadcnui/sidebar";
+import { TooltipProvider } from "@/components/shadcnui/tooltip";
 import { auth } from "@/lib/auth";
 import { LayoutProps } from "@/lib/types";
-import { headers } from "next/headers";
-
-const NAV_LINKS = [
-  { href: "/admin", label: "Dashboard" },
-  { href: "/admin/orders", label: "Orders" },
-  { href: "/admin/inventory", label: "Inventory" },
-  { href: "/admin/products", label: "Products" },
-  { href: "/admin/categories", label: "Categories" },
-  { href: "/admin/users", label: "Users" },
-] as const;
 
 const AdminLayout = async ({ children }: LayoutProps) => {
+  const cookieStore = await cookies();
+  const defaultOpen = cookieStore.get("sidebar_state")?.value !== "false";
+
   const session = await auth.api.getSession({
     headers: await headers(),
   });
 
   return (
-    <div className="flex min-h-screen">
-      <aside className="flex w-64 flex-col gap-4 border-r p-4">
-        <p className="text-lg font-semibold">unboxd Admin</p>
-        <nav className="flex flex-col gap-1">
-          {NAV_LINKS.map((link) => (
-            <Link
-              key={link.href}
-              href={link.href}
-              className="text-muted-foreground hover:bg-muted hover:text-foreground rounded-md px-3 py-2 text-sm font-medium transition-colors">
-              {link.label}
-            </Link>
-          ))}
-        </nav>
-        {session && (
-          <div>
-            <p className="font-medium">{session.user.name}</p>
-            <p className="text-muted-foreground text-sm">
-              {session.user.email}
-            </p>
-          </div>
-        )}
-        <SignOutButton />
-      </aside>
-      <main className="flex-1 p-6">{children}</main>
-    </div>
+    <TooltipProvider>
+      <SidebarProvider defaultOpen={defaultOpen}>
+        <AdminSidebar />
+        <SidebarInset>
+          <AdminHeader />
+          {session?.session.impersonatedBy && (
+            <ImpersonationBanner name={session.user.name} />
+          )}
+          <main className="flex-1 p-6">{children}</main>
+        </SidebarInset>
+      </SidebarProvider>
+    </TooltipProvider>
   );
 };
 

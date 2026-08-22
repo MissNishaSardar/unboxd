@@ -252,7 +252,9 @@ export async function updateProduct(
       });
     });
 
-    const orphaned = oldImageUrls.filter((url) => !newImageUrls.includes(url));
+    const orphaned = oldImageUrls.filter(
+      (url) => url.startsWith("/uploads/") && !newImageUrls.includes(url),
+    );
     await Promise.all(
       orphaned.map((url) =>
         storage.delete(url).catch((e) => {

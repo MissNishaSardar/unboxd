@@ -137,7 +137,13 @@ const PrivateHeader = () => {
               <DropdownMenuSeparator />
               <DropdownMenuGroup>
                 <DropdownMenuItem
-                  onClick={() => router.push("/dashboard" as never)}>
+                  onClick={() =>
+                    router.push(
+                      (session.user.role === "admin" ?
+                        "/admin"
+                      : "/dashboard") as never,
+                    )
+                  }>
                   <LayoutDashboardIcon aria-hidden="true" />
                   Dashboard
                 </DropdownMenuItem>
@@ -146,15 +152,14 @@ const PrivateHeader = () => {
               <DropdownMenuGroup>
                 <DropdownMenuItem
                   onClick={async () => {
-                    await authClient.signOut({
-                      fetchOptions: {
-                        onSuccess: () => {
-                          clearCart();
-                          router.push("/");
-                          router.refresh();
-                        },
-                      },
-                    });
+                    try {
+                      await authClient.signOut();
+                    } catch {
+                      // ignore server unexpected response, still clear local state
+                    }
+                    clearCart();
+                    router.push("/");
+                    router.refresh();
                   }}>
                   <LogOutIcon aria-hidden="true" />
                   Log out

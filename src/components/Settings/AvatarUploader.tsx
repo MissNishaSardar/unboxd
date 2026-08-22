@@ -4,10 +4,7 @@ import Image from "next/image";
 import { Loader2Icon, Trash2Icon, UploadIcon } from "lucide-react";
 import { useState } from "react";
 import { useFilePicker } from "use-file-picker";
-import {
-  FileSizeValidator,
-  FileTypeValidator,
-} from "use-file-picker/validators";
+import { FileSizeValidator } from "use-file-picker/validators";
 import { Button } from "@/components/shadcnui/button";
 import { toast } from "@/components/shadcnui/toast";
 import { uploadAvatar } from "@/server/user/uploadAvatar";
@@ -27,10 +24,7 @@ const AvatarUploader = ({ value, onChange, disabled }: AvatarUploaderProps) => {
     accept: "image/*",
     multiple: false,
     readAs: "DataURL",
-    validators: [
-      new FileTypeValidator(["jpeg", "png", "webp"]),
-      new FileSizeValidator({ maxFileSize: MAX_SIZE }),
-    ],
+    validators: [new FileSizeValidator({ maxFileSize: MAX_SIZE })],
     onFilesRejected: ({ errors }) => {
       const error = errors[0];
       const reason = error && "reason" in error ? error.reason : undefined;
@@ -38,7 +32,7 @@ const AvatarUploader = ({ value, onChange, disabled }: AvatarUploaderProps) => {
         title:
           reason === "FILE_SIZE_TOO_LARGE" ?
             "Image must be under 5MB"
-          : "Only JPG, PNG, or WebP images are accepted",
+          : "Only images are accepted",
         type: "error",
       });
     },
@@ -57,7 +51,7 @@ const AvatarUploader = ({ value, onChange, disabled }: AvatarUploaderProps) => {
             error instanceof Error && error.message === "FORBIDDEN" ?
               "Sign in again to upload"
             : error instanceof Error && error.message === "INVALID_INPUT" ?
-              "Only JPG, PNG, or WebP images under 5MB are accepted"
+              "Only images under 5MB are accepted"
             : "Upload failed",
           type: "error",
         });

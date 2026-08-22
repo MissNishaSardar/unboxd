@@ -56,7 +56,7 @@ export async function banUser(userId: string): Promise<AdminUserActionResult> {
   }
 
   try {
-    await auth.api.banUser({ body: { userId } });
+    await auth.api.banUser({ body: { userId }, headers: await headers() });
     revalidatePath("/admin/users", "page");
     return { ok: true };
   } catch (e) {
@@ -75,7 +75,7 @@ export async function unbanUser(
   }
 
   try {
-    await auth.api.unbanUser({ body: { userId } });
+    await auth.api.unbanUser({ body: { userId }, headers: await headers() });
     revalidatePath("/admin/users", "page");
     return { ok: true };
   } catch (e) {
@@ -98,7 +98,7 @@ export async function removeUser(
     if (orderCount > 0) {
       return { ok: false, error: "HAS_ORDERS" };
     }
-    await auth.api.removeUser({ body: { userId } });
+    await auth.api.removeUser({ body: { userId }, headers: await headers() });
     revalidatePath("/admin/users", "page");
     return { ok: true };
   } catch (e) {
@@ -117,7 +117,10 @@ export async function impersonateUser(
   }
 
   try {
-    await auth.api.impersonateUser({ body: { userId } });
+    await auth.api.impersonateUser({
+      body: { userId },
+      headers: await headers(),
+    });
   } catch (e) {
     console.error("impersonateUser failed", e);
     return { ok: false, error: "SERVER_ERROR" };
