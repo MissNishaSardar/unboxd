@@ -19,7 +19,11 @@ type Props = {
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { id } = await params;
-  return { title: `Order ${id} - Unboxd` };
+  const short = id.slice(0, 8);
+  return {
+    title: `Order #${short}`,
+    description: `Details for order #${short}.`,
+  };
 }
 
 const OrderPage = async ({ params }: Props) => {

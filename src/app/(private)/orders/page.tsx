@@ -1,7 +1,13 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { PackageIcon } from "lucide-react";
 import { auth } from "@/lib/auth";
+
+export const metadata: Metadata = {
+  title: "Orders",
+  description: "View and track your Unboxd orders.",
+};
 import prisma from "@/lib/dbClient/prisma";
 import { headers } from "next/headers";
 import { orderListSearchParamsSchema } from "@/lib/zodSchema";

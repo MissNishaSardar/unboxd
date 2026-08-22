@@ -1,6 +1,12 @@
+import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { headers } from "next/headers";
 import { auth } from "@/lib/auth";
+
+export const metadata: Metadata = {
+  title: "Settings",
+  description: "Manage your Unboxd profile and account settings.",
+};
 import prisma from "@/lib/dbClient/prisma";
 import { formatDate } from "@/lib/format";
 import { Badge } from "@/components/shadcnui/badge";

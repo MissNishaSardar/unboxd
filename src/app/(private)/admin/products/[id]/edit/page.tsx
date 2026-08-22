@@ -1,6 +1,12 @@
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import ProductForm from "@/components/Admin/ProductForm";
 import { requireAdminPage } from "@/lib/guard";
+
+export const metadata: Metadata = {
+  title: "Edit Product",
+  description: "Edit product details on Unboxd.",
+};
 import {
   getAdminCategories,
   getAdminProductForEdit,

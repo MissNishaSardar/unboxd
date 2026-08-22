@@ -9,9 +9,15 @@ import {
   EmptyMedia,
   EmptyTitle,
 } from "@/components/shadcnui/empty";
+import type { Metadata } from "next";
 import { requireAdminPage } from "@/lib/guard";
 import { adminUserListSearchParamsSchema } from "@/lib/zodSchema";
 import { getAdminUsers } from "@/server/admin/queries";
+
+export const metadata: Metadata = {
+  title: "Users",
+  description: "Manage Unboxd users, roles, and bans.",
+};
 
 const AdminUsersPage = async ({
   searchParams,

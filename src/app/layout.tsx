@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import ThemeProvider from "@/components/Providers/ThemeProvider";
 import { Toaster } from "@/components/shadcnui/toast";
 import { geistMono, geistSans, interHeading } from "@/lib/fonts";
@@ -5,6 +6,15 @@ import { LayoutProps } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { NuqsAdapter } from "nuqs/adapters/next/app";
 import "./globals.css";
+
+export const metadata: Metadata = {
+  title: {
+    default: "Unboxd | Electronics, Unboxed",
+    template: "%s | Unboxd",
+  },
+  description:
+    "Shop smartphones, laptops, audio, and accessories with fast COD delivery.",
+};
 
 const RootLayout = ({ children }: LayoutProps) => {
   return (

@@ -24,10 +24,16 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/shadcnui/table";
+import type { Metadata } from "next";
 import { formatPrice } from "@/lib/format";
 import { requireAdminPage } from "@/lib/guard";
 import { adminProductListSearchParamsSchema } from "@/lib/zodSchema";
 import { getAdminProducts } from "@/server/admin/queries";
+
+export const metadata: Metadata = {
+  title: "Manage Products",
+  description: "Manage the Unboxd product catalog.",
+};
 
 const STATUS_OPTIONS = ["all", "active", "inactive"] as const;
 

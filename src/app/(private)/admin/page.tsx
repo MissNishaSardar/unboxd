@@ -1,6 +1,13 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
+
+export const metadata: Metadata = {
+  title: "Admin Dashboard",
+  description:
+    "Unboxd admin overview — manage products, orders, inventory, and users.",
+};
 import SalesSummaryCard from "@/components/Admin/SalesSummaryCard";
 import { Button } from "@/components/shadcnui/button";
 import {

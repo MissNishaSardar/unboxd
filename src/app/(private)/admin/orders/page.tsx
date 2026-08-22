@@ -9,9 +9,15 @@ import {
   EmptyMedia,
   EmptyTitle,
 } from "@/components/shadcnui/empty";
+import type { Metadata } from "next";
 import { requireAdminPage } from "@/lib/guard";
 import { adminOrderListSearchParamsSchema } from "@/lib/zodSchema";
 import { getAdminOrders } from "@/server/admin/orders";
+
+export const metadata: Metadata = {
+  title: "Manage Orders",
+  description: "Review and fulfill Unboxd orders.",
+};
 
 const AdminOrdersPage = async ({
   searchParams,

@@ -6,7 +6,7 @@ import { productListSearchParamsSchema } from "@/lib/zodSchema";
 import { getCategoriesWithCounts, getProducts } from "@/server/catalog";
 
 export const metadata: Metadata = {
-  title: "Products — Unboxd",
+  title: "Products",
   description: "Browse our electronics catalog with filters and sorting.",
 };
 

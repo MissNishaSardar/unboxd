@@ -1,6 +1,20 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeftIcon } from "lucide-react";
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}): Promise<Metadata> {
+  const { id } = await params;
+  const short = id.slice(0, 8);
+  return {
+    title: `Order #${short}`,
+    description: `Manage order #${short}.`,
+  };
+}
 import OrderStatusActions from "@/components/Admin/OrderStatusActions";
 import OrderStatusBadge from "@/components/Orders/OrderStatusBadge";
 import OrderTimeline from "@/components/Orders/OrderTimeline";

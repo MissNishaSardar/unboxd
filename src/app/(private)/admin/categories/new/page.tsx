@@ -1,6 +1,12 @@
+import type { Metadata } from "next";
 import CategoryForm from "@/components/Admin/CategoryForm";
 import { requireAdminPage } from "@/lib/guard";
 import { getAdminCategoryOptions } from "@/server/admin/queries";
+
+export const metadata: Metadata = {
+  title: "New Category",
+  description: "Create a new category on Unboxd.",
+};
 
 const AdminCategoryNewPage = async () => {
   await requireAdminPage();

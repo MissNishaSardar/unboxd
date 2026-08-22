@@ -19,12 +19,18 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/shadcnui/table";
+import type { Metadata } from "next";
 import { requireAdminPage } from "@/lib/guard";
 import {
   type AdminCategoryNode,
   getAdminCategoryOptions,
   getAdminCategoryTree,
 } from "@/server/admin/queries";
+
+export const metadata: Metadata = {
+  title: "Categories",
+  description: "Manage the Unboxd category tree.",
+};
 
 const CategoryRow = ({
   category,

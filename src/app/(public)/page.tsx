@@ -21,7 +21,9 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 export const metadata: Metadata = {
-  title: "Unboxd — Electronics, Unboxed",
+  title: {
+    absolute: "Unboxd | Electronics, Unboxed",
+  },
   description:
     "Shop smartphones, laptops, audio, and accessories with fast COD delivery.",
 };

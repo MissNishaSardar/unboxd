@@ -1,6 +1,12 @@
+import type { Metadata } from "next";
 import ProductForm from "@/components/Admin/ProductForm";
 import { requireAdminPage } from "@/lib/guard";
 import { getAdminCategories } from "@/server/admin/queries";
+
+export const metadata: Metadata = {
+  title: "New Product",
+  description: "Add a new product to the Unboxd catalog.",
+};
 
 const NewProductPage = async () => {
   await requireAdminPage();

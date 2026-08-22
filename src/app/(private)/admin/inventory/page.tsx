@@ -17,11 +17,17 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/shadcnui/table";
+import type { Metadata } from "next";
 import { requireAdminPage } from "@/lib/guard";
 import {
   LOW_STOCK_THRESHOLD,
   getInventoryLowStock,
 } from "@/server/admin/queries";
+
+export const metadata: Metadata = {
+  title: "Inventory",
+  description: "Monitor and manage low-stock inventory on Unboxd.",
+};
 
 const AdminInventoryPage = async () => {
   await requireAdminPage();
