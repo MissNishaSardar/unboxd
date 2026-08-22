@@ -1,6 +1,7 @@
 import CartProvider from "@/components/Cart/CartProvider";
 import ImpersonationBanner from "@/components/Admin/ImpersonationBanner";
 import Header from "@/components/Layout/Header";
+import WishlistProvider from "@/components/Wishlist/WishlistProvider";
 import { auth } from "@/lib/auth";
 import { LayoutProps } from "@/lib/types";
 import { headers } from "next/headers";
@@ -25,6 +26,7 @@ const PublicLayout = async ({ children }: LayoutProps) => {
       <Header />
       <main>{children}</main>
       <CartProvider />
+      <WishlistProvider />
     </div>
   );
 };

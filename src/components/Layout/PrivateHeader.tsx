@@ -16,6 +16,7 @@ import { SidebarTrigger } from "@/components/shadcnui/sidebar";
 const LABELS: Record<string, string> = {
   dashboard: "Dashboard",
   orders: "Orders",
+  wishlist: "Wishlist",
   settings: "Settings",
   cart: "Cart",
   checkout: "Checkout",

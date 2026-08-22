@@ -13,6 +13,7 @@ import {
   ToggleGroupItem,
 } from "@/components/shadcnui/toggle-group";
 import { toast } from "@/components/shadcnui/toast";
+import WishlistButton from "@/components/Product/WishlistButton";
 import { addToCart } from "@/lib/cart/atoms";
 import { formatPrice } from "@/lib/format";
 
@@ -162,6 +163,7 @@ const ProductInfo = ({
           <ShoppingCartIcon aria-hidden="true" />
           {outOfStock ? "Out of Stock" : "Add to Cart"}
         </Button>
+        <WishlistButton productId={productId} />
       </div>
     </div>
   );

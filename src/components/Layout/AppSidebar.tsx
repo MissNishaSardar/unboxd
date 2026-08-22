@@ -2,7 +2,13 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { LayoutDashboard, LogOut, Package, Settings } from "lucide-react";
+import {
+  Heart,
+  LayoutDashboard,
+  LogOut,
+  Package,
+  Settings,
+} from "lucide-react";
 import { authClient } from "@/lib/auth-client";
 import { clearCart } from "@/lib/cart/atoms";
 import SignOutButton from "@/components/Auth/SignOutButton";
@@ -28,6 +34,7 @@ type AppSidebarProps = {
 const NAV_ITEMS = [
   { href: "/dashboard" as const, label: "Dashboard", icon: LayoutDashboard },
   { href: "/orders" as const, label: "Orders", icon: Package },
+  { href: "/wishlist" as const, label: "Wishlist", icon: Heart },
   { href: "/settings" as const, label: "Settings", icon: Settings },
 ] as const;
 
@@ -80,7 +87,7 @@ const AppSidebar = ({ user }: AppSidebarProps) => {
                       isActive={isActive}
                       tooltip={item.label}
                       render={
-                        <Link href={item.href}>
+                        <Link href={item.href as never}>
                           <item.icon />
                           <span>{item.label}</span>
                         </Link>

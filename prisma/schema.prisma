@@ -27,6 +27,7 @@ model User {
   sessions      Session[]
   accounts      Account[]
   orders        Order[]
+  wishlist      WishlistItem[]
 
   @@unique([email])
   @@map("user")
@@ -60,6 +61,7 @@ model Product {
   category      Category        @relation(fields: [categoryId], references: [id])
   variants      ProductVariant[]
   images        ProductImage[]
+  wishlistItems WishlistItem[]
   createdAt     DateTime        @default(now())
   updatedAt     DateTime        @updatedAt
 
@@ -132,6 +134,18 @@ model Address {
   city        String
   pincode     String
   createdAt   DateTime @default(now())
+}
+
+model WishlistItem {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  productId String
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([userId, productId])
+  @@index([userId])
 }
 
 model Session {

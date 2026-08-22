@@ -1,7 +1,13 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { PackageIcon } from "lucide-react";
 import { auth } from "@/lib/auth";
+
+export const metadata: Metadata = {
+  title: "Dashboard",
+  description: "Your Unboxd overview — orders, activity, and quick actions.",
+};
 import { headers } from "next/headers";
 import { formatDate } from "@/lib/format";
 import { getDashboardData } from "@/server/dashboard";
@@ -89,7 +95,10 @@ const DashboardPage = async () => {
         <h2 className="font-heading text-lg font-semibold tracking-tight">
           Quick actions
         </h2>
-        <QuickActions isAdmin={session.user.role === "admin"} />
+        <QuickActions
+          isAdmin={session.user.role === "admin"}
+          hideBrowse={data.orderCount === 0}
+        />
       </section>
     </div>
   );
