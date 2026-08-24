@@ -20,6 +20,7 @@ import {
   HeartIcon,
   LayoutDashboardIcon,
   LogOutIcon,
+  ShieldIcon,
   ShoppingCartIcon,
 } from "lucide-react";
 import Link from "next/link";
@@ -97,87 +98,80 @@ const Header = () => {
         {isPending ?
           null
         : session ?
-          <>
-            {session.user.role === "admin" && (
-              <Button
-                variant="ghost"
-                size="sm"
-                render={<Link href="/admin" />}
-                nativeButton={false}>
-                Admin
-              </Button>
-            )}
-            <DropdownMenu>
-              <DropdownMenuTrigger
-                className="focus-visible:ring-ring ml-2 flex size-8 shrink-0 items-center justify-center overflow-hidden rounded-full border focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
-                aria-label="User menu">
-                {session.user.image ?
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    src={session.user.image}
-                    alt=""
-                    aria-hidden="true"
-                    width={32}
-                    height={32}
-                    className="size-full object-cover"
-                  />
-                : <span className="bg-muted text-muted-foreground flex size-full items-center justify-center text-xs font-semibold">
-                    {session.user.name
-                      .trim()
-                      .split(/\s+/)
-                      .slice(0, 2)
-                      .map((p) => p[0]?.toUpperCase() ?? "")
-                      .join("") || "?"}
+          <DropdownMenu>
+            <DropdownMenuTrigger
+              className="focus-visible:ring-ring ml-2 flex size-8 shrink-0 items-center justify-center overflow-hidden rounded-full border focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
+              aria-label="User menu">
+              {session.user.image ?
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={session.user.image}
+                  alt=""
+                  aria-hidden="true"
+                  width={32}
+                  height={32}
+                  className="size-full object-cover"
+                />
+              : <span className="bg-muted text-muted-foreground flex size-full items-center justify-center text-xs font-semibold">
+                  {session.user.name
+                    .trim()
+                    .split(/\s+/)
+                    .slice(0, 2)
+                    .map((p) => p[0]?.toUpperCase() ?? "")
+                    .join("") || "?"}
+                </span>
+              }
+            </DropdownMenuTrigger>
+            <DropdownMenuContent
+              align="end"
+              className="w-56">
+              <DropdownMenuGroup>
+                <DropdownMenuLabel>
+                  <span className="block truncate text-sm font-medium">
+                    {session.user.name}
                   </span>
-                }
-              </DropdownMenuTrigger>
-              <DropdownMenuContent
-                align="end"
-                className="w-56">
-                <DropdownMenuGroup>
-                  <DropdownMenuLabel>
-                    <span className="block truncate text-sm font-medium">
-                      {session.user.name}
-                    </span>
-                    <span className="text-muted-foreground block truncate text-xs font-normal">
-                      {session.user.email}
-                    </span>
-                  </DropdownMenuLabel>
-                </DropdownMenuGroup>
-                <DropdownMenuSeparator />
-                <DropdownMenuGroup>
-                  <DropdownMenuItem
-                    onClick={() =>
-                      router.push(
-                        (session.user.role === "admin" ?
-                          "/admin"
-                        : "/dashboard") as never,
-                      )
-                    }>
-                    <LayoutDashboardIcon aria-hidden="true" />
-                    Dashboard
-                  </DropdownMenuItem>
-                </DropdownMenuGroup>
-                <DropdownMenuSeparator />
-                <DropdownMenuGroup>
-                  <DropdownMenuItem
-                    onClick={async () => {
-                      try {
-                        await authClient.signOut();
-                      } catch {
-                        // ignore server unexpected response, still clear local state
-                      }
-                      clearCart();
-                      router.push("/");
-                      router.refresh();
-                    }}>
-                    <LogOutIcon aria-hidden="true" />
-                    Log out
-                  </DropdownMenuItem>
-                </DropdownMenuGroup>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </>
+                  <span className="text-muted-foreground block truncate text-xs font-normal">
+                    {session.user.email}
+                  </span>
+                </DropdownMenuLabel>
+              </DropdownMenuGroup>
+              <DropdownMenuSeparator />
+              <DropdownMenuGroup>
+                <DropdownMenuItem
+                  onClick={() =>
+                    router.push(
+                      (session.user.role === "admin" ?
+                        "/admin"
+                      : "/dashboard") as never,
+                    )
+                  }>
+                  {session.user.role === "admin" ?
+                    <ShieldIcon aria-hidden="true" />
+                  : <LayoutDashboardIcon aria-hidden="true" />}
+                  {session.user.role === "admin" ?
+                    "Admin Dashboard"
+                  : "Dashboard"}
+                </DropdownMenuItem>
+              </DropdownMenuGroup>
+              <DropdownMenuSeparator />
+              <DropdownMenuGroup>
+                <DropdownMenuItem
+                  onClick={async () => {
+                    try {
+                      await authClient.signOut();
+                    } catch {
+                      // ignore server unexpected response, still clear local state
+                    }
+                    clearCart();
+                    router.push("/");
+                    router.refresh();
+                  }}>
+                  <LogOutIcon aria-hidden="true" />
+                  Log out
+                </DropdownMenuItem>
+              </DropdownMenuGroup>
+            </DropdownMenuContent>
+          </DropdownMenu>
         : <Button
             render={<Link href="/auth/login" />}
             nativeButton={false}

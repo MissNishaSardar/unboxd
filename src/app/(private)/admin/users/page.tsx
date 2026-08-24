@@ -24,7 +24,7 @@ const AdminUsersPage = async ({
 }: {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) => {
-  await requireAdminPage();
+  const session = await requireAdminPage();
 
   const {
     search,
@@ -63,14 +63,20 @@ const AdminUsersPage = async ({
             </EmptyDescription>
           </EmptyHeader>
         </Empty>
-      : <UsersTable users={users} />}
+      : <UsersTable
+          users={users}
+          currentUserId={session.user.id}
+        />
+      }
 
       {users.length > 0 && (
-        <Pagination
-          currentPage={page}
-          totalPages={totalPages}
-          pathname="/admin/users"
-        />
+        <div className="flex justify-end">
+          <Pagination
+            currentPage={page}
+            totalPages={totalPages}
+            pathname="/admin/users"
+          />
+        </div>
       )}
     </div>
   );

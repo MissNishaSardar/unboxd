@@ -1,3 +1,4 @@
+import { APIError } from "better-auth/api";
 import { betterAuth } from "better-auth";
 import { prismaAdapter } from "better-auth/adapters/prisma";
 import { nextCookies } from "better-auth/next-js";
@@ -8,6 +9,30 @@ export const auth = betterAuth({
   database: prismaAdapter(prisma, { provider: "sqlite" }),
   emailAndPassword: {
     enabled: true,
+  },
+  user: {
+    additionalFields: {
+      deletedAt: {
+        type: "date",
+        required: false,
+        input: false,
+      },
+    },
+  },
+  databaseHooks: {
+    session: {
+      create: {
+        before: async (session) => {
+          const user = await prisma.user.findUnique({
+            where: { id: session.userId },
+            select: { deletedAt: true },
+          });
+          if (user?.deletedAt) {
+            throw new APIError("FORBIDDEN", { message: "Account deactivated" });
+          }
+        },
+      },
+    },
   },
   plugins: [
     admin({

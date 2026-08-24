@@ -27,10 +27,27 @@ const Pagination = ({
 
   if (totalPages <= 1) return null;
 
-  const pages: number[] = [];
+  const pages: (number | string)[] = [];
   const start = Math.max(1, currentPage - 2);
   const end = Math.min(totalPages, currentPage + 2);
-  for (let page = start; page <= end; page++) pages.push(page);
+  if (totalPages <= 7) {
+    for (let page = 1; page <= totalPages; page++) pages.push(page);
+  } else {
+    for (let page = start; page <= end; page++) pages.push(page);
+    // Add first page and ellipsis if needed
+    if (start > 1) {
+      if (start > 2) {
+        pages.unshift("ellipsis-start");
+      }
+      pages.unshift(1);
+    }
+    if (end < totalPages) {
+      if (end < totalPages - 1) {
+        pages.push("ellipsis-end");
+      }
+      pages.push(totalPages);
+    }
+  }
 
   return (
     <nav
@@ -45,18 +62,25 @@ const Pagination = ({
         aria-label="Previous page">
         Prev
       </Button>
-      {pages.map((page) => (
-        <Button
-          key={page}
-          render={<Link href={buildHref(page)} />}
-          nativeButton={false}
-          variant={page === currentPage ? "default" : "outline"}
-          size="sm"
-          className={cn(page === currentPage && "pointer-events-none")}
-          aria-current={page === currentPage ? "page" : undefined}>
-          {page}
-        </Button>
-      ))}
+      {pages.map((page) =>
+        typeof page === "string" ?
+          <span
+            key={page}
+            className="text-muted-foreground px-1 text-sm"
+            aria-hidden="true">
+            ...
+          </span>
+        : <Button
+            key={page}
+            render={<Link href={buildHref(page)} />}
+            nativeButton={false}
+            variant={page === currentPage ? "default" : "outline"}
+            size="sm"
+            className={cn(page === currentPage && "pointer-events-none")}
+            aria-current={page === currentPage ? "page" : undefined}>
+            {page}
+          </Button>,
+      )}
       <Button
         render={<Link href={buildHref(currentPage + 1)} />}
         nativeButton={false}

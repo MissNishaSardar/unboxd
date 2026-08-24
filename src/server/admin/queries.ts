@@ -1,6 +1,4 @@
-import { headers } from "next/headers";
 import prisma from "@/lib/dbClient/prisma";
-import { auth } from "@/lib/auth";
 import { adminProductListSearchParamsType } from "@/lib/zodSchema";
 import { startOfWeek } from "date-fns";
 
@@ -222,42 +220,51 @@ export async function getAdminUsers(params: {
   const limit = ADMIN_USERS_PER_PAGE;
   const offset = (page - 1) * limit;
 
-  const result = await auth.api.listUsers({
-    query: {
-      limit,
-      offset,
-      sortBy: "createdAt",
-      sortDirection: "desc",
-      ...(search ?
-        {
-          searchValue: search,
-          searchField: "name" as const,
-          searchOperator: "contains" as const,
-        }
-      : {}),
-      ...(role !== "all" ?
-        {
-          filterField: "role",
-          filterValue: role,
-          filterOperator: "eq" as const,
-        }
-      : {}),
-    },
-    headers: await headers(),
-  });
+  const where: Record<string, unknown> = {
+    deletedAt: null,
+    ...(search ?
+      {
+        OR: [{ name: { contains: search } }, { email: { contains: search } }],
+      }
+    : {}),
+    ...(role !== "all" ? { role } : {}),
+  };
+
+  const [users, total] = await Promise.all([
+    prisma.user.findMany({
+      where: where as never,
+      orderBy: { createdAt: "desc" },
+      skip: offset,
+      take: limit,
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        role: true,
+        banned: true,
+        banReason: true,
+        banExpires: true,
+        deletedAt: true,
+        createdAt: true,
+      },
+    }),
+    prisma.user.count({ where: where as never }),
+  ]);
 
   return {
-    users: result.users.map((user) => ({
+    users: users.map((user) => ({
       id: user.id,
       name: user.name,
       email: user.email,
       role: user.role ?? "user",
       banned: user.banned ?? false,
       banReason: user.banReason ?? null,
+      banExpires: user.banExpires ? user.banExpires.toISOString() : null,
+      deletedAt: user.deletedAt ? user.deletedAt.toISOString() : null,
       createdAt: user.createdAt.toISOString(),
     })),
-    total: result.total,
+    total,
     page,
-    totalPages: Math.max(1, Math.ceil(result.total / limit)),
+    totalPages: Math.max(1, Math.ceil(total / limit)),
   };
 }

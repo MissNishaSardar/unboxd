@@ -8,6 +8,7 @@ import {
   LayoutDashboardIcon,
   PackageIcon,
   PackageOpenIcon,
+  SettingsIcon,
   UsersIcon,
 } from "lucide-react";
 import {
@@ -38,6 +39,7 @@ const ADMIN_NAV = [
     icon: FolderTreeIcon,
   },
   { href: "/admin/users" as const, label: "Users", icon: UsersIcon },
+  { href: "/admin/settings" as const, label: "Settings", icon: SettingsIcon },
 ] as const;
 
 const AdminSidebar = () => {

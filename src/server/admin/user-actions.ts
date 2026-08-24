@@ -6,7 +6,7 @@ import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 import prisma from "@/lib/dbClient/prisma";
 import { requireAdmin } from "@/lib/guard";
-import { userRoleSchema } from "@/lib/zodSchema";
+import { bulkUserIdsSchema, userRoleSchema } from "@/lib/zodSchema";
 
 export type AdminUserActionResult =
   | { ok: true }
@@ -17,15 +17,33 @@ export type AdminUserActionResult =
         | "INVALID_INPUT"
         | "NOT_FOUND"
         | "HAS_ORDERS"
+        | "SELF_ACTION"
+        | "LAST_ADMIN"
+        | "ALREADY_DEACTIVATED"
         | "SERVER_ERROR";
     };
+
+export type BulkUserActionResult =
+  | { ok: true; updated: number; skipped: number }
+  | { ok: false; error: "FORBIDDEN" | "INVALID_INPUT" | "SERVER_ERROR" };
+
+async function getActiveAdminCount(): Promise<number> {
+  return prisma.user.count({
+    where: { role: "admin", banned: false, deletedAt: null },
+  });
+}
+
+async function getAdminCount(): Promise<number> {
+  return prisma.user.count({ where: { role: "admin", deletedAt: null } });
+}
 
 export async function setUserRole(
   userId: string,
   role: unknown,
 ): Promise<AdminUserActionResult> {
+  let session;
   try {
-    await requireAdmin();
+    session = await requireAdmin();
   } catch {
     return { ok: false, error: "FORBIDDEN" };
   }
@@ -35,7 +53,28 @@ export async function setUserRole(
     return { ok: false, error: "INVALID_INPUT" };
   }
 
+  if (session.user.id === userId && parsed.data === "user") {
+    return { ok: false, error: "SELF_ACTION" };
+  }
+
   try {
+    const target = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { role: true, banned: true, deletedAt: true },
+    });
+    if (!target) return { ok: false, error: "NOT_FOUND" };
+    if (target.role === "admin" && parsed.data === "user") {
+      const activeCount = await getActiveAdminCount();
+      const isActiveAdmin = target.banned === false && target.deletedAt == null;
+      if (isActiveAdmin && activeCount <= 1) {
+        return { ok: false, error: "LAST_ADMIN" };
+      }
+      const totalCount = await getAdminCount();
+      if (!isActiveAdmin && totalCount <= 1) {
+        return { ok: false, error: "LAST_ADMIN" };
+      }
+    }
+
     await auth.api.setRole({
       body: { userId, role: parsed.data },
       headers: await headers(),
@@ -49,13 +88,26 @@ export async function setUserRole(
 }
 
 export async function banUser(userId: string): Promise<AdminUserActionResult> {
+  let session;
   try {
-    await requireAdmin();
+    session = await requireAdmin();
   } catch {
     return { ok: false, error: "FORBIDDEN" };
   }
+  if (session.user.id === userId) {
+    return { ok: false, error: "SELF_ACTION" };
+  }
 
   try {
+    const target = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { role: true, banned: true, deletedAt: true },
+    });
+    if (!target) return { ok: false, error: "NOT_FOUND" };
+    if (target.role === "admin" && !target.banned && !target.deletedAt) {
+      const activeCount = await getActiveAdminCount();
+      if (activeCount <= 1) return { ok: false, error: "LAST_ADMIN" };
+    }
     await auth.api.banUser({ body: { userId }, headers: await headers() });
     revalidatePath("/admin/users", "page");
     return { ok: true };
@@ -84,7 +136,51 @@ export async function unbanUser(
   }
 }
 
-export async function removeUser(
+export async function deactivateUser(
+  userId: string,
+): Promise<AdminUserActionResult> {
+  let session;
+  try {
+    session = await requireAdmin();
+  } catch {
+    return { ok: false, error: "FORBIDDEN" };
+  }
+  if (session.user.id === userId) {
+    return { ok: false, error: "SELF_ACTION" };
+  }
+
+  try {
+    const target = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { role: true, deletedAt: true, banned: true },
+    });
+    if (!target) return { ok: false, error: "NOT_FOUND" };
+    if (target.deletedAt) return { ok: false, error: "ALREADY_DEACTIVATED" };
+    if (target.role === "admin") {
+      const isActive = !target.banned && !target.deletedAt;
+      if (isActive) {
+        const activeCount = await getActiveAdminCount();
+        if (activeCount <= 1) return { ok: false, error: "LAST_ADMIN" };
+      } else {
+        const totalCount = await getAdminCount();
+        if (totalCount <= 1) return { ok: false, error: "LAST_ADMIN" };
+      }
+    }
+
+    await prisma.user.update({
+      where: { id: userId },
+      data: { deletedAt: new Date() },
+    });
+    await prisma.session.deleteMany({ where: { userId } });
+    revalidatePath("/admin/users", "page");
+    return { ok: true };
+  } catch (e) {
+    console.error("deactivateUser failed", e);
+    return { ok: false, error: "SERVER_ERROR" };
+  }
+}
+
+export async function reactivateUser(
   userId: string,
 ): Promise<AdminUserActionResult> {
   try {
@@ -94,17 +190,29 @@ export async function removeUser(
   }
 
   try {
-    const orderCount = await prisma.order.count({ where: { userId } });
-    if (orderCount > 0) {
-      return { ok: false, error: "HAS_ORDERS" };
-    }
-    await auth.api.removeUser({ body: { userId }, headers: await headers() });
+    const target = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { deletedAt: true },
+    });
+    if (!target) return { ok: false, error: "NOT_FOUND" };
+    if (!target.deletedAt) return { ok: false, error: "INVALID_INPUT" };
+    await prisma.user.update({
+      where: { id: userId },
+      data: { deletedAt: null },
+    });
     revalidatePath("/admin/users", "page");
     return { ok: true };
   } catch (e) {
-    console.error("removeUser failed", e);
+    console.error("reactivateUser failed", e);
     return { ok: false, error: "SERVER_ERROR" };
   }
+}
+
+export async function removeUser(
+  userId: string,
+): Promise<AdminUserActionResult> {
+  // Soft-delete alias: never hard-delete, use deactivate
+  return deactivateUser(userId);
 }
 
 export async function impersonateUser(
@@ -138,4 +246,135 @@ export async function stopImpersonating(): Promise<AdminUserActionResult> {
   }
 
   redirect("/");
+}
+
+export async function bulkBanUsers(
+  input: unknown,
+): Promise<BulkUserActionResult> {
+  let session;
+  try {
+    session = await requireAdmin();
+  } catch {
+    return { ok: false, error: "FORBIDDEN" };
+  }
+  const parsed = bulkUserIdsSchema.safeParse(input);
+  if (!parsed.success) return { ok: false, error: "INVALID_INPUT" };
+  const userIds = [...new Set(parsed.data.userIds)];
+
+  let updated = 0;
+  let skipped = 0;
+  for (const userId of userIds) {
+    if (userId === session.user.id) {
+      skipped += 1;
+      continue;
+    }
+    const target = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { role: true, banned: true, deletedAt: true },
+    });
+    if (!target || target.banned) {
+      skipped += 1;
+      continue;
+    }
+    if (target.role === "admin" && !target.deletedAt) {
+      const activeCount = await getActiveAdminCount();
+      if (activeCount <= 1) {
+        skipped += 1;
+        continue;
+      }
+    }
+    try {
+      await auth.api.banUser({ body: { userId }, headers: await headers() });
+      updated += 1;
+    } catch {
+      skipped += 1;
+    }
+  }
+  revalidatePath("/admin/users", "page");
+  return { ok: true, updated, skipped };
+}
+
+export async function bulkDeactivateUsers(
+  input: unknown,
+): Promise<BulkUserActionResult> {
+  let session;
+  try {
+    session = await requireAdmin();
+  } catch {
+    return { ok: false, error: "FORBIDDEN" };
+  }
+  const parsed = bulkUserIdsSchema.safeParse(input);
+  if (!parsed.success) return { ok: false, error: "INVALID_INPUT" };
+  const userIds = [...new Set(parsed.data.userIds)];
+
+  let updated = 0;
+  let skipped = 0;
+  for (const userId of userIds) {
+    if (userId === session.user.id) {
+      skipped += 1;
+      continue;
+    }
+    const target = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { role: true, banned: true, deletedAt: true },
+    });
+    if (!target || target.deletedAt) {
+      skipped += 1;
+      continue;
+    }
+    if (target.role === "admin") {
+      const isActive = !target.banned && !target.deletedAt;
+      const count =
+        isActive ? await getActiveAdminCount() : await getAdminCount();
+      if (count <= 1) {
+        skipped += 1;
+        continue;
+      }
+    }
+    try {
+      await prisma.user.update({
+        where: { id: userId },
+        data: { deletedAt: new Date() },
+      });
+      await prisma.session.deleteMany({ where: { userId } });
+      updated += 1;
+    } catch {
+      skipped += 1;
+    }
+  }
+  revalidatePath("/admin/users", "page");
+  return { ok: true, updated, skipped };
+}
+
+export async function bulkUnbanUsers(
+  input: unknown,
+): Promise<BulkUserActionResult> {
+  try {
+    await requireAdmin();
+  } catch {
+    return { ok: false, error: "FORBIDDEN" };
+  }
+  const parsed = bulkUserIdsSchema.safeParse(input);
+  if (!parsed.success) return { ok: false, error: "INVALID_INPUT" };
+  const userIds = [...new Set(parsed.data.userIds)];
+  let updated = 0;
+  let skipped = 0;
+  for (const userId of userIds) {
+    const target = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { banned: true },
+    });
+    if (!target || !target.banned) {
+      skipped += 1;
+      continue;
+    }
+    try {
+      await auth.api.unbanUser({ body: { userId }, headers: await headers() });
+      updated += 1;
+    } catch {
+      skipped += 1;
+    }
+  }
+  revalidatePath("/admin/users", "page");
+  return { ok: true, updated, skipped };
 }

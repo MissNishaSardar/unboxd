@@ -238,6 +238,12 @@ export const userRoleSchema = z.enum(["admin", "user"]);
 
 export type userRoleType = z.infer<typeof userRoleSchema>;
 
+export const bulkUserIdsSchema = z.object({
+  userIds: z.array(z.string().min(1)).min(1),
+});
+
+export type bulkUserIdsType = z.infer<typeof bulkUserIdsSchema>;
+
 export const adminUserListSearchParamsSchema = z.object({
   search: queryString(z.string().min(1).max(100)).optional(),
   role: z.enum(["all", "admin", "user"]).catch("all"),

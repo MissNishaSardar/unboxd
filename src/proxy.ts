@@ -37,7 +37,11 @@ export async function proxy(request: NextRequest) {
       loginUrl.searchParams.set("callbackUrl", pathname);
       return NextResponse.redirect(loginUrl);
     }
-    if (session.user.role !== "admin") {
+    if (
+      session.user.role !== "admin" ||
+      (session.user as unknown as { deletedAt?: unknown }).deletedAt ||
+      (session.user as unknown as { banned?: unknown }).banned
+    ) {
       return NextResponse.redirect(new URL("/forbidden", request.url));
     }
     return withShell(request, "admin");

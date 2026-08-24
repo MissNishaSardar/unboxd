@@ -22,12 +22,7 @@ import { Separator } from "@/components/shadcnui/separator";
 import { SidebarTrigger } from "@/components/shadcnui/sidebar";
 import { authClient } from "@/lib/auth-client";
 import { clearCart } from "@/lib/cart/atoms";
-import {
-  LayoutDashboardIcon,
-  LogOutIcon,
-  StoreIcon,
-  UserRoundIcon,
-} from "lucide-react";
+import { LogOutIcon, StoreIcon, UserRoundIcon } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
@@ -149,11 +144,6 @@ const AdminHeader = () => {
               </DropdownMenuGroup>
               <DropdownMenuSeparator />
               <DropdownMenuGroup>
-                <DropdownMenuItem
-                  onClick={() => router.push("/admin" as never)}>
-                  <LayoutDashboardIcon aria-hidden="true" />
-                  Dashboard
-                </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => router.push("/" as never)}>
                   <StoreIcon aria-hidden="true" />
                   Storefront
