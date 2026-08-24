@@ -9,7 +9,17 @@ export const metadata: Metadata = {
 };
 import prisma from "@/lib/dbClient/prisma";
 import { formatDate } from "@/lib/format";
-import SettingsTabs from "@/components/Settings/SettingsTabs";
+import AccountDetails from "@/components/Settings/AccountDetails";
+import ChangePasswordForm from "@/components/Settings/ChangePasswordForm";
+import DangerZone from "@/components/Settings/DangerZone";
+import ProfileHero from "@/components/Settings/ProfileHero";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/shadcnui/card";
 
 const SettingsPage = async () => {
   const session = await auth.api.getSession({
@@ -23,6 +33,7 @@ const SettingsPage = async () => {
       name: true,
       email: true,
       image: true,
+      bio: true,
       role: true,
       banned: true,
       emailVerified: true,
@@ -38,6 +49,9 @@ const SettingsPage = async () => {
     .map((part) => part[0]?.toUpperCase() ?? "")
     .join("");
 
+  const memberSince = formatDate(user.createdAt);
+  const isAdmin = user.role === "admin";
+
   return (
     <div className="mx-auto flex max-w-3xl flex-col gap-6">
       <div>
@@ -48,16 +62,37 @@ const SettingsPage = async () => {
           Manage your profile and account
         </p>
       </div>
-      <SettingsTabs
-        defaultName={user.name}
-        defaultImage={user.image ?? null}
-        email={user.email}
-        emailVerified={user.emailVerified}
-        role={user.role}
-        banned={user.banned}
-        memberSince={formatDate(user.createdAt)}
+
+      {/* 1. Hero Profile Section — avatar + name + bio */}
+      <ProfileHero
+        name={user.name}
+        image={user.image ?? null}
         initials={initials}
+        bio={user.bio ?? null}
       />
+
+      {/* 2. Account Details — read-only grid: email (full-width) + role/memberSince */}
+      <AccountDetails
+        email={user.email}
+        role={user.role}
+        memberSince={memberSince}
+        emailVerified={user.emailVerified}
+        banned={user.banned}
+      />
+
+      {/* Security — always visible (was Security tab) */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Security</CardTitle>
+          <CardDescription>Reset your password</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <ChangePasswordForm />
+        </CardContent>
+      </Card>
+
+      {/* 3. Danger Zone — hidden for admins, red for regular users */}
+      {!isAdmin && <DangerZone />}
     </div>
   );
 };

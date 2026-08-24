@@ -261,6 +261,12 @@ export const profileUpdateSchema = z.object({
     .min(2, { error: "Name must be at least 2 characters" })
     .max(80, { error: "Name must be at most 80 characters" }),
   image: z.string().trim().nullable().optional(),
+  bio: z
+    .string()
+    .trim()
+    .max(160, { error: "Bio must be at most 160 characters" })
+    .optional()
+    .or(z.literal("")),
 });
 
 export type profileUpdateType = z.infer<typeof profileUpdateSchema>;

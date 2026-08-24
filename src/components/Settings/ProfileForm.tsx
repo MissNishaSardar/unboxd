@@ -16,22 +16,34 @@ import {
   FieldLabel,
 } from "@/components/shadcnui/field";
 import { Input } from "@/components/shadcnui/input";
+import { Textarea } from "@/components/shadcnui/textarea";
 import { toast } from "@/components/shadcnui/toast";
 
 type ProfileFormProps = {
   defaultName: string;
   defaultImage: string | null;
+  defaultBio?: string | null;
 };
 
-const ProfileForm = ({ defaultName, defaultImage }: ProfileFormProps) => {
+const ProfileForm = ({
+  defaultName,
+  defaultImage,
+  defaultBio,
+}: ProfileFormProps) => {
   const router = useRouter();
 
-  const { handleSubmit, control, formState, reset } =
+  const { handleSubmit, control, formState, reset, watch } =
     useForm<profileUpdateType>({
       resolver: zodResolver(profileUpdateSchema),
-      defaultValues: { name: defaultName, image: defaultImage ?? null },
+      defaultValues: {
+        name: defaultName,
+        image: defaultImage ?? null,
+        bio: defaultBio ?? "",
+      },
       mode: "all",
     });
+
+  const bio = watch("bio");
 
   const onSubmit = async (values: profileUpdateType) => {
     const prevImage = defaultImage;
@@ -39,7 +51,8 @@ const ProfileForm = ({ defaultName, defaultImage }: ProfileFormProps) => {
     const { error } = await authClient.updateUser({
       name: values.name,
       image: (nextImage ?? null) as string | null,
-    });
+      bio: (values.bio?.trim() || null) as string | null,
+    } as unknown as Parameters<typeof authClient.updateUser>[0]);
 
     if (error) {
       toast.add({
@@ -62,6 +75,7 @@ const ProfileForm = ({ defaultName, defaultImage }: ProfileFormProps) => {
       void deleteAvatarFile(prevImage);
     }
     reset(values);
+    router.push("/settings" as never);
     router.refresh();
   };
 
@@ -103,6 +117,33 @@ const ProfileForm = ({ defaultName, defaultImage }: ProfileFormProps) => {
                 aria-invalid={fieldState.invalid}
               />
               {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+            </Field>
+          )}
+        />
+        <Controller
+          name="bio"
+          control={control}
+          render={({ field, fieldState }) => (
+            <Field data-invalid={fieldState.invalid}>
+              <div className="flex items-center justify-between gap-2">
+                <FieldLabel htmlFor={field.name}>Bio</FieldLabel>
+                <span className="text-muted-foreground text-xs tabular-nums">
+                  {(bio ?? "").length}/160
+                </span>
+              </div>
+              <Textarea
+                {...field}
+                id={field.name}
+                value={field.value ?? ""}
+                placeholder="Tell us a bit about yourself"
+                rows={3}
+                maxLength={160}
+                aria-invalid={fieldState.invalid}
+              />
+              {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+              <p className="text-muted-foreground text-xs">
+                Short intro shown on your profile hero. Max 160 characters.
+              </p>
             </Field>
           )}
         />

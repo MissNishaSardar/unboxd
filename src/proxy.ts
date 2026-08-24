@@ -68,6 +68,7 @@ export const config = {
     "/checkout",
     "/orders/:path*",
     "/settings",
+    "/settings/:path*",
     "/cart",
     "/wishlist",
     "/admin",

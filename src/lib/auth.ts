@@ -12,6 +12,11 @@ export const auth = betterAuth({
   },
   user: {
     additionalFields: {
+      bio: {
+        type: "string",
+        required: false,
+        input: true,
+      },
       deletedAt: {
         type: "date",
         required: false,

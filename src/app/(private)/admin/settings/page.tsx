@@ -4,7 +4,16 @@ import { headers } from "next/headers";
 import { auth } from "@/lib/auth";
 import prisma from "@/lib/dbClient/prisma";
 import { formatDate } from "@/lib/format";
-import SettingsTabs from "@/components/Settings/SettingsTabs";
+import AccountDetails from "@/components/Settings/AccountDetails";
+import ChangePasswordForm from "@/components/Settings/ChangePasswordForm";
+import ProfileHero from "@/components/Settings/ProfileHero";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/shadcnui/card";
 
 export const metadata: Metadata = {
   title: "Settings",
@@ -23,6 +32,7 @@ const AdminSettingsPage = async () => {
       name: true,
       email: true,
       image: true,
+      bio: true,
       role: true,
       banned: true,
       emailVerified: true,
@@ -38,6 +48,8 @@ const AdminSettingsPage = async () => {
     .map((part) => part[0]?.toUpperCase() ?? "")
     .join("");
 
+  const memberSince = formatDate(user.createdAt);
+
   return (
     <div className="mx-auto flex max-w-3xl flex-col gap-6">
       <div>
@@ -48,16 +60,33 @@ const AdminSettingsPage = async () => {
           Manage your profile and account
         </p>
       </div>
-      <SettingsTabs
-        defaultName={user.name}
-        defaultImage={user.image ?? null}
-        email={user.email}
-        emailVerified={user.emailVerified}
-        role={user.role}
-        banned={user.banned}
-        memberSince={formatDate(user.createdAt)}
+
+      <ProfileHero
+        name={user.name}
+        image={user.image ?? null}
         initials={initials}
+        bio={user.bio ?? null}
       />
+
+      <AccountDetails
+        email={user.email}
+        role={user.role}
+        memberSince={memberSince}
+        emailVerified={user.emailVerified}
+        banned={user.banned}
+      />
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Security</CardTitle>
+          <CardDescription>Reset your password</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <ChangePasswordForm />
+        </CardContent>
+      </Card>
+
+      {/* Danger Zone hidden for admins */}
     </div>
   );
 };
