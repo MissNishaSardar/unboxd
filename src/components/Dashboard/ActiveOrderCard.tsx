@@ -24,7 +24,7 @@ const ActiveOrderCard = ({ order }: ActiveOrderCardProps) => {
   const eta = getEstimatedDelivery(order.createdAt);
 
   return (
-    <Card>
+    <Card className="border-border bg-card">
       <CardHeader>
         <CardTitle className="flex items-center justify-between gap-2">
           <span className="flex items-center gap-2">
@@ -40,7 +40,7 @@ const ActiveOrderCard = ({ order }: ActiveOrderCardProps) => {
       <CardContent>
         <OrderTimeline status={order.status} />
         {showEta && (
-          <div className="flex items-center gap-2 border-t pt-3">
+          <div className="border-border flex items-center gap-2 border-t pt-3">
             <CalendarClockIcon
               aria-hidden="true"
               className="text-muted-foreground size-4"

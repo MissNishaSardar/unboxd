@@ -20,7 +20,7 @@ const CartItemRow = ({ item, size = "md", onNavigate }: CartItemRowProps) => {
   return (
     <div className="flex gap-4 py-4">
       <div
-        className={`relative ${imageSize} shrink-0 overflow-hidden rounded-lg bg-zinc-900`}>
+        className={`relative ${imageSize} bg-muted shrink-0 overflow-hidden rounded-lg`}>
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src={item.image}

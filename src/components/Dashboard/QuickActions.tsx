@@ -65,7 +65,7 @@ const QuickActions = ({
           key={section.title}
           href={section.href}
           className="focus-visible:ring-ring/50 block rounded-xl transition-opacity hover:opacity-80 focus-visible:ring-3 focus-visible:outline-none">
-          <Card className="h-full transition-colors hover:border-zinc-700">
+          <Card className="border-border bg-card hover:border-border h-full transition-colors">
             <CardHeader>
               <div className="flex items-start justify-between gap-2">
                 <CardTitle>{section.title}</CardTitle>

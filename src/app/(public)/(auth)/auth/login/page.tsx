@@ -37,7 +37,7 @@ const LoginPage = async ({
 
   return (
     <div className="flex min-h-svh items-center justify-center px-4 py-12">
-      <Card className="w-full max-w-md">
+      <Card className="border-border bg-card w-full max-w-md">
         <CardHeader className="items-center justify-items-center text-center">
           <CardTitle className="text-lg">Sign in</CardTitle>
           <CardDescription>Welcome back to Unboxd.</CardDescription>

@@ -148,7 +148,7 @@ const AdminOrderDetailPage = async ({
                   <TableCell className="font-medium">
                     <div className="flex items-center gap-3">
                       {item.imageUrl && (
-                        <div className="size-10 shrink-0 overflow-hidden rounded-md bg-zinc-900">
+                        <div className="bg-muted size-10 shrink-0 overflow-hidden rounded-md">
                           {/* eslint-disable-next-line @next/next/no-img-element */}
                           <img
                             src={item.imageUrl}

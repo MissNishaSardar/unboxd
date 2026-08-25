@@ -127,7 +127,7 @@ const CheckoutClient = () => {
           onSubmit={handleSubmit(onSubmit)}
           noValidate
           className="flex flex-col gap-8 lg:flex-row lg:items-start">
-          <div className="flex min-w-0 flex-1 flex-col gap-4 rounded-2xl border border-zinc-800 bg-zinc-950 p-5">
+          <div className="border-border bg-card flex min-w-0 flex-1 flex-col gap-4 rounded-2xl border p-5">
             <div className="flex items-center justify-between">
               <h2 className="font-heading text-sm font-semibold">
                 Shipping address
@@ -244,7 +244,7 @@ const CheckoutClient = () => {
             </FieldGroup>
           </div>
 
-          <aside className="flex w-full flex-col gap-4 rounded-2xl border border-zinc-800 bg-zinc-950 p-5 lg:sticky lg:top-24 lg:w-80">
+          <aside className="border-border bg-card flex w-full flex-col gap-4 rounded-2xl border p-5 lg:sticky lg:top-24 lg:w-80">
             <h2 className="font-heading text-sm font-semibold">
               Order summary
             </h2>
@@ -255,7 +255,7 @@ const CheckoutClient = () => {
                   key={`${item.productId}-${item.sku}`}
                   className="flex items-start justify-between gap-3">
                   <div className="flex min-w-0 items-start gap-3">
-                    <div className="size-10 shrink-0 overflow-hidden rounded-md bg-zinc-900">
+                    <div className="bg-muted size-10 shrink-0 overflow-hidden rounded-md">
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img
                         src={item.image}

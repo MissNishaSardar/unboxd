@@ -76,7 +76,7 @@ const AdminSettingsPage = async () => {
         banned={user.banned}
       />
 
-      <Card>
+      <Card className="border-border bg-card">
         <CardHeader>
           <CardTitle>Security</CardTitle>
           <CardDescription>Reset your password</CardDescription>

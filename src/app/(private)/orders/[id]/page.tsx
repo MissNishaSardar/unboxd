@@ -81,7 +81,7 @@ const OrderPage = async ({ params }: Props) => {
         </div>
       </div>
 
-      <div className="flex flex-col gap-4 rounded-2xl border border-zinc-800 bg-zinc-950 p-5">
+      <div className="border-border bg-card flex flex-col gap-4 rounded-2xl border p-5">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <PackageIcon
@@ -94,7 +94,7 @@ const OrderPage = async ({ params }: Props) => {
         </div>
         <OrderTimeline status={order.status} />
         {showEta && (
-          <div className="flex items-center gap-2 border-t border-zinc-800 pt-4">
+          <div className="border-border flex items-center gap-2 border-t pt-4">
             <CalendarClockIcon
               aria-hidden="true"
               className="text-muted-foreground size-4"
@@ -113,18 +113,18 @@ const OrderPage = async ({ params }: Props) => {
         </div>
       </div>
 
-      <div className="flex flex-col gap-4 rounded-2xl border border-zinc-800 bg-zinc-950 p-5">
+      <div className="border-border bg-card flex flex-col gap-4 rounded-2xl border p-5">
         <div className="flex items-center justify-between">
           <h2 className="font-heading text-sm font-semibold">Items</h2>
           <Badge variant="secondary">{order.paymentMethod}</Badge>
         </div>
-        <ul className="flex flex-col divide-y divide-zinc-800">
+        <ul className="divide-border flex flex-col divide-y">
           {order.items.map((item) => (
             <li
               key={item.id}
               className="flex items-start justify-between gap-3 py-3">
               <div className="flex min-w-0 items-start gap-3">
-                <div className="size-10 shrink-0 overflow-hidden rounded-md bg-zinc-900">
+                <div className="bg-muted size-10 shrink-0 overflow-hidden rounded-md">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={imageByProductId.get(item.productId) ?? undefined}
@@ -150,7 +150,7 @@ const OrderPage = async ({ params }: Props) => {
       </div>
 
       {order.address && (
-        <div className="flex flex-col gap-2 rounded-2xl border border-zinc-800 bg-zinc-950 p-5">
+        <div className="border-border bg-card flex flex-col gap-2 rounded-2xl border p-5">
           <h2 className="font-heading text-sm font-semibold">
             Delivery address
           </h2>
@@ -165,7 +165,7 @@ const OrderPage = async ({ params }: Props) => {
         </div>
       )}
 
-      <div className="flex flex-col gap-3 rounded-2xl border border-zinc-800 bg-zinc-950 p-5">
+      <div className="border-border bg-card flex flex-col gap-3 rounded-2xl border p-5">
         <div className="flex items-center justify-between">
           <span className="text-muted-foreground text-sm">Subtotal</span>
           <span className="text-sm tabular-nums">
@@ -180,7 +180,7 @@ const OrderPage = async ({ params }: Props) => {
             : formatPrice(order.shipping)}
           </span>
         </div>
-        <div className="flex items-center justify-between border-t border-zinc-800 pt-3">
+        <div className="border-border flex items-center justify-between border-t pt-3">
           <span className="text-sm font-medium">Total</span>
           <span className="text-lg font-semibold tabular-nums">
             {formatPrice(order.total)}

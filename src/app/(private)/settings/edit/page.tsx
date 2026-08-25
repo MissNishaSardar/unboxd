@@ -55,7 +55,7 @@ const EditProfilePage = async () => {
         </p>
       </div>
 
-      <Card>
+      <Card className="border-border bg-card">
         <CardHeader>
           <CardTitle>Profile</CardTitle>
           <CardDescription>

@@ -19,7 +19,7 @@ const RecentOrders = ({ orders }: RecentOrdersProps) => {
           <li key={order.id}>
             <Link
               href={`/orders/${order.id}`}
-              className="flex items-center justify-between gap-4 rounded-2xl border border-zinc-800 bg-zinc-950 p-4 transition-colors hover:bg-zinc-900">
+              className="border-border bg-card hover:bg-muted flex items-center justify-between gap-4 rounded-2xl border p-4 transition-colors">
               <div className="min-w-0">
                 <p className="truncate text-sm font-medium">Order {order.id}</p>
                 <p className="text-muted-foreground text-xs">

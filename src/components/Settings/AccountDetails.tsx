@@ -24,7 +24,7 @@ const AccountDetails = ({
   banned,
 }: AccountDetailsProps) => {
   return (
-    <Card>
+    <Card className="border-border bg-card">
       <CardHeader>
         <CardTitle>Account Details</CardTitle>
         <CardDescription>Read-only account information</CardDescription>
@@ -74,7 +74,7 @@ const AccountDetails = ({
           </div>
 
           {/* Member since */}
-          <div className="bg-muted/20 flex flex-col gap-1 p-4 md:rounded-lg md:border">
+          <div className="bg-muted/20 border-border flex flex-col gap-1 p-4 md:rounded-lg md:border">
             <span className="text-muted-foreground flex items-center gap-1.5 text-xs font-medium tracking-wide uppercase">
               <CalendarIcon
                 className="size-3.5"

@@ -81,7 +81,7 @@ const SettingsPage = async () => {
       />
 
       {/* Security — always visible (was Security tab) */}
-      <Card>
+      <Card className="border-border bg-card">
         <CardHeader>
           <CardTitle>Security</CardTitle>
           <CardDescription>Reset your password</CardDescription>

@@ -84,7 +84,7 @@ const CartClient = () => {
           </div>
         </Empty>
       : <div className="flex flex-col gap-8 lg:flex-row lg:items-start">
-          <div className="flex min-w-0 flex-1 flex-col rounded-2xl border border-zinc-800 bg-zinc-950">
+          <div className="border-border bg-card flex min-w-0 flex-1 flex-col rounded-2xl border">
             <div className="flex items-center justify-between px-5 pt-4">
               <h2 className="font-heading text-sm font-semibold">
                 Items ({items.length})
@@ -100,7 +100,7 @@ const CartClient = () => {
                 </Button>
               )}
             </div>
-            <ul className="flex flex-col divide-y divide-zinc-800 px-5">
+            <ul className="divide-border flex flex-col divide-y px-5">
               <AnimatePresence initial={false}>
                 {items.map((item) => (
                   <motion.li
@@ -132,7 +132,7 @@ const CartClient = () => {
             </div>
           </div>
 
-          <aside className="flex w-full flex-col gap-4 rounded-2xl border border-zinc-800 bg-zinc-950 p-5 lg:sticky lg:top-24 lg:w-80">
+          <aside className="border-border bg-card flex w-full flex-col gap-4 rounded-2xl border p-5 lg:sticky lg:top-24 lg:w-80">
             <h2 className="font-heading text-sm font-semibold">
               Order summary
             </h2>
@@ -153,7 +153,7 @@ const CartClient = () => {
             </div>
 
             <div className="flex flex-col gap-2">
-              <div className="h-1.5 overflow-hidden rounded-full bg-zinc-900">
+              <div className="bg-muted h-1.5 overflow-hidden rounded-full">
                 <div
                   className="bg-primary h-full rounded-full transition-all"
                   style={{ width: `${progress * 100}%` }}

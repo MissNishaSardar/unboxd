@@ -12,11 +12,13 @@ type ProfileHeroProps = {
 
 const ProfileHero = ({ name, image, initials, bio }: ProfileHeroProps) => {
   return (
-    <Card>
+    <Card
+      withGradient
+      className="border-border bg-card">
       <CardContent className="p-6">
         <div className="flex items-center gap-4">
           {/* Avatar — clean, no banner overlap */}
-          <div className="bg-muted flex size-20 shrink-0 items-center justify-center overflow-hidden rounded-full border shadow-sm md:size-24">
+          <div className="bg-muted border-border flex size-20 shrink-0 items-center justify-center overflow-hidden rounded-full border shadow-sm md:size-24">
             {image ?
               // eslint-disable-next-line @next/next/no-img-element
               <img

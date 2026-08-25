@@ -35,7 +35,7 @@ const DashboardStats = ({
             key={stat.key}
             href="/orders"
             className="transition-opacity hover:opacity-80">
-            <Card>
+            <Card className="border-border bg-card">
               <CardContent className="flex items-center justify-between">
                 <div className="flex flex-col gap-1">
                   <p className="text-muted-foreground text-sm">{stat.label}</p>

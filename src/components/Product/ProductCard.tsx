@@ -71,12 +71,12 @@ const ProductCard = ({ product }: { product: ProductCardData }) => {
       whileHover={{ y: -4 }}
       transition={{ type: "spring", stiffness: 300, damping: 24 }}
       className="h-full">
-      <Card className="group relative flex h-full flex-col border border-zinc-800 ring-0 transition-colors hover:border-zinc-700">
+      <Card className="group relative flex h-full flex-col border border-transparent bg-transparent shadow-none ring-0 transition-colors hover:border-transparent">
         <Link
           href={`/products/${product.slug}`}
           className="focus-visible:ring-ring/50 block flex-1 rounded-xl outline-none focus-visible:ring-3">
           {image && (
-            <div className="relative aspect-square w-full overflow-hidden rounded-t-xl bg-zinc-900">
+            <div className="bg-muted relative aspect-square w-full overflow-hidden rounded-t-xl">
               <Image
                 src={image.url}
                 alt={image.alt ?? product.name}

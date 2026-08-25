@@ -22,7 +22,7 @@ import { Separator } from "@/components/shadcnui/separator";
 import { SidebarTrigger } from "@/components/shadcnui/sidebar";
 import { authClient } from "@/lib/auth-client";
 import { clearCart } from "@/lib/cart/atoms";
-import { LayoutDashboardIcon, LogOutIcon, ShieldIcon } from "lucide-react";
+import { LogOutIcon } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 
@@ -133,24 +133,6 @@ const PrivateHeader = () => {
                     {session.user.email}
                   </span>
                 </DropdownMenuLabel>
-              </DropdownMenuGroup>
-              <DropdownMenuSeparator />
-              <DropdownMenuGroup>
-                <DropdownMenuItem
-                  onClick={() =>
-                    router.push(
-                      (session.user.role === "admin" ?
-                        "/admin"
-                      : "/dashboard") as never,
-                    )
-                  }>
-                  {session.user.role === "admin" ?
-                    <ShieldIcon aria-hidden="true" />
-                  : <LayoutDashboardIcon aria-hidden="true" />}
-                  {session.user.role === "admin" ?
-                    "Admin Dashboard"
-                  : "Dashboard"}
-                </DropdownMenuItem>
               </DropdownMenuGroup>
               <DropdownMenuSeparator />
               <DropdownMenuGroup>
