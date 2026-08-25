@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
+import { requireAdminPage } from "@/lib/guard";
 
 export const metadata: Metadata = {
   title: "Admin Dashboard",
@@ -47,6 +48,7 @@ const SECTIONS = [
 ];
 
 const AdminPage = async () => {
+  await requireAdminPage();
   const session = await auth.api.getSession({ headers: await headers() });
 
   return (

@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
-import { redirect } from "next/navigation";
 import { headers } from "next/headers";
 import { auth } from "@/lib/auth";
 import prisma from "@/lib/dbClient/prisma";
 import { formatDate } from "@/lib/format";
+import { requireAdminPage } from "@/lib/guard";
 import AccountDetails from "@/components/Settings/AccountDetails";
 import ChangePasswordForm from "@/components/Settings/ChangePasswordForm";
 import ProfileHero from "@/components/Settings/ProfileHero";
@@ -21,13 +21,13 @@ export const metadata: Metadata = {
 };
 
 const AdminSettingsPage = async () => {
+  await requireAdminPage();
   const session = await auth.api.getSession({
     headers: await headers(),
   });
-  if (!session) redirect("/auth/login");
-
+  // requireAdminPage guarantees admin session exists
   const user = await prisma.user.findUnique({
-    where: { id: session.user.id },
+    where: { id: session!.user.id },
     select: {
       name: true,
       email: true,
@@ -39,16 +39,20 @@ const AdminSettingsPage = async () => {
       createdAt: true,
     },
   });
-  if (!user) redirect("/auth/login");
+  if (!user) {
+    // Should not happen for valid admin, but keep safe fallback
+    const { redirect } = await import("next/navigation");
+    redirect("/auth/login");
+  }
 
-  const initials = user.name
+  const initials = user!.name
     .trim()
     .split(/\s+/)
     .slice(0, 2)
     .map((part) => part[0]?.toUpperCase() ?? "")
     .join("");
 
-  const memberSince = formatDate(user.createdAt);
+  const memberSince = formatDate(user!.createdAt);
 
   return (
     <div className="mx-auto flex max-w-3xl flex-col gap-6">
@@ -62,18 +66,19 @@ const AdminSettingsPage = async () => {
       </div>
 
       <ProfileHero
-        name={user.name}
-        image={user.image ?? null}
+        name={user!.name}
+        image={user!.image ?? null}
         initials={initials}
-        bio={user.bio ?? null}
+        bio={user!.bio ?? null}
+        editHref="/admin/settings/edit"
       />
 
       <AccountDetails
-        email={user.email}
-        role={user.role}
+        email={user!.email}
+        role={user!.role}
         memberSince={memberSince}
-        emailVerified={user.emailVerified}
-        banned={user.banned}
+        emailVerified={user!.emailVerified}
+        banned={user!.banned}
       />
 
       <Card className="border-border bg-card">

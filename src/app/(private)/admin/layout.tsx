@@ -5,9 +5,11 @@ import AdminSidebar from "@/components/Layout/AdminSidebar";
 import { SidebarInset, SidebarProvider } from "@/components/shadcnui/sidebar";
 import { TooltipProvider } from "@/components/shadcnui/tooltip";
 import { auth } from "@/lib/auth";
+import { requireAdminPage } from "@/lib/guard";
 import { LayoutProps } from "@/lib/types";
 
 const AdminLayout = async ({ children }: LayoutProps) => {
+  await requireAdminPage();
   const cookieStore = await cookies();
   const defaultOpen = cookieStore.get("sidebar_state")?.value !== "false";
 

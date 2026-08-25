@@ -23,12 +23,14 @@ type ProfileFormProps = {
   defaultName: string;
   defaultImage: string | null;
   defaultBio?: string | null;
+  redirectTo?: string;
 };
 
 const ProfileForm = ({
   defaultName,
   defaultImage,
   defaultBio,
+  redirectTo = "/settings",
 }: ProfileFormProps) => {
   const router = useRouter();
 
@@ -75,7 +77,7 @@ const ProfileForm = ({
       void deleteAvatarFile(prevImage);
     }
     reset(values);
-    router.push("/settings" as never);
+    router.push(redirectTo as never);
     router.refresh();
   };
 

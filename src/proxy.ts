@@ -16,8 +16,11 @@ const AUTH = ["/auth"];
 function withShell(request: NextRequest, shell: string) {
   const requestHeaders = new Headers(request.headers);
   requestHeaders.set("x-route-shell", shell);
+  requestHeaders.set("x-pathname", request.nextUrl.pathname);
   return NextResponse.next({
-    request: new NextRequest(request.url, { headers: requestHeaders }),
+    request: {
+      headers: requestHeaders,
+    },
   });
 }
 
@@ -48,7 +51,13 @@ export async function proxy(request: NextRequest) {
   }
 
   if (!PROTECTED.some((p) => pathname.startsWith(p))) {
-    return NextResponse.next();
+    const requestHeaders = new Headers(request.headers);
+    requestHeaders.set("x-pathname", pathname);
+    return NextResponse.next({
+      request: {
+        headers: requestHeaders,
+      },
+    });
   }
 
   const sessionCookie = getSessionCookie(request);
@@ -59,7 +68,13 @@ export async function proxy(request: NextRequest) {
     return NextResponse.redirect(loginUrl);
   }
 
-  return NextResponse.next();
+  const requestHeaders = new Headers(request.headers);
+  requestHeaders.set("x-pathname", pathname);
+  return NextResponse.next({
+    request: {
+      headers: requestHeaders,
+    },
+  });
 }
 
 export const config = {

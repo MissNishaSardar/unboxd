@@ -11,8 +11,9 @@ import { LayoutProps } from "@/lib/types";
 const PrivateLayout = async ({ children }: LayoutProps) => {
   const headerList = await headers();
   const shell = headerList.get("x-route-shell");
+  const pathname = headerList.get("x-pathname") ?? "";
 
-  if (shell === "admin") {
+  if (shell === "admin" || pathname.startsWith("/admin")) {
     return <>{children}</>;
   }
 

@@ -8,9 +8,16 @@ type ProfileHeroProps = {
   image: string | null;
   initials: string;
   bio?: string | null;
+  editHref?: string;
 };
 
-const ProfileHero = ({ name, image, initials, bio }: ProfileHeroProps) => {
+const ProfileHero = ({
+  name,
+  image,
+  initials,
+  bio,
+  editHref = "/settings/edit",
+}: ProfileHeroProps) => {
   return (
     <Card
       withGradient
@@ -57,7 +64,7 @@ const ProfileHero = ({ name, image, initials, bio }: ProfileHeroProps) => {
             aria-label="Edit profile"
             render={
               <Link
-                href={"/settings/edit" as never}
+                href={editHref as never}
                 aria-label="Edit profile"
               />
             }
