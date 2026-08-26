@@ -37,12 +37,18 @@ const CategoryForm = ({
   initialData,
   categories,
   excludeIds,
+  onCreated,
+  onCancel,
+  hideCardWrapper = false,
 }: {
   mode: "create" | "edit";
   categoryId?: string;
   initialData?: { name: string; parentId: string | null };
   categories: { id: string; name: string }[];
   excludeIds?: string[];
+  onCreated?: (cat: { id: string; name: string }) => void;
+  onCancel?: () => void;
+  hideCardWrapper?: boolean;
 }) => {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -77,13 +83,99 @@ const CategoryForm = ({
         title: mode === "create" ? "Category created" : "Category updated",
         type: "success",
       });
-      router.replace("/admin/categories");
+      if (onCreated && mode === "create") {
+        onCreated({ id: result.id, name: data.name.trim() });
+      } else {
+        router.replace("/admin/categories");
+      }
     } else if (result.error === "INVALID_INPUT") {
       toast.add({ title: "Invalid category details", type: "error" });
     } else {
       toast.add({ title: "Something went wrong", type: "error" });
     }
   };
+
+  const formContent = (
+    <FieldGroup>
+      <Controller
+        name="name"
+        control={control}
+        render={({ field, fieldState }) => (
+          <Field data-invalid={fieldState.invalid}>
+            <FieldLabel htmlFor={field.name}>Name</FieldLabel>
+            <Input
+              {...field}
+              id={field.name}
+              aria-invalid={fieldState.invalid}
+            />
+            {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+          </Field>
+        )}
+      />
+
+      <Controller
+        name="parentId"
+        control={control}
+        render={({ field }) => (
+          <Field>
+            <FieldLabel>Parent category</FieldLabel>
+            <Select
+              value={field.value ?? ""}
+              onValueChange={(value) => field.onChange(value ?? "")}
+              items={parentOptions.map((category) => ({
+                value: category.id,
+                label: category.name,
+              }))}>
+              <SelectTrigger id={field.name}>
+                <SelectValue placeholder="No parent" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="">No parent</SelectItem>
+                {parentOptions.map((category) => (
+                  <SelectItem
+                    key={category.id}
+                    value={category.id}>
+                    {category.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </Field>
+        )}
+      />
+    </FieldGroup>
+  );
+
+  const formActions = (
+    <>
+      <Button
+        type="button"
+        variant="ghost"
+        onClick={() => {
+          if (onCancel) onCancel();
+          else router.back();
+        }}>
+        Cancel
+      </Button>
+      <Button
+        type="submit"
+        disabled={isSubmitting || !isDirty || Object.keys(errors).length > 0}>
+        {mode === "create" ? "Create category" : "Save changes"}
+      </Button>
+    </>
+  );
+
+  if (hideCardWrapper) {
+    return (
+      <form
+        onSubmit={handleSubmit(onSubmit)}
+        noValidate
+        className="flex flex-col gap-4">
+        {formContent}
+        <div className="flex justify-end gap-2">{formActions}</div>
+      </form>
+    );
+  }
 
   return (
     <form
@@ -98,73 +190,8 @@ const CategoryForm = ({
             Categories can be nested under a parent category.
           </CardDescription>
         </CardHeader>
-        <CardContent>
-          <FieldGroup>
-            <Controller
-              name="name"
-              control={control}
-              render={({ field, fieldState }) => (
-                <Field data-invalid={fieldState.invalid}>
-                  <FieldLabel htmlFor={field.name}>Name</FieldLabel>
-                  <Input
-                    {...field}
-                    id={field.name}
-                    aria-invalid={fieldState.invalid}
-                  />
-                  {fieldState.invalid && (
-                    <FieldError errors={[fieldState.error]} />
-                  )}
-                </Field>
-              )}
-            />
-
-            <Controller
-              name="parentId"
-              control={control}
-              render={({ field }) => (
-                <Field>
-                  <FieldLabel>Parent category</FieldLabel>
-                  <Select
-                    value={field.value ?? ""}
-                    onValueChange={(value) => field.onChange(value ?? "")}
-                    items={parentOptions.map((category) => ({
-                      value: category.id,
-                      label: category.name,
-                    }))}>
-                    <SelectTrigger id={field.name}>
-                      <SelectValue placeholder="No parent" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="">No parent</SelectItem>
-                      {parentOptions.map((category) => (
-                        <SelectItem
-                          key={category.id}
-                          value={category.id}>
-                          {category.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </Field>
-              )}
-            />
-          </FieldGroup>
-        </CardContent>
-        <CardFooter className="justify-end gap-2">
-          <Button
-            type="button"
-            variant="ghost"
-            onClick={() => router.back()}>
-            Cancel
-          </Button>
-          <Button
-            type="submit"
-            disabled={
-              isSubmitting || !isDirty || Object.keys(errors).length > 0
-            }>
-            {mode === "create" ? "Create category" : "Save changes"}
-          </Button>
-        </CardFooter>
+        <CardContent>{formContent}</CardContent>
+        <CardFooter className="justify-end gap-2">{formActions}</CardFooter>
       </Card>
     </form>
   );

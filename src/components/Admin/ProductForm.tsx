@@ -58,6 +58,11 @@ const ProductForm = ({
 }: ProductFormProps) => {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState("details");
+  const [isFreePriceOpen, setIsFreePriceOpen] = useState(false);
+  const [pendingValues, setPendingValues] = useState<productFormType | null>(
+    null,
+  );
+  const [liveCategories, setLiveCategories] = useState(categories);
 
   const methods = useForm<productFormInputType, undefined, productFormType>({
     resolver: zodResolver(productFormSchema),
@@ -110,7 +115,24 @@ const ProductForm = ({
   const imagesErrorCount =
     Array.isArray(errors.images) ? errors.images.filter(Boolean).length : 0;
 
-  const onSubmit = async (values: productFormType) => {
+  const isDetails = activeTab === "details";
+  const isVariants = activeTab === "variants";
+  const isImages = activeTab === "images";
+
+  const goNext = () => setActiveTab(isDetails ? "variants" : "images");
+  const goBack = () => setActiveTab(isVariants ? "details" : "variants");
+
+  const handleCategoryCreated = (newCat: { id: string; name: string }) => {
+    setLiveCategories((prev) =>
+      [...prev, newCat].sort((a, b) => a.name.localeCompare(b.name)),
+    );
+    methods.setValue("categoryId", newCat.id, {
+      shouldDirty: true,
+      shouldValidate: true,
+    });
+  };
+
+  const doSubmit = async (values: productFormType) => {
     const result =
       mode === "create" ?
         await createProduct(values)
@@ -135,6 +157,27 @@ const ProductForm = ({
         : "Something went wrong",
       type: "error",
     });
+  };
+
+  const onSubmit = async (values: productFormType) => {
+    if (values.basePrice === 0) {
+      setPendingValues(values);
+      setIsFreePriceOpen(true);
+      return;
+    }
+    await doSubmit(values);
+  };
+
+  const confirmFreePrice = async () => {
+    if (!pendingValues) return;
+    setIsFreePriceOpen(false);
+    await doSubmit(pendingValues);
+    setPendingValues(null);
+  };
+
+  const cancelFreePrice = () => {
+    setIsFreePriceOpen(false);
+    setPendingValues(null);
   };
 
   return (
@@ -168,40 +211,68 @@ const ProductForm = ({
           </TabsList>
           <TabsContent value="details">
             <ProductDetailsFields
-              categories={categories}
-              onNext={() => setActiveTab("variants")}
+              categories={liveCategories}
+              onCategoryCreated={handleCategoryCreated}
             />
           </TabsContent>
           <TabsContent value="variants">
-            <ProductVariantsFields onNext={() => setActiveTab("images")} />
+            <ProductVariantsFields />
           </TabsContent>
           <TabsContent value="images">
             <ProductImagesFields />
           </TabsContent>
         </Tabs>
 
-        <div className="bg-background/95 sticky bottom-0 z-10 flex justify-end gap-2 border-t p-4 backdrop-blur">
-          <Button
-            type="button"
-            variant="outline"
-            disabled={isSubmitting}
-            onClick={() =>
-              guard(() => router.push("/admin/products" as Route))
-            }>
-            Cancel
-          </Button>
-          <Button
-            type="submit"
-            disabled={isSubmitting || (mode === "edit" && !isDirty)}>
-            {isSubmitting && (
-              <Loader2Icon
-                data-icon="inline-start"
-                className="animate-spin"
-                aria-hidden="true"
-              />
+        <div className="bg-background/95 sticky bottom-0 z-10 flex items-center justify-between gap-2 p-4 backdrop-blur">
+          <div>
+            {isDetails ?
+              <Button
+                type="button"
+                variant="outline"
+                disabled={isSubmitting}
+                onClick={() =>
+                  guard(() => router.push("/admin/products" as Route))
+                }>
+                Cancel
+              </Button>
+            : <Button
+                type="button"
+                variant="outline"
+                onClick={goBack}>
+                Back
+              </Button>
+            }
+          </div>
+          <div>
+            {isDetails && (
+              <Button
+                type="button"
+                onClick={goNext}>
+                Next: Variants
+              </Button>
             )}
-            {mode === "create" ? "Create product" : "Save changes"}
-          </Button>
+            {isVariants && (
+              <Button
+                type="button"
+                onClick={goNext}>
+                Next: Images
+              </Button>
+            )}
+            {isImages && (
+              <Button
+                type="submit"
+                disabled={isSubmitting || (mode === "edit" && !isDirty)}>
+                {isSubmitting && (
+                  <Loader2Icon
+                    data-icon="inline-start"
+                    className="animate-spin"
+                    aria-hidden="true"
+                  />
+                )}
+                {mode === "create" ? "Create Product" : "Save changes"}
+              </Button>
+            )}
+          </div>
         </div>
 
         <AlertDialog
@@ -220,6 +291,27 @@ const ProductForm = ({
                 variant="destructive"
                 onClick={confirmLeave}>
                 Leave
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+
+        <AlertDialog
+          open={isFreePriceOpen}
+          onOpenChange={(open) => {
+            if (!open) cancelFreePrice();
+          }}>
+          <AlertDialogContent>
+            <AlertDialogTitle>List product for free?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Base price is ₹0. The product will be listed for free. Continue?
+            </AlertDialogDescription>
+            <AlertDialogFooter>
+              <AlertDialogCancel onClick={cancelFreePrice}>
+                Change price
+              </AlertDialogCancel>
+              <AlertDialogAction onClick={confirmFreePrice}>
+                List for free
               </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>

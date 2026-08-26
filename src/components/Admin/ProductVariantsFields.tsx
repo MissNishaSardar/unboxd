@@ -1,13 +1,12 @@
 "use client";
 
-import { ArrowRightIcon, PlusIcon, Trash2Icon } from "lucide-react";
+import { PlusIcon, Trash2Icon, TriangleAlertIcon } from "lucide-react";
 import { Controller, useFieldArray, useFormContext } from "react-hook-form";
 import { Button } from "@/components/shadcnui/button";
 import {
   Card,
   CardContent,
   CardDescription,
-  CardFooter,
   CardHeader,
   CardTitle,
 } from "@/components/shadcnui/card";
@@ -24,7 +23,7 @@ import {
   type productFormType,
 } from "@/lib/zodSchema";
 
-const ProductVariantsFields = ({ onNext }: { onNext?: () => void }) => {
+const ProductVariantsFields = () => {
   const { control } = useFormContext<
     productFormInputType,
     undefined,
@@ -82,6 +81,17 @@ const ProductVariantsFields = ({ onNext }: { onNext?: () => void }) => {
                         value={field.value as number}
                         aria-invalid={fieldState.invalid}
                       />
+                      {!fieldState.invalid && Number(field.value) === 0 && (
+                        <p
+                          className="flex items-center gap-1 text-xs text-amber-600"
+                          role="status">
+                          <TriangleAlertIcon
+                            className="size-3.5"
+                            aria-hidden="true"
+                          />
+                          This variant will be listed as Out of stock
+                        </p>
+                      )}
                       {fieldState.invalid && (
                         <FieldError errors={[fieldState.error]} />
                       )}
@@ -113,18 +123,6 @@ const ProductVariantsFields = ({ onNext }: { onNext?: () => void }) => {
           </Button>
         </FieldSet>
       </CardContent>
-      {onNext && (
-        <CardFooter className="justify-end">
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            onClick={onNext}
-            aria-label="Next: Images">
-            <ArrowRightIcon aria-hidden="true" />
-          </Button>
-        </CardFooter>
-      )}
     </Card>
   );
 };
