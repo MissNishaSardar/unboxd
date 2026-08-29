@@ -54,7 +54,7 @@ Kill the chrome process and the `next start` listener (port 3000) after testing.
 src/
   app/              # App Router (layout.tsx, page.tsx, globals.css)
     (public)/       # Public shell (Header + cart provider): home, products, categories, search, about, contact, forbidden
-      (auth)/       # Nested group, bare layout (AuthBackButton only): /auth/login, /auth/register
+    (auth)/         # Auth shell (AuthBackButton only): /auth/login, /auth/register
     (private)/      # Authed shell (sidebar + sign out): cart, checkout, dashboard, orders, profile, settings
       admin/        # /admin keeps its own "unboxd Admin" layout
   components/
@@ -76,7 +76,7 @@ src/
     types.ts        # LayoutProps
     utils.ts        # cn() helper (clsx + tailwind-merge)
   server/           # Server actions: catalog.ts, admin/
-  proxy.ts          # Route protection (Next 16 middleware replacement): PROTECTED session-cookie redirect, ADMIN role check → /forbidden, AUTH + ADMIN set x-route-shell header for group-layout pass-through
+  proxy.ts          # Route protection (Next 16 middleware replacement): PROTECTED session-cookie redirect, ADMIN role check → /forbidden, ADMIN sets x-route-shell header for group-layout pass-through
 prisma/
   schema.prisma     # Auth + catalog + orders models
   seed.ts           # 26 products / 11 categories, idempotent (see DB conventions)

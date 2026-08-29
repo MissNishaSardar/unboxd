@@ -6,9 +6,36 @@ export const signinSchema = z.object({
     .string()
     .min(8, { error: "Password must be at least 8 characters" })
     .max(128, { error: "Password must be at most 128 characters" }),
+  rememberMe: z.boolean().optional(),
 });
 
 export type signinType = z.infer<typeof signinSchema>;
+
+export const forgotPasswordSchema = z.object({
+  email: z.email({ error: "Enter a valid email" }),
+});
+
+export type forgotPasswordType = z.infer<typeof forgotPasswordSchema>;
+
+export const resetPasswordSchema = z
+  .object({
+    newPassword: z
+      .string()
+      .min(8, { error: "Password must be at least 8 characters" })
+      .max(128, { error: "Password must be at most 128 characters" }),
+    confirmPassword: z.string().min(1, { error: "Confirm your new password" }),
+  })
+  .superRefine((data, ctx) => {
+    if (data.newPassword !== data.confirmPassword) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["confirmPassword"],
+        message: "Passwords do not match",
+      });
+    }
+  });
+
+export type resetPasswordType = z.infer<typeof resetPasswordSchema>;
 
 export const signupSchema = z
   .object({

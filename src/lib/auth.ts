@@ -9,6 +9,29 @@ export const auth = betterAuth({
   database: prismaAdapter(prisma, { provider: "sqlite" }),
   emailAndPassword: {
     enabled: true,
+    sendResetPassword: async ({ user, url, token }) => {
+      // Dev: formatted clickable link in the dev server terminal
+      // Prod TODO: replace with Resend / email provider
+      // Better Auth's `url` is the API route that redirects to `redirectTo` with ?token
+      const pageUrl = `http://localhost:3000/auth/reset-password?token=${token}`;
+      void console.log(
+        `\n` +
+          `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n` +
+          `  🔑  Password reset requested\n` +
+          `  Email: ${user.email}\n` +
+          `  Click to reset (via API → redirects to page):\n` +
+          `  ${url}\n` +
+          `  Or open directly:\n` +
+          `  ${pageUrl}\n` +
+          `  Token: ${token}\n` +
+          `  Expires in 1 hour\n` +
+          `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n`,
+      );
+    },
+    resetPasswordTokenExpiresIn: 3600,
+    onPasswordReset: async ({ user }) => {
+      console.log(`[auth] ✅ password reset completed for ${user.email}`);
+    },
   },
   user: {
     additionalFields: {

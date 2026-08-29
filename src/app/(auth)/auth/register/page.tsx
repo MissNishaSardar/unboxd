@@ -26,17 +26,15 @@ const RegisterPage = async () => {
   }
 
   return (
-    <div className="flex min-h-svh items-center justify-center px-4 py-12">
-      <Card className="border-border bg-card w-full max-w-md">
-        <CardHeader className="items-center justify-items-center text-center">
-          <CardTitle className="text-lg">Create account</CardTitle>
-          <CardDescription>Join Unboxd to start shopping.</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <SignUpForm />
-        </CardContent>
-      </Card>
-    </div>
+    <Card className="w-full max-w-md border-white/[0.08] bg-[rgba(255,255,255,0.03)] backdrop-blur-xl">
+      <CardHeader className="items-center justify-items-center text-center">
+        <CardTitle className="text-lg">Create account</CardTitle>
+        <CardDescription>Join Unboxd to start shopping.</CardDescription>
+      </CardHeader>
+      <CardContent>
+        <SignUpForm />
+      </CardContent>
+    </Card>
   );
 };
 

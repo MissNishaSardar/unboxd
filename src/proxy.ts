@@ -11,7 +11,6 @@ const PROTECTED = [
   "/wishlist",
 ];
 const ADMIN = ["/admin"];
-const AUTH = ["/auth"];
 
 function withShell(request: NextRequest, shell: string) {
   const requestHeaders = new Headers(request.headers);
@@ -26,10 +25,6 @@ function withShell(request: NextRequest, shell: string) {
 
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
-
-  if (AUTH.some((p) => pathname.startsWith(p))) {
-    return withShell(request, "auth");
-  }
 
   if (ADMIN.some((p) => pathname.startsWith(p))) {
     const session = await auth.api.getSession({
@@ -88,6 +83,5 @@ export const config = {
     "/wishlist",
     "/admin",
     "/admin/:path*",
-    "/auth/:path*",
   ],
 };

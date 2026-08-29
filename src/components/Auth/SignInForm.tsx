@@ -9,6 +9,7 @@ import { Controller, useForm } from "react-hook-form";
 import { authClient } from "@/lib/auth-client";
 import { signinSchema, signinType } from "@/lib/zodSchema";
 import { Button } from "@/components/shadcnui/button";
+import { Checkbox } from "@/components/shadcnui/checkbox";
 import {
   Field,
   FieldError,
@@ -36,6 +37,7 @@ const SignInForm = () => {
     defaultValues: {
       email: "",
       password: "",
+      rememberMe: true,
     },
     mode: "all",
   });
@@ -44,6 +46,7 @@ const SignInForm = () => {
     const { data, error } = await authClient.signIn.email({
       email: values.email,
       password: values.password,
+      rememberMe: values.rememberMe ?? true,
     });
 
     if (error) {
@@ -96,7 +99,14 @@ const SignInForm = () => {
           control={control}
           render={({ field, fieldState }) => (
             <Field data-invalid={fieldState.invalid}>
-              <FieldLabel htmlFor={field.name}>Password</FieldLabel>
+              <div className="flex items-center justify-between gap-2">
+                <FieldLabel htmlFor={field.name}>Password</FieldLabel>
+                <Link
+                  href="/auth/forgot-password"
+                  className="hover:text-primary text-sm underline underline-offset-4">
+                  Forgot password?
+                </Link>
+              </div>
               <Input
                 {...field}
                 id={field.name}
@@ -105,6 +115,24 @@ const SignInForm = () => {
                 aria-invalid={fieldState.invalid}
               />
               {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+            </Field>
+          )}
+        />
+        <Controller
+          name="rememberMe"
+          control={control}
+          render={({ field }) => (
+            <Field orientation="horizontal">
+              <Checkbox
+                id={field.name}
+                checked={field.value}
+                onCheckedChange={field.onChange}
+              />
+              <FieldLabel
+                htmlFor={field.name}
+                className="font-normal">
+                Remember me
+              </FieldLabel>
             </Field>
           )}
         />

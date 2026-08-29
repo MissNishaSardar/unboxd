@@ -8,11 +8,6 @@ import { headers } from "next/headers";
 
 const PublicLayout = async ({ children }: LayoutProps) => {
   const headerList = await headers();
-  const shell = headerList.get("x-route-shell");
-
-  if (shell === "auth") {
-    return <>{children}</>;
-  }
 
   const session = await auth.api.getSession({
     headers: headerList,
