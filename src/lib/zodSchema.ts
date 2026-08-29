@@ -42,8 +42,18 @@ export const productSortSchema = z.enum(["price_asc", "price_desc", "newest"]);
 export const productListSearchParamsSchema = z.object({
   category: queryString(z.string().min(1).max(100)).optional(),
   sort: productSortSchema.catch("newest"),
-  min: z.coerce.number().min(0).optional().catch(undefined),
-  max: z.coerce.number().min(0).optional().catch(undefined),
+  min: z
+    .preprocess(
+      (value) => (value === "" ? undefined : value),
+      z.coerce.number().min(0).optional(),
+    )
+    .catch(undefined),
+  max: z
+    .preprocess(
+      (value) => (value === "" ? undefined : value),
+      z.coerce.number().min(0).optional(),
+    )
+    .catch(undefined),
   page: z.coerce.number().int().min(1).optional().catch(1),
 });
 

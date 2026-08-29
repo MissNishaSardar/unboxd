@@ -1,4 +1,5 @@
 import prisma from "@/lib/dbClient/prisma";
+import { resolveProductImageUrl } from "@/lib/placeholder";
 import { adminProductListSearchParamsType } from "@/lib/zodSchema";
 import { startOfWeek } from "date-fns";
 
@@ -61,7 +62,10 @@ export async function getAdminProducts(
       isActive: product.isActive,
       featured: product.featured,
       categoryName: product.category.name,
-      imageUrl: product.images[0]?.url ?? null,
+      imageUrl:
+        product.images[0] ?
+          resolveProductImageUrl(product.images[0].url, product.slug, 0)
+        : null,
       totalStock: product.variants.reduce(
         (sum, variant) => sum + variant.stock,
         0,
@@ -94,7 +98,7 @@ export async function getAdminProductForEdit(id: string) {
     isActive: product.isActive,
     categoryName: product.category.name,
     images: product.images.map((image) => ({
-      url: image.url,
+      url: resolveProductImageUrl(image.url, product.slug, image.sortOrder),
       alt: image.alt,
       sortOrder: image.sortOrder,
     })),

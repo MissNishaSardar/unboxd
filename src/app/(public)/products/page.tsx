@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import FilterSidebar from "@/components/Product/FilterSidebar";
 import Pagination from "@/components/Product/Pagination";
 import ProductGrid from "@/components/Product/ProductGrid";
+import ProductToolbar from "@/components/Product/ProductToolbar";
 import { productListSearchParamsSchema } from "@/lib/zodSchema";
 import { getCategoriesWithCounts, getProducts } from "@/server/catalog";
 
@@ -31,7 +32,11 @@ const ProductsPage = async ({
       max: sp.max,
       page: sp.page,
     }),
-    getCategoriesWithCounts(),
+    getCategoriesWithCounts({
+      category: sp.category,
+      min: sp.min,
+      max: sp.max,
+    }),
   ]);
 
   return (
@@ -47,12 +52,15 @@ const ProductsPage = async ({
 
       <div className="flex flex-col gap-8 lg:flex-row">
         <FilterSidebar categories={categories} />
-        <div className="flex min-w-0 flex-1 flex-col gap-8">
+        <div className="flex min-w-0 flex-1 flex-col gap-4">
+          <ProductToolbar categories={categories} />
           <ProductGrid products={data.products} />
-          <Pagination
-            currentPage={data.page}
-            totalPages={data.totalPages}
-          />
+          {data.total > 0 && data.totalPages > 1 && (
+            <Pagination
+              currentPage={data.page}
+              totalPages={data.totalPages}
+            />
+          )}
         </div>
       </div>
     </div>

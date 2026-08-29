@@ -2,6 +2,7 @@ import { cacheLife } from "next/cache";
 import { cacheTag } from "next/cache";
 import { z } from "zod";
 import prisma from "@/lib/dbClient/prisma";
+import { resolveProductImageUrl } from "@/lib/placeholder";
 import { productSortSchema } from "@/lib/zodSchema";
 
 export const PRODUCTS_PER_PAGE = 12;
@@ -31,7 +32,10 @@ export function toProductCardData(product: ProductRow) {
     name: product.name,
     basePrice: String(product.basePrice),
     category: { name: product.category.name, slug: product.category.slug },
-    images: product.images.map((image) => ({ url: image.url, alt: image.alt })),
+    images: product.images.map((image, index) => ({
+      url: resolveProductImageUrl(image.url, product.slug, index),
+      alt: image.alt,
+    })),
     defaultVariant:
       defaultVariant ?
         {
@@ -63,15 +67,36 @@ export async function getFeaturedProducts() {
   return products.map(toProductCardData);
 }
 
-export async function getCategoriesWithCounts() {
+export async function getCategoriesWithCounts(params?: {
+  category?: string;
+  min?: number;
+  max?: number;
+}) {
   "use cache";
   cacheLife("hours");
   cacheTag("products");
+  const whereProducts: Record<string, unknown> = { isActive: true };
+  if (params?.min !== undefined || params?.max !== undefined) {
+    (whereProducts as Record<string, unknown>).basePrice = {
+      gte: params?.min,
+      lte: params?.max,
+    };
+  }
+  if (params?.category) {
+    (whereProducts as Record<string, unknown>).category = {
+      slug: params.category,
+      deletedAt: null,
+    };
+  }
   const categories = await prisma.category.findMany({
     where: { deletedAt: null },
     orderBy: { name: "asc" },
     include: {
-      _count: { select: { products: { where: { isActive: true } } } },
+      _count: {
+        select: {
+          products: { where: whereProducts as never },
+        },
+      },
     },
   });
   return categories
@@ -223,7 +248,10 @@ function toProductDetailData(product: {
     basePrice: String(product.basePrice),
     priceFrom,
     category: { name: product.category.name, slug: product.category.slug },
-    images: product.images.map((image) => ({ url: image.url, alt: image.alt })),
+    images: product.images.map((image, index) => ({
+      url: resolveProductImageUrl(image.url, product.slug, index),
+      alt: image.alt,
+    })),
     variants,
   };
 }

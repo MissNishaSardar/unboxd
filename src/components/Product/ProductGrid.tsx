@@ -1,31 +1,9 @@
-import { PackageSearchIcon } from "lucide-react";
-import ProductCard, {
-  ProductCardData,
-} from "@/components/Product/ProductCard";
-import {
-  Empty,
-  EmptyDescription,
-  EmptyHeader,
-  EmptyMedia,
-  EmptyTitle,
-} from "@/components/shadcnui/empty";
+import ProductCard, { ProductCardData } from "@/components/Product/ProductCard";
+import ProductsEmpty from "@/components/Product/ProductsEmpty";
 
 const ProductGrid = ({ products }: { products: ProductCardData[] }) => {
   if (products.length === 0) {
-    return (
-      <Empty>
-        <EmptyHeader>
-          <EmptyMedia variant="icon">
-            <PackageSearchIcon />
-          </EmptyMedia>
-          <EmptyTitle>No products found</EmptyTitle>
-          <EmptyDescription>
-            No products match these filters. Try widening the price range or
-            picking another category.
-          </EmptyDescription>
-        </EmptyHeader>
-      </Empty>
-    );
+    return <ProductsEmpty />;
   }
   return (
     <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
