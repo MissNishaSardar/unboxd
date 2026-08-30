@@ -109,6 +109,7 @@ export async function getCategoriesWithCounts(params?: {
 }
 
 export type ProductListParams = {
+  q?: string;
   category?: string;
   sort?: z.infer<typeof productSortSchema>;
   min?: number;
@@ -117,9 +118,16 @@ export type ProductListParams = {
 };
 
 export async function getProducts(params: ProductListParams) {
-  const { category, sort = "newest", min, max, page = 1 } = params;
+  const { q, category, sort = "newest", min, max, page = 1 } = params;
+  const trimmedQ = q?.trim();
   const where = {
     isActive: true,
+    ...(trimmedQ && {
+      OR: [
+        { name: { contains: trimmedQ } },
+        { description: { contains: trimmedQ } },
+      ],
+    }),
     ...(category && { category: { slug: category, deletedAt: null } }),
     ...((min !== undefined || max !== undefined) && {
       basePrice: {

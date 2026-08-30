@@ -15,6 +15,7 @@ const ProductsPage = async ({
   searchParams,
 }: {
   searchParams: Promise<{
+    q?: string | string[];
     category?: string | string[];
     sort?: string | string[];
     min?: string | string[];
@@ -26,6 +27,7 @@ const ProductsPage = async ({
 
   const [data, categories] = await Promise.all([
     getProducts({
+      q: sp.q,
       category: sp.category,
       sort: sp.sort,
       min: sp.min,

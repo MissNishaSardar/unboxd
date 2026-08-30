@@ -67,6 +67,7 @@ const queryString = <T extends z.ZodType<string>>(schema: T) =>
 export const productSortSchema = z.enum(["price_asc", "price_desc", "newest"]);
 
 export const productListSearchParamsSchema = z.object({
+  q: queryString(z.string().trim().min(1).max(100)).optional(),
   category: queryString(z.string().min(1).max(100)).optional(),
   sort: productSortSchema.catch("newest"),
   min: z
@@ -83,6 +84,13 @@ export const productListSearchParamsSchema = z.object({
     .catch(undefined),
   page: z.coerce.number().int().min(1).optional().catch(1),
 });
+
+export const searchSearchParamsSchema = z.object({
+  q: queryString(z.string().trim().min(1).max(100)).optional(),
+  page: z.coerce.number().int().min(1).optional().catch(1),
+});
+
+export type searchSearchParamsType = z.infer<typeof searchSearchParamsSchema>;
 
 export type productListSearchParamsType = z.infer<
   typeof productListSearchParamsSchema
