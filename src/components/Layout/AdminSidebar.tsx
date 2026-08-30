@@ -11,6 +11,8 @@ import {
   SettingsIcon,
   UsersIcon,
 } from "lucide-react";
+
+import SidebarBrand from "@/components/Brand/SidebarBrand";
 import {
   Sidebar,
   SidebarContent,
@@ -48,19 +50,10 @@ const AdminSidebar = () => {
   return (
     <Sidebar collapsible="icon">
       <SidebarHeader>
-        <div className="flex items-center gap-2 px-2 py-2 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0">
-          <div className="bg-primary text-primary-foreground flex size-8 shrink-0 items-center justify-center rounded-lg text-sm font-semibold">
-            U
-          </div>
-          <div className="flex min-w-0 flex-col group-data-[collapsible=icon]:hidden">
-            <span className="truncate text-sm leading-none font-medium">
-              Unboxd
-            </span>
-            <span className="text-muted-foreground truncate text-xs">
-              Admin
-            </span>
-          </div>
-        </div>
+        <SidebarBrand
+          href="/admin"
+          subtitle="Admin"
+        />
       </SidebarHeader>
       <SidebarContent>
         <SidebarGroup>

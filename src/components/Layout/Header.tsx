@@ -1,5 +1,6 @@
 "use client";
 
+import UnboxdLogo from "@/components/Brand/UnboxdLogo";
 import ThemeToggleButton from "@/components/Layout/ThemeToggleButton";
 import { Button } from "@/components/shadcnui/button";
 import {
@@ -86,7 +87,13 @@ const Header = () => {
             side="left"
             className="w-64">
             <SheetHeader>
-              <SheetTitle>Unboxd</SheetTitle>
+              <SheetTitle className="flex items-center gap-2">
+                <UnboxdLogo
+                  className="size-6"
+                  aria-hidden="true"
+                />
+                Unboxd
+              </SheetTitle>
             </SheetHeader>
             <nav
               aria-label="Primary"
@@ -116,8 +123,12 @@ const Header = () => {
         </Sheet>
         <Link
           href="/"
-          className="font-heading text-lg font-medium">
-          Unboxd
+          className="flex items-center gap-2">
+          <UnboxdLogo
+            className="size-7 shrink-0"
+            aria-hidden="true"
+          />
+          <span className="font-heading text-lg font-medium">Unboxd</span>
         </Link>
       </div>
 
