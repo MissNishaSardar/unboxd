@@ -30,10 +30,12 @@ Path aliases: `@/*` → `./src/*`, `@generated/*` → `./generated/*`.
 
 ## Verification
 
-- **Primary**: `bun lint` — runs `next typegen && tsc --noEmit && eslint`
+- **Lint**: `bun lint` — runs `eslint` only (the package.json `lint` script; no typegen/tsc)
+- **Type check**: `bun run typecheck` — `next typegen && tsc --noEmit`
 - **Build gate**: `bun run build` — `prisma generate && next build`
 - **Full prod**: `bun prod` — `prisma generate && next build && next start` (before schema/env changes)
 - **Seed**: `bun run seed` (or `bunx --bun prisma db seed`) — idempotent; use `bunx --bun prisma migrate reset` to wipe + re-seed
+- **Gotcha**: a running `next dev` server writes `.next/dev/types` concurrently with `next typegen`/`tsc`, producing torn files and cascading false LSP/type errors (e.g. "Property 'refresh' does not exist on AppRouterInstance"). Fix: kill the dev server, `Remove-Item -Recurse -Force .next/dev/types`, re-run typegen.
 
 ## Smoke testing (Playwright)
 
@@ -51,25 +53,32 @@ Kill the chrome process and the `next start` listener (port 3000) after testing.
 ```
 src/
   app/              # App Router (layout.tsx, page.tsx, globals.css)
-    (public)/       # Guest routes: home, products, product detail, auth, about, contact, search
-    (private)/      # Authed routes: cart, checkout, orders, dashboard, profile, settings, wishlist
+    (public)/       # Public shell (Header + cart provider): home, products, categories, search, about, contact, forbidden
+    (auth)/         # Auth shell (AuthBackButton only): /auth/login, /auth/register
+    (private)/      # Authed shell (sidebar + sign out): cart, checkout, dashboard, orders, profile, settings
+      admin/        # /admin keeps its own "unboxd Admin" layout
   components/
+    Auth/           # AuthBackButton, SignInForm, SignOutButton, SignUpForm
+    Cart/           # CartDrawer, CartItemRow, CartProvider
     Layout/         # Header, ThemeToggleButton
+    Orders/         # OrderStatusBadge, OrderTimeline
+    Product/        # FilterSidebar, Pagination, ProductCard, ProductGallery, ProductGrid, ProductInfo
     Providers/      # ThemeProvider (next-themes)
     shadcnui/       # shadcn primitives (button.tsx, toast.tsx)
-  hooks/            # Custom hooks (currently empty)
+  hooks/            # use-mounted.ts
   lib/
-    auth.ts         # Better Auth server config (email/password + nextCookies)
+    auth.ts         # Better Auth server config (email/password + admin RBAC + nextCookies)
     auth-client.ts  # Better Auth client
+    cart/atoms.ts   # jotai cart store, addToCart(), FREE_SHIPPING_THRESHOLD; items keyed (productId, sku), localStorage 'cart-v2'
     dbClient/       # Prisma singleton with libSQL adapter
     env/            # serverEnv.ts, clientEnv.ts (t3-env)
     fonts.ts        # next/font (Geist, Inter)
     types.ts        # LayoutProps
     utils.ts        # cn() helper (clsx + tailwind-merge)
-  server/           # API routes placeholder (empty)
-  proxy.ts          # Route protection (Next 16 middleware replacement) — session-cookie redirect only, no admin check yet
+  server/           # Server actions: catalog.ts, admin/
+  proxy.ts          # Route protection (Next 16 middleware replacement): PROTECTED session-cookie redirect, ADMIN role check → /forbidden, ADMIN sets x-route-shell header for group-layout pass-through
 prisma/
-  schema.prisma     # Auth + catalog + orders + wishlist models
+  schema.prisma     # Auth + catalog + orders models
   seed.ts           # 26 products / 11 categories, idempotent (see DB conventions)
   migrations/       # SQLite migrations; delete before the Day 13 Postgres migration (P3014)
 generated/prisma/   # Prisma client output (gitignored)
@@ -83,7 +92,6 @@ public/uploads/     # User uploads (all files ignored except .gitkeep)
 - **Seed**: configured via `migrations.seed` in `prisma.config.ts` (`bun prisma/seed.ts`). Guard skips if products OR categories exist (partial-state safety); full reset requires `migrate reset`.
 - **Money**: `Decimal` everywhere (basePrice, priceDiff, order totals, snapshots). `OrderItem` freezes `nameSnapshot` + `priceSnapshot` at purchase — never reference live product data on receipts.
 - **Order.status**: `PENDING | CONFIRMED | SHIPPED | DELIVERED | CANCELLED | RETURNED` (COD-first; RETURNED covers delivery refusals).
-- **WishlistItem**: `@@unique([userId, productId])` → idempotent `upsert` toggle (Day 5).
 - **Seed images** are `placehold.co` placeholders — swap for real uploads when the Day 8 pipeline lands.
 
 ## Gitignore pattern: uploads

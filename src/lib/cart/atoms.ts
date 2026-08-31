@@ -3,7 +3,7 @@ import { atomWithStorage, createJSONStorage } from "jotai/utils";
 
 export type CartItem = {
   productId: string;
-  variantId: string;
+  sku: string;
   slug: string;
   name: string;
   variantName: string;
@@ -23,7 +23,7 @@ const storage = createJSONStorage<CartItem[]>(() =>
     },
 );
 
-export const cartAtom = atomWithStorage<CartItem[]>("cart", [], storage, {
+export const cartAtom = atomWithStorage<CartItem[]>("cart-v2", [], storage, {
   getOnInit: true,
 });
 
@@ -37,8 +37,6 @@ export const cartTotalAtom = atom((get) =>
 
 export const cartDrawerOpenAtom = atom(false);
 
-export const FREE_SHIPPING_THRESHOLD = 999;
-
 const store = getDefaultStore();
 
 export const openCart = () => {
@@ -47,23 +45,21 @@ export const openCart = () => {
 
 export function updateQuantity(
   productId: string,
-  variantId: string,
+  sku: string,
   quantity: number,
 ) {
   store.set(cartAtom, (items) =>
     items.map((item) =>
-      item.productId === productId && item.variantId === variantId ?
+      item.productId === productId && item.sku === sku ?
         { ...item, quantity: Math.max(1, Math.min(quantity, item.maxStock)) }
       : item,
     ),
   );
 }
 
-export function removeCartItem(productId: string, variantId: string) {
+export function removeCartItem(productId: string, sku: string) {
   store.set(cartAtom, (items) =>
-    items.filter(
-      (item) => item.productId !== productId || item.variantId !== variantId,
-    ),
+    items.filter((item) => item.productId !== productId || item.sku !== sku),
   );
 }
 
@@ -73,7 +69,7 @@ export function clearCart() {
 
 export type AddToCartInput = {
   productId: string;
-  variantId: string;
+  sku: string;
   slug: string;
   name: string;
   variantName: string;
@@ -85,16 +81,11 @@ export type AddToCartInput = {
 export function addToCart(input: AddToCartInput) {
   store.set(cartAtom, (items) => {
     const existing = items.find(
-      (item) =>
-        item.productId === input.productId &&
-        item.variantId === input.variantId,
+      (item) => item.productId === input.productId && item.sku === input.sku,
     );
     if (existing) {
       return items.map((item) =>
-        (
-          item.productId === input.productId &&
-          item.variantId === input.variantId
-        ) ?
+        item.productId === input.productId && item.sku === input.sku ?
           { ...item, quantity: Math.min(item.quantity + 1, item.maxStock) }
         : item,
       );

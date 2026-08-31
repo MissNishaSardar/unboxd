@@ -24,22 +24,6 @@ export async function toggleWishlist(productId: string) {
   return true;
 }
 
-export async function syncWishlist(ids: string[]) {
-  const user = await requireUser();
-  const uniqueIds = [...new Set(ids)];
-  if (uniqueIds.length === 0) return;
-  const existing = await prisma.wishlistItem.findMany({
-    where: { userId: user.id, productId: { in: uniqueIds } },
-    select: { productId: true },
-  });
-  const existingIds = new Set(existing.map((item) => item.productId));
-  const missing = uniqueIds.filter((id) => !existingIds.has(id));
-  if (missing.length === 0) return;
-  await prisma.wishlistItem.createMany({
-    data: missing.map((productId) => ({ userId: user.id, productId })),
-  });
-}
-
 export async function getWishlistIds() {
   const user = await requireUser();
   const items = await prisma.wishlistItem.findMany({

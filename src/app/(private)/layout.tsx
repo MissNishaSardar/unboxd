@@ -1,29 +1,46 @@
-import SignOutButton from "@/components/auth/SignOutButton";
+import { cookies, headers } from "next/headers";
+import { redirect } from "next/navigation";
+import ImpersonationBanner from "@/components/Admin/ImpersonationBanner";
+import AppSidebar from "@/components/Layout/AppSidebar";
+import PrivateHeader from "@/components/Layout/PrivateHeader";
+import { SidebarInset, SidebarProvider } from "@/components/shadcnui/sidebar";
+import { TooltipProvider } from "@/components/shadcnui/tooltip";
 import { auth } from "@/lib/auth";
 import { LayoutProps } from "@/lib/types";
-import { headers } from "next/headers";
-import { redirect } from "next/navigation";
 
 const PrivateLayout = async ({ children }: LayoutProps) => {
+  const headerList = await headers();
+  const shell = headerList.get("x-route-shell");
+  const pathname = headerList.get("x-pathname") ?? "";
+
+  if (shell === "admin" || pathname.startsWith("/admin")) {
+    return <>{children}</>;
+  }
+
   const session = await auth.api.getSession({
-    headers: await headers(),
+    headers: headerList,
   });
 
   if (!session) {
     redirect("/");
   }
 
+  const cookieStore = await cookies();
+  const defaultOpen = cookieStore.get("sidebar_state")?.value !== "false";
+
   return (
-    <div className="flex min-h-screen">
-      <aside className="flex w-64 flex-col gap-4 border-r p-4">
-        <div>
-          <p className="font-medium">{session.user.name}</p>
-          <p className="text-muted-foreground text-sm">{session.user.email}</p>
-        </div>
-        <SignOutButton />
-      </aside>
-      <main className="flex-1 p-6">{children}</main>
-    </div>
+    <TooltipProvider>
+      <SidebarProvider defaultOpen={defaultOpen}>
+        <AppSidebar />
+        <SidebarInset>
+          <PrivateHeader />
+          {session.session.impersonatedBy && (
+            <ImpersonationBanner name={session.user.name} />
+          )}
+          <main className="flex-1 p-6">{children}</main>
+        </SidebarInset>
+      </SidebarProvider>
+    </TooltipProvider>
   );
 };
 

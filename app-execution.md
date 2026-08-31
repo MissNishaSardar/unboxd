@@ -511,6 +511,8 @@ export async function placeOrder(formData: FormData) {
 
 </details>
 
+**✅ Executed (Day 6 complete):** Shipping constants moved to `src/lib/cart/shipping.ts` (`FREE_SHIPPING_THRESHOLD = 999`, `SHIPPING_FLAT_RATE = 99`) — shared by client and server so the estimate and the charge can't drift. `checkoutSchema` added to `src/lib/zodSchema.ts` (name/phone/addressLine/city/pincode). `src/app/(private)/checkout/actions.ts` `placeOrder({ address, cart })` server action: session guard via `auth.api.getSession`, zod-parse both, then `prisma.$transaction(async (tx) => …)` — `findUniqueOrThrow` each variant (live name/price), sequential `for…of` `updateMany({ where: { id, stock: { gte: qty } }, data: { stock: { decrement: qty } } })` (any `count === 0` → throw → rollback), unit price `basePrice + priceDiff` (the module card's `basePrice + priceDiff * qty` is a precedence bug — it computes `basePrice + (priceDiff × qty)`), `status: "CONFIRMED"`, `paymentMethod: "COD"`, `OrderItem` name/price snapshots, `Address` create, `revalidateTag("products", "max")` (Next 16 requires the 2-arg form; 1-arg is deprecated and TS-errors). Returns `{ ok, orderId }` — **no `redirect()` inside** so the client can `clearCart()` before navigating (a server action can't touch the client cart atom). `(private)/checkout/page.tsx` rewritten as a client page: RHF + `Controller` address form (left) + sticky order summary (right) with item review rows, subtotal/shipping/total, Place order button; on success `clearCart()` → `router.push(/orders/${id})`; OUT_OF_STOCK → toast, UNAUTHENTICATED → `/auth/login?callbackUrl=/checkout`. Minimal `(private)/orders/[id]/page.tsx` receipt (server component, `findUnique({ where: { id, userId } })` ownership check → `notFound()`, order id/status/items/address/totals) — Day 7 expands it. Cart page shipping row now shows the real free/flat value instead of "Free" whenever logged in. Smoke-tested headless as customer1 (14/14): place order → redirect + receipt + cart cleared; oversell (qty 999) → toast, no order; empty cart → empty state; stock 12→6 across 3 orders; snapshots + address persisted. **Deviations:** (1) interactive `$transaction` IS supported on SQLite (Serializable, strictest isolation) — confirmed against Prisma docs; sequential awaits inside the tx to avoid libSQL lock contention. (2) **Playwright click on the sticky Place order button does not land** (coordinate click misses; `clicks: 0` via a native listener) — the app is fine, use `page.evaluate(() => document.querySelector("button[type='submit']").click())` in smoke scripts. (3) With `FREE_SHIPPING_THRESHOLD = 999` and every seed product ≥ ₹1,499, the flat-rate branch is dead in practice (free shipping always applies) — logic is correct and shared; adjust the constant if a real threshold is wanted. (4) RHF `mode: "all"` does NOT validate on mount, so empty-field errors appear only after blur/change — don't use them as a hydration signal in tests. **Post-review hardening:** `placeOrder` now throws a sentinel `OutOfStockError` (caught specifically → `OUT_OF_STOCK`) instead of a catch-all that mislabeled every failure as out-of-stock; other errors are `console.error`-logged and returned as `SERVER_ERROR` (client shows "Something went wrong"). Tx runs with `{ maxWait: 5000, timeout: 10000 }`; variant reads are sequential `for…of` (not `Promise.all`); `cartLineSchema` quantity cap dropped (the `stock >= quantity` guard is authoritative); checkout strings `.trim()`-ed before validation; all zod schemas use the v4 `{ error }` message form.
+
 ### Day 7 · Orders (History + Detail)
 
 **Goal:** Customer-facing order visibility with status tracking.
@@ -580,50 +582,7 @@ export async function POST(req: Request) {
 
 ```ts
 // src/lib/storage/adapter.ts — env-driven swap
-import { writeFile, mkdir } from "node:fs/promises";
-import path from "node:path";
-import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3"; // B2 is S3-compatible
 
-export interface StorageAdapter {
-  save(buffer: Buffer, filename: string): Promise<string>;
-}
-
-class LocalStorage implements StorageAdapter {
-  async save(buffer: Buffer, filename: string) {
-    const dir = path.join(process.cwd(), "public", "uploads");
-    await mkdir(dir, { recursive: true });
-    await writeFile(path.join(dir, filename), buffer);
-    return `/uploads/${filename}`;
-  }
-}
-
-class B2Storage implements StorageAdapter {
-  private s3 = new S3Client({
-    endpoint: process.env.B2_ENDPOINT!, // https://s3.us-west-004.backblazeb2.com
-    region: process.env.B2_REGION!,
-    credentials: {
-      accessKeyId: process.env.B2_KEY_ID!,
-      secretAccessKey: process.env.B2_APP_KEY!,
-    },
-  });
-  async save(buffer: Buffer, filename: string) {
-    await this.s3.send(
-      new PutObjectCommand({
-        Bucket: process.env.B2_BUCKET!,
-        Key: filename,
-        Body: buffer,
-        ContentType: "image/webp",
-      }),
-    );
-    return `${process.env.B2_PUBLIC_BASE}/${filename}`;
-  }
-}
-
-export const storage: StorageAdapter =
-  process.env.NODE_ENV === "production" ? new B2Storage() : new LocalStorage();
-```
-
-</details>
 
 ---
 
@@ -715,3 +674,4 @@ export const storage: StorageAdapter =
 ## Daily Routine
 
 Each day, follow this loop: **schema/action → UI component → manual test the happy path → handle the error edge case → commit with a conventional message.** Resist the urge to build features ahead of their day — the sequence is dependency-ordered so each day's deliverable unblocks the next. If you finish a day early, spend the surplus on the polish tasks from Day 12 rather than jumping ahead.
+```

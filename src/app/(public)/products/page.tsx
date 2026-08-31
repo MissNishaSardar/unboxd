@@ -1,12 +1,13 @@
 import type { Metadata } from "next";
-import FilterSidebar from "@/components/product/filter-sidebar";
-import Pagination from "@/components/product/pagination";
-import ProductGrid from "@/components/product/product-grid";
+import FilterSidebar from "@/components/Product/FilterSidebar";
+import Pagination from "@/components/Product/Pagination";
+import ProductGrid from "@/components/Product/ProductGrid";
+import ProductToolbar from "@/components/Product/ProductToolbar";
 import { productListSearchParamsSchema } from "@/lib/zodSchema";
 import { getCategoriesWithCounts, getProducts } from "@/server/catalog";
 
 export const metadata: Metadata = {
-  title: "Products — Unboxd",
+  title: "Products",
   description: "Browse our electronics catalog with filters and sorting.",
 };
 
@@ -14,6 +15,7 @@ const ProductsPage = async ({
   searchParams,
 }: {
   searchParams: Promise<{
+    q?: string | string[];
     category?: string | string[];
     sort?: string | string[];
     min?: string | string[];
@@ -25,13 +27,18 @@ const ProductsPage = async ({
 
   const [data, categories] = await Promise.all([
     getProducts({
+      q: sp.q,
       category: sp.category,
       sort: sp.sort,
       min: sp.min,
       max: sp.max,
       page: sp.page,
     }),
-    getCategoriesWithCounts(),
+    getCategoriesWithCounts({
+      category: sp.category,
+      min: sp.min,
+      max: sp.max,
+    }),
   ]);
 
   return (
@@ -47,12 +54,15 @@ const ProductsPage = async ({
 
       <div className="flex flex-col gap-8 lg:flex-row">
         <FilterSidebar categories={categories} />
-        <div className="flex min-w-0 flex-1 flex-col gap-8">
+        <div className="flex min-w-0 flex-1 flex-col gap-4">
+          <ProductToolbar categories={categories} />
           <ProductGrid products={data.products} />
-          <Pagination
-            currentPage={data.page}
-            totalPages={data.totalPages}
-          />
+          {data.total > 0 && data.totalPages > 1 && (
+            <Pagination
+              currentPage={data.page}
+              totalPages={data.totalPages}
+            />
+          )}
         </div>
       </div>
     </div>

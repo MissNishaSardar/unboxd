@@ -7,9 +7,21 @@ const PROTECTED = [
   "/checkout",
   "/orders",
   "/settings",
-  "/profile",
+  "/cart",
+  "/wishlist",
 ];
 const ADMIN = ["/admin"];
+
+function withShell(request: NextRequest, shell: string) {
+  const requestHeaders = new Headers(request.headers);
+  requestHeaders.set("x-route-shell", shell);
+  requestHeaders.set("x-pathname", request.nextUrl.pathname);
+  return NextResponse.next({
+    request: {
+      headers: requestHeaders,
+    },
+  });
+}
 
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
@@ -18,23 +30,46 @@ export async function proxy(request: NextRequest) {
     const session = await auth.api.getSession({
       headers: request.headers as unknown as Headers,
     });
-    if (!session || session.user.role !== "admin") {
-      return NextResponse.redirect(new URL("/", request.url));
+    if (!session) {
+      const loginUrl = new URL("/auth/login", request.url);
+      loginUrl.searchParams.set("callbackUrl", pathname);
+      return NextResponse.redirect(loginUrl);
     }
-    return NextResponse.next();
+    if (
+      session.user.role !== "admin" ||
+      (session.user as unknown as { deletedAt?: unknown }).deletedAt ||
+      (session.user as unknown as { banned?: unknown }).banned
+    ) {
+      return NextResponse.redirect(new URL("/forbidden", request.url));
+    }
+    return withShell(request, "admin");
   }
 
   if (!PROTECTED.some((p) => pathname.startsWith(p))) {
-    return NextResponse.next();
+    const requestHeaders = new Headers(request.headers);
+    requestHeaders.set("x-pathname", pathname);
+    return NextResponse.next({
+      request: {
+        headers: requestHeaders,
+      },
+    });
   }
 
   const sessionCookie = getSessionCookie(request);
 
   if (!sessionCookie) {
-    return NextResponse.redirect(new URL("/", request.url));
+    const loginUrl = new URL("/auth/login", request.url);
+    loginUrl.searchParams.set("callbackUrl", pathname + request.nextUrl.search);
+    return NextResponse.redirect(loginUrl);
   }
 
-  return NextResponse.next();
+  const requestHeaders = new Headers(request.headers);
+  requestHeaders.set("x-pathname", pathname);
+  return NextResponse.next({
+    request: {
+      headers: requestHeaders,
+    },
+  });
 }
 
 export const config = {
@@ -43,7 +78,9 @@ export const config = {
     "/checkout",
     "/orders/:path*",
     "/settings",
-    "/profile",
+    "/settings/:path*",
+    "/cart",
+    "/wishlist",
     "/admin",
     "/admin/:path*",
   ],

@@ -1,0 +1,2 @@
+export const FREE_SHIPPING_THRESHOLD = 999;
+export const SHIPPING_FLAT_RATE = 99;

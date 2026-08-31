@@ -1,6 +1,8 @@
-import type { Metadata } from "next";
+import ProductGrid from "@/components/Product/ProductGrid";
+import { Badge } from "@/components/shadcnui/badge";
+import { Button } from "@/components/shadcnui/button";
+import { getCategoriesWithCounts, getFeaturedProducts } from "@/server/catalog";
 import type { LucideIcon } from "lucide-react";
-import Link from "next/link";
 import {
   ArrowRightIcon,
   AudioLinesIcon,
@@ -15,13 +17,13 @@ import {
   TagIcon,
   TruckIcon,
 } from "lucide-react";
-import { Badge } from "@/components/shadcnui/badge";
-import { Button } from "@/components/shadcnui/button";
-import ProductGrid from "@/components/product/product-grid";
-import { getCategoriesWithCounts, getFeaturedProducts } from "@/server/catalog";
+import type { Metadata } from "next";
+import Link from "next/link";
 
 export const metadata: Metadata = {
-  title: "Unboxd — Electronics, Unboxed",
+  title: {
+    absolute: "Unboxd | Electronics, Unboxed",
+  },
   description:
     "Shop smartphones, laptops, audio, and accessories with fast COD delivery.",
 };
@@ -50,7 +52,7 @@ const HomePage = async () => {
 
   return (
     <div className="flex flex-col gap-20 px-6 py-10">
-      <section className="relative overflow-hidden rounded-3xl border border-zinc-800 bg-zinc-950 px-6 py-16 md:px-12 md:py-24">
+      <section className="border-border bg-card relative overflow-hidden rounded-3xl border px-6 py-16 md:px-12 md:py-24">
         <div
           aria-hidden
           className="bg-primary/20 pointer-events-none absolute -top-32 right-0 size-96 rounded-full blur-3xl"
@@ -113,14 +115,18 @@ const HomePage = async () => {
                   pathname: "/products",
                   query: { category: category.slug },
                 }}
-                className="group flex flex-col gap-3 rounded-xl border border-zinc-800 bg-zinc-950 p-5 transition-all hover:-translate-y-1 hover:border-zinc-700">
-                <div className="text-primary flex size-10 items-center justify-center rounded-lg bg-zinc-900">
+                className="group border-border bg-card hover:border-border relative flex flex-col gap-3 overflow-hidden rounded-xl border p-5 transition-all hover:-translate-y-1">
+                <div
+                  aria-hidden
+                  className="bg-primary/20 pointer-events-none absolute -top-10 -right-10 size-32 rounded-full blur-2xl"
+                />
+                <div className="text-primary bg-muted relative flex size-10 items-center justify-center rounded-lg">
                   <Icon
                     aria-hidden="true"
                     className="size-5"
                   />
                 </div>
-                <div className="flex flex-col gap-1">
+                <div className="relative flex flex-col gap-1">
                   <span className="font-heading text-sm font-medium">
                     {category.name}
                   </span>
@@ -152,7 +158,7 @@ const HomePage = async () => {
         <ProductGrid products={featured} />
       </section>
 
-      <section className="relative overflow-hidden rounded-3xl border border-zinc-800 bg-zinc-950 px-6 py-14 text-center md:py-20">
+      <section className="border-border bg-card relative overflow-hidden rounded-3xl border px-6 py-14 text-center md:py-20">
         <div
           aria-hidden
           className="bg-primary/20 pointer-events-none absolute -bottom-32 left-1/2 size-96 -translate-x-1/2 rounded-full blur-3xl"

@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import type { Route } from "next";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
-import SignInForm from "@/components/auth/SignInForm";
+import SignInForm from "@/components/Auth/SignInForm";
 import { auth } from "@/lib/auth";
 import {
   Card,
@@ -29,22 +29,22 @@ const LoginPage = async ({
   if (session) {
     const sp = await searchParams;
     const callbackUrl =
-      typeof sp.callbackUrl === "string" ? sp.callbackUrl : "/dashboard";
+      typeof sp.callbackUrl === "string" ? sp.callbackUrl
+      : session.user.role === "admin" ? "/admin"
+      : "/dashboard";
     redirect(callbackUrl as Route);
   }
 
   return (
-    <div className="flex min-h-svh items-center justify-center px-4 py-12">
-      <Card className="w-full max-w-md">
-        <CardHeader className="items-center justify-items-center text-center">
-          <CardTitle className="text-lg">Sign in</CardTitle>
-          <CardDescription>Welcome back to Unboxd.</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <SignInForm />
-        </CardContent>
-      </Card>
-    </div>
+    <Card className="w-full max-w-md border-white/[0.08] bg-[rgba(255,255,255,0.03)] backdrop-blur-xl">
+      <CardHeader className="items-center justify-items-center text-center">
+        <CardTitle className="text-lg">Sign in</CardTitle>
+        <CardDescription>Welcome back to Unboxd.</CardDescription>
+      </CardHeader>
+      <CardContent>
+        <SignInForm />
+      </CardContent>
+    </Card>
   );
 };
 
