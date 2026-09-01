@@ -14,9 +14,13 @@ import { useMounted } from "@/hooks/use-mounted";
 const WishlistButton = ({
   productId,
   className,
+  size = "icon-lg",
+  variant = "outline",
 }: {
   productId: string;
   className?: string;
+  size?: "icon" | "icon-sm" | "icon-lg" | "icon-xs";
+  variant?: "outline" | "ghost" | "secondary" | "default";
 }) => {
   const ids = useAtomValue(wishlistAtom);
   const setIds = useSetAtom(wishlistAtom);
@@ -55,15 +59,22 @@ const WishlistButton = ({
 
   return (
     <Button
-      variant="ghost"
-      size="icon-sm"
+      variant={variant}
+      size={size}
       aria-label={isWishlisted ? "Remove from wishlist" : "Add to wishlist"}
       aria-pressed={isWishlisted}
       onClick={handleToggle}
-      className={cn("bg-background/80 backdrop-blur-sm", className)}>
+      className={cn(
+        "shrink-0 rounded-md border-2",
+        variant === "outline" && "bg-background",
+        variant === "outline" &&
+          isWishlisted &&
+          "border-red-200 bg-red-50 dark:border-red-900/50 dark:bg-red-950/30",
+        className,
+      )}>
       <HeartIcon
         aria-hidden="true"
-        className={cn(isWishlisted && "fill-current text-red-500")}
+        className={cn("size-5", isWishlisted && "fill-red-500 text-red-500")}
       />
     </Button>
   );

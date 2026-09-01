@@ -3,7 +3,7 @@ import { Skeleton } from "@/components/shadcnui/skeleton";
 
 const Loading = () => {
   return (
-    <div className="flex flex-col gap-8 px-6 py-10">
+    <div className="flex flex-col gap-8">
       <div className="flex flex-col gap-2">
         <Skeleton className="h-8 w-40" />
         <Skeleton className="h-4 w-20" />

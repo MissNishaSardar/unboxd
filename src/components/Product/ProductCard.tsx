@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -13,6 +14,7 @@ import { toast } from "@/components/shadcnui/toast";
 import WishlistButton from "@/components/Product/WishlistButton";
 import { addToCart } from "@/lib/cart/atoms";
 import { formatPrice } from "@/lib/format";
+import { getPlaceholderPhotoUrl } from "@/lib/placeholder";
 
 export type ProductCardData = {
   id: string;
@@ -31,6 +33,9 @@ export type ProductCardData = {
 
 const ProductCard = ({ product }: { product: ProductCardData }) => {
   const image = product.images[0];
+  const thumbnailUrl = image?.url ?? getPlaceholderPhotoUrl(product.slug);
+  const thumbnailAlt = image?.alt ?? product.name;
+  const [imgFailed, setImgFailed] = useState(false);
   const variant = product.defaultVariant;
   const price =
     Number(product.basePrice) + (variant ? Number(variant.priceDiff) : 0);
@@ -48,7 +53,7 @@ const ProductCard = ({ product }: { product: ProductCardData }) => {
       router.push(`/auth/login?callbackUrl=/products/${product.slug}`);
       return;
     }
-    if (!variant || !image) return;
+    if (!variant) return;
     addToCart({
       productId: product.id,
       sku: variant.sku,
@@ -56,7 +61,7 @@ const ProductCard = ({ product }: { product: ProductCardData }) => {
       name: product.name,
       variantName: variant.name,
       price,
-      image: image.url,
+      image: thumbnailUrl,
       maxStock: variant.stock,
     });
     toast.add({
@@ -75,18 +80,20 @@ const ProductCard = ({ product }: { product: ProductCardData }) => {
         <Link
           href={`/products/${product.slug}`}
           className="focus-visible:ring-ring/50 block flex-1 rounded-xl outline-none focus-visible:ring-3">
-          {image && (
-            <div className="bg-muted relative aspect-square w-full overflow-hidden rounded-t-xl">
-              <Image
-                src={image.url}
-                alt={image.alt ?? product.name}
-                fill
-                unoptimized
-                sizes="(max-width: 768px) 50vw, 25vw"
-                className="object-cover transition-transform duration-300 group-hover:scale-105"
-              />
-            </div>
-          )}
+          <div className="bg-muted relative aspect-square w-full overflow-hidden rounded-t-xl">
+            <Image
+              src={imgFailed ? "/placeholder.svg" : thumbnailUrl}
+              alt={thumbnailAlt}
+              fill
+              unoptimized
+              sizes="(max-width: 768px) 50vw, 25vw"
+              className="object-cover transition-transform duration-500 ease-out group-hover:scale-[1.12]"
+              onError={() => setImgFailed(true)}
+            />
+            <span className="bg-background/85 text-foreground pointer-events-none absolute right-2 bottom-2 inline-flex items-center rounded-full px-2 py-1 text-[10px] font-medium opacity-0 shadow transition-opacity group-hover:opacity-100">
+              Hover to zoom
+            </span>
+          </div>
           <CardContent className="flex flex-col gap-2">
             <Badge
               variant="secondary"
@@ -102,19 +109,23 @@ const ProductCard = ({ product }: { product: ProductCardData }) => {
           <p className="text-lg font-semibold tabular-nums">
             {formatPrice(price)}
           </p>
-          <Button
-            size="sm"
-            disabled={outOfStock}
-            onClick={handleAddToCart}
-            data-icon="inline-start">
-            <ShoppingCartIcon aria-hidden="true" />
-            {outOfStock ? "Out of stock" : "Add"}
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button
+              size="sm"
+              disabled={outOfStock}
+              onClick={handleAddToCart}
+              data-icon="inline-start">
+              <ShoppingCartIcon aria-hidden="true" />
+              {outOfStock ? "Out of stock" : "Add"}
+            </Button>
+            <WishlistButton
+              productId={product.id}
+              variant="outline"
+              size="icon-sm"
+              className="bg-background size-8 rounded-md border-2 shadow-xs"
+            />
+          </div>
         </CardFooter>
-        <WishlistButton
-          productId={product.id}
-          className="absolute top-2 right-2"
-        />
       </Card>
     </motion.div>
   );

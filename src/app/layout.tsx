@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import ThemeProvider from "@/components/Providers/ThemeProvider";
-import { Toaster } from "@/components/shadcnui/toast";
 import { geistMono, geistSans, interHeading } from "@/lib/fonts";
 import { LayoutProps } from "@/lib/types";
 import { cn } from "@/lib/utils";
@@ -34,7 +33,6 @@ const RootLayout = ({ children }: LayoutProps) => {
             defaultTheme="dark"
             enableSystem={false}>
             {children}
-            <Toaster />
           </ThemeProvider>
         </NuqsAdapter>
       </body>

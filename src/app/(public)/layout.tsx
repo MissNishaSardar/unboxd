@@ -1,5 +1,6 @@
 import CartProvider from "@/components/Cart/CartProvider";
 import ImpersonationBanner from "@/components/Admin/ImpersonationBanner";
+import Container from "@/components/Layout/Container";
 import Header from "@/components/Layout/Header";
 import WishlistProvider from "@/components/Wishlist/WishlistProvider";
 import { auth } from "@/lib/auth";
@@ -19,7 +20,9 @@ const PublicLayout = async ({ children }: LayoutProps) => {
         <ImpersonationBanner name={session.user.name} />
       )}
       <Header />
-      <main>{children}</main>
+      <main>
+        <Container className="py-10">{children}</Container>
+      </main>
       <CartProvider />
       <WishlistProvider />
     </div>

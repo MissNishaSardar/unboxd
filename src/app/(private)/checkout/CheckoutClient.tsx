@@ -20,6 +20,7 @@ import {
   SHIPPING_FLAT_RATE,
 } from "@/lib/cart/shipping";
 import { formatPrice } from "@/lib/format";
+import { getPlaceholderPhotoUrl } from "@/lib/placeholder";
 import { checkoutSchema, checkoutType } from "@/lib/zodSchema";
 import { placeOrder } from "./actions";
 import { Button } from "@/components/shadcnui/button";
@@ -258,9 +259,15 @@ const CheckoutClient = () => {
                     <div className="bg-muted size-10 shrink-0 overflow-hidden rounded-md">
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img
-                        src={item.image}
+                        src={
+                          item.image ||
+                          getPlaceholderPhotoUrl(item.slug || item.productId)
+                        }
                         alt={item.name}
                         className="size-full object-cover"
+                        onError={(e) => {
+                          e.currentTarget.src = "/placeholder.svg";
+                        }}
                       />
                     </div>
                     <div className="min-w-0">

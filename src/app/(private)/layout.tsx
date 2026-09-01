@@ -6,6 +6,7 @@ import PrivateHeader from "@/components/Layout/PrivateHeader";
 import { SidebarInset, SidebarProvider } from "@/components/shadcnui/sidebar";
 import { TooltipProvider } from "@/components/shadcnui/tooltip";
 import { auth } from "@/lib/auth";
+import Container from "@/components/Layout/Container";
 import { LayoutProps } from "@/lib/types";
 
 const PrivateLayout = async ({ children }: LayoutProps) => {
@@ -37,7 +38,9 @@ const PrivateLayout = async ({ children }: LayoutProps) => {
           {session.session.impersonatedBy && (
             <ImpersonationBanner name={session.user.name} />
           )}
-          <main className="flex-1 p-6">{children}</main>
+          <main className="flex-1 py-6">
+            <Container>{children}</Container>
+          </main>
         </SidebarInset>
       </SidebarProvider>
     </TooltipProvider>

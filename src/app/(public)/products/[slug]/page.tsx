@@ -5,11 +5,14 @@ import { ChevronRightIcon } from "lucide-react";
 import ProductGallery from "@/components/Product/ProductGallery";
 import ProductGrid from "@/components/Product/ProductGrid";
 import ProductInfo from "@/components/Product/ProductInfo";
+import ProductReviews from "@/components/Product/ProductReviews";
+import { getPlaceholderPhotoUrl } from "@/lib/placeholder";
 import {
   getProductBySlug,
   getProductSlugs,
   getRelatedProducts,
 } from "@/server/catalog";
+import { getReviewsBySlug } from "@/server/reviews";
 
 type Props = {
   params: Promise<{ slug: string }>;
@@ -37,10 +40,13 @@ const ProductPage = async ({ params }: Props) => {
   const product = await getProductBySlug(slug);
   if (!product) notFound();
 
-  const related = await getRelatedProducts(product.slug, product.category.slug);
+  const [related, initialReviews] = await Promise.all([
+    getRelatedProducts(product.slug, product.category.slug),
+    getReviewsBySlug(product.slug),
+  ]);
 
   return (
-    <div className="flex flex-col gap-10 px-6 py-10">
+    <div className="flex flex-col gap-10">
       <nav
         aria-label="Breadcrumb"
         className="text-muted-foreground flex items-center gap-1 text-sm">
@@ -77,10 +83,11 @@ const ProductPage = async ({ params }: Props) => {
         <span className="text-foreground truncate">{product.name}</span>
       </nav>
 
-      <div className="grid gap-8 lg:grid-cols-2">
+      <div className="grid items-start gap-8 lg:grid-cols-2">
         <ProductGallery
           images={product.images}
           name={product.name}
+          slug={product.slug}
         />
         <ProductInfo
           productId={product.id}
@@ -88,15 +95,21 @@ const ProductPage = async ({ params }: Props) => {
           name={product.name}
           basePrice={product.basePrice}
           priceFrom={product.priceFrom}
-          image={product.images[0]?.url ?? ""}
+          image={product.images[0]?.url ?? getPlaceholderPhotoUrl(product.slug)}
           variants={product.variants}
+          description={product.description}
+          initialReviews={initialReviews}
         />
       </div>
 
-      <section className="flex flex-col gap-3">
-        <h2 className="font-heading text-xl font-medium">Description</h2>
-        <p className="text-muted-foreground max-w-2xl">{product.description}</p>
-      </section>
+      <div id="reviews-full">
+        <ProductReviews
+          key={product.slug}
+          slug={product.slug}
+          productId={product.id}
+          initialReviews={initialReviews}
+        />
+      </div>
 
       {related.length > 0 && (
         <section className="flex flex-col gap-4">

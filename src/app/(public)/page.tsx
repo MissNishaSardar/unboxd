@@ -51,7 +51,7 @@ const HomePage = async () => {
   ]);
 
   return (
-    <div className="flex flex-col gap-20 px-6 py-10">
+    <div className="flex flex-col gap-20">
       <section className="border-border bg-card relative overflow-hidden rounded-3xl border px-6 py-16 md:px-12 md:py-24">
         <div
           aria-hidden

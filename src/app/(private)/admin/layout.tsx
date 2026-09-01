@@ -6,6 +6,7 @@ import { SidebarInset, SidebarProvider } from "@/components/shadcnui/sidebar";
 import { TooltipProvider } from "@/components/shadcnui/tooltip";
 import { auth } from "@/lib/auth";
 import { requireAdminPage } from "@/lib/guard";
+import Container from "@/components/Layout/Container";
 import { LayoutProps } from "@/lib/types";
 
 const AdminLayout = async ({ children }: LayoutProps) => {
@@ -26,7 +27,9 @@ const AdminLayout = async ({ children }: LayoutProps) => {
           {session?.session.impersonatedBy && (
             <ImpersonationBanner name={session.user.name} />
           )}
-          <main className="flex-1 p-6">{children}</main>
+          <main className="flex-1 py-6">
+            <Container>{children}</Container>
+          </main>
         </SidebarInset>
       </SidebarProvider>
     </TooltipProvider>

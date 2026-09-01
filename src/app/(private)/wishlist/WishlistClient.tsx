@@ -54,7 +54,7 @@ const WishlistClient = () => {
   }, [ids, session, setIds]);
 
   return (
-    <div className="mx-auto flex max-w-6xl flex-col gap-8">
+    <div className="flex max-w-6xl mx-auto flex-col gap-8">
       <header className="flex flex-col gap-1">
         <h1 className="font-heading text-2xl font-semibold tracking-tight md:text-3xl">
           Wishlist
