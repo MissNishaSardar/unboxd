@@ -1,6 +1,10 @@
 import { endOfDay, parseISO, startOfDay } from "date-fns";
 import type { Prisma } from "@generated/prisma/client";
 import prisma from "@/lib/dbClient/prisma";
+import {
+  getPlaceholderPhotoUrl,
+  resolveProductImageUrl,
+} from "@/lib/placeholder";
 
 export const ADMIN_ORDERS_PER_PAGE = 10;
 
@@ -111,12 +115,18 @@ export async function getAdminOrderDetail(id: string) {
         where: { id: { in: productIds } },
         select: {
           id: true,
+          slug: true,
           images: { orderBy: { sortOrder: "asc" }, take: 1 },
         },
       })
     : [];
   const imageByProductId = new Map(
-    products.map((product) => [product.id, product.images[0]?.url ?? null]),
+    products.map((product) => [
+      product.id,
+      product.images[0] ?
+        resolveProductImageUrl(product.images[0].url, product.slug, 0)
+      : getPlaceholderPhotoUrl(product.slug),
+    ]),
   );
 
   return {
@@ -130,13 +140,19 @@ export async function getAdminOrderDetail(id: string) {
     statusUpdatedAt: order.statusUpdatedAt?.toISOString() ?? null,
     user: order.user,
     address: order.address,
-    items: order.items.map((item) => ({
-      id: item.id,
-      nameSnapshot: item.nameSnapshot,
-      priceSnapshot: String(item.priceSnapshot),
-      quantity: item.quantity,
-      sku: item.variantId ? (skuById.get(item.variantId) ?? null) : null,
-      imageUrl: imageByProductId.get(item.productId) ?? null,
-    })),
+    items: order.items.map((item) => {
+      const imageUrl = imageByProductId.get(item.productId);
+      const fallbackSeed =
+        item.nameSnapshot.toLowerCase().replace(/[^a-z0-9]+/g, "-") ||
+        item.productId;
+      return {
+        id: item.id,
+        nameSnapshot: item.nameSnapshot,
+        priceSnapshot: String(item.priceSnapshot),
+        quantity: item.quantity,
+        sku: item.variantId ? (skuById.get(item.variantId) ?? null) : null,
+        imageUrl: imageUrl ?? getPlaceholderPhotoUrl(fallbackSeed),
+      };
+    }),
   };
 }

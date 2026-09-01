@@ -339,3 +339,26 @@ export const changePasswordSchema = z
   });
 
 export type changePasswordType = z.infer<typeof changePasswordSchema>;
+
+export const reviewCreateSchema = z.object({
+  productId: z.string().min(1, { error: "Product is required" }),
+  rating: z.number().int().min(1).max(5),
+  title: z
+    .string()
+    .trim()
+    .min(5, { error: "Title must be at least 5 characters" })
+    .max(80, { error: "Title must be at most 80 characters" }),
+  body: z
+    .string()
+    .trim()
+    .min(10, { error: "Review must be at least 10 characters" })
+    .max(1000, { error: "Review must be at most 1000 characters" }),
+});
+
+export type reviewCreateType = z.infer<typeof reviewCreateSchema>;
+
+export const reviewHelpfulSchema = z.object({
+  reviewId: z.string().min(1),
+});
+
+export type reviewHelpfulType = z.infer<typeof reviewHelpfulSchema>;

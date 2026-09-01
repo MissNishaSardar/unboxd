@@ -155,22 +155,14 @@ const AdminProductsPage = async ({
                   <TableRow key={product.id}>
                     <TableCell>
                       <div className="flex items-center gap-3">
-                        {product.imageUrl ?
-                          <Image
-                            src={product.imageUrl}
-                            alt={product.name}
-                            width={40}
-                            height={40}
-                            unoptimized
-                            className="size-10 shrink-0 rounded-md object-cover"
-                          />
-                        : <div className="bg-muted flex size-10 shrink-0 items-center justify-center rounded-md">
-                            <PackageIcon
-                              className="text-muted-foreground size-4"
-                              aria-hidden="true"
-                            />
-                          </div>
-                        }
+                        <Image
+                          src={product.imageUrl}
+                          alt={product.name}
+                          width={40}
+                          height={40}
+                          unoptimized
+                          className="size-10 shrink-0 rounded-md object-cover"
+                        />
                         <div className="min-w-0">
                           <p className="truncate text-sm font-medium">
                             {product.name}

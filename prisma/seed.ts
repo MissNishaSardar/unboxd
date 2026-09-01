@@ -414,6 +414,15 @@ async function seedCatalog() {
   }
 
   for (const p of products) {
+    const baseUrl = p.images[0];
+    const galleryUrls =
+      baseUrl.includes("picsum.photos") ?
+        [0, 1, 2, 3].map((i) =>
+          i === 0 ? baseUrl : (
+            baseUrl.replace(`/seed/${p.slug}/`, `/seed/${p.slug}-${i + 1}/`)
+          ),
+        )
+      : p.images;
     const product = await prisma.product.create({
       data: {
         name: p.name,
@@ -423,7 +432,7 @@ async function seedCatalog() {
         featured: p.featured ?? false,
         category: { connect: { slug: p.category } },
         images: {
-          create: p.images.map((url, i) => ({
+          create: galleryUrls.map((url, i) => ({
             url,
             alt: p.name,
             sortOrder: i,

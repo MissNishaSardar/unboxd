@@ -30,6 +30,8 @@ model User {
   accounts      Account[]
   orders        Order[]
   wishlist      WishlistItem[]
+  reviews       Review[]
+  reviewHelpful ReviewHelpful[]
 
   @@unique([email])
   @@index([deletedAt])
@@ -56,8 +58,8 @@ model Product {
   id            String          @id @default(cuid())
   slug          String          @unique
   name          String
-  description   String         
-  basePrice     Decimal        
+  description   String
+  basePrice     Decimal
   isActive      Boolean         @default(true)
   featured      Boolean         @default(false)
   categoryId    String
@@ -65,6 +67,7 @@ model Product {
   variants      ProductVariant[]
   images        ProductImage[]
   wishlistItems WishlistItem[]
+  reviews       Review[]
   createdAt     DateTime        @default(now())
   updatedAt     DateTime        @updatedAt
 
@@ -149,6 +152,37 @@ model WishlistItem {
 
   @@unique([userId, productId])
   @@index([userId])
+}
+
+model Review {
+  id         String          @id @default(cuid())
+  productId  String
+  product    Product         @relation(fields: [productId], references: [id], onDelete: Cascade)
+  userId     String
+  user       User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  rating     Int
+  title      String
+  body       String
+  verified   Boolean         @default(false)
+  helpful    Int             @default(0)
+  helpfulBy  ReviewHelpful[]
+  createdAt  DateTime        @default(now())
+  updatedAt  DateTime        @updatedAt
+
+  @@unique([productId, userId])
+  @@index([productId, createdAt])
+}
+
+model ReviewHelpful {
+  id        String   @id @default(cuid())
+  reviewId  String
+  review    Review   @relation(fields: [reviewId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([reviewId, userId])
+  @@index([reviewId])
 }
 
 model Session {

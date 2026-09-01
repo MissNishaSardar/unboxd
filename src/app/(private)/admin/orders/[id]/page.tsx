@@ -147,16 +147,14 @@ const AdminOrderDetailPage = async ({
                 <TableRow key={item.id}>
                   <TableCell className="font-medium">
                     <div className="flex items-center gap-3">
-                      {item.imageUrl && (
-                        <div className="bg-muted size-10 shrink-0 overflow-hidden rounded-md">
-                          {/* eslint-disable-next-line @next/next/no-img-element */}
-                          <img
-                            src={item.imageUrl}
-                            alt={item.nameSnapshot}
-                            className="size-full object-cover"
-                          />
-                        </div>
-                      )}
+                      <div className="bg-muted size-10 shrink-0 overflow-hidden rounded-md">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src={item.imageUrl}
+                          alt={item.nameSnapshot}
+                          className="size-full object-cover"
+                        />
+                      </div>
                       {item.nameSnapshot}
                     </div>
                   </TableCell>

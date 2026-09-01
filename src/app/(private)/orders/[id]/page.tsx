@@ -6,6 +6,10 @@ import { auth } from "@/lib/auth";
 import prisma from "@/lib/dbClient/prisma";
 import { formatDate, formatPrice } from "@/lib/format";
 import { getEstimatedDelivery } from "@/lib/orders/status";
+import {
+  getPlaceholderPhotoUrl,
+  resolveProductImageUrl,
+} from "@/lib/placeholder";
 import { headers } from "next/headers";
 import { Badge } from "@/components/shadcnui/badge";
 import { Button } from "@/components/shadcnui/button";
@@ -48,12 +52,18 @@ const OrderPage = async ({ params }: Props) => {
         where: { id: { in: productIds } },
         select: {
           id: true,
+          slug: true,
           images: { orderBy: { sortOrder: "asc" }, take: 1 },
         },
       })
     : [];
   const imageByProductId = new Map(
-    products.map((product) => [product.id, product.images[0]?.url ?? null]),
+    products.map((product) => [
+      product.id,
+      product.images[0] ?
+        resolveProductImageUrl(product.images[0].url, product.slug, 0)
+      : getPlaceholderPhotoUrl(product.slug),
+    ]),
   );
 
   const showEta = order.status === "CONFIRMED" || order.status === "SHIPPED";
@@ -127,7 +137,14 @@ const OrderPage = async ({ params }: Props) => {
                 <div className="bg-muted size-10 shrink-0 overflow-hidden rounded-md">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
-                    src={imageByProductId.get(item.productId) ?? undefined}
+                    src={
+                      imageByProductId.get(item.productId) ??
+                      getPlaceholderPhotoUrl(
+                        item.nameSnapshot
+                          .toLowerCase()
+                          .replace(/[^a-z0-9]+/g, "-") || item.productId,
+                      )
+                    }
                     alt={item.nameSnapshot}
                     className="size-full object-cover"
                   />
