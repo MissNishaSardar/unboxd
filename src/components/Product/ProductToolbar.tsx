@@ -1,7 +1,10 @@
 "use client";
 
-import { XIcon } from "lucide-react";
+/* eslint-disable react-hooks/set-state-in-effect -- syncing URL query state to draft inputs for popover is intentional */
+import { useEffect, useState } from "react";
+import { SlidersHorizontalIcon, XIcon } from "lucide-react";
 import {
+  parseAsArrayOf,
   parseAsFloat,
   parseAsInteger,
   parseAsString,
@@ -10,14 +13,23 @@ import {
 import { Badge } from "@/components/shadcnui/badge";
 import { Button } from "@/components/shadcnui/button";
 import {
-  Select,
-  SelectContent,
-  SelectGroup,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/shadcnui/select";
-import type { FilterCategory } from "@/components/Product/FilterSidebar";
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@/components/shadcnui/card";
+import { Field, FieldLabel } from "@/components/shadcnui/field";
+import { Input } from "@/components/shadcnui/input";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/shadcnui/popover";
+import {
+  ToggleGroup,
+  ToggleGroupItem,
+} from "@/components/shadcnui/toggle-group";
+import type { FilterCategory } from "@/components/Product/categoryFilterMeta";
 
 const SORT_OPTIONS = [
   { value: "newest", label: "Newest" },
@@ -32,93 +44,231 @@ type Props = {
 const ProductToolbar = ({ categories }: Props) => {
   const [filters, setFilters] = useQueryStates(
     {
-      category: parseAsString,
+      q: parseAsString,
+      categories: parseAsArrayOf(parseAsString, ",").withDefault([]),
       sort: parseAsString,
       min: parseAsFloat,
       max: parseAsFloat,
       page: parseAsInteger,
     },
-    { shallow: false },
+    { shallow: false, urlKeys: { categories: "categories" } },
   );
 
   const sort = filters.sort ?? "newest";
-  const activeCategory = filters.category ?? null;
+  const activeCategories = filters.categories;
   const activeMin = filters.min ?? null;
   const activeMax = filters.max ?? null;
+  const activeQ = filters.q ?? null;
 
-  const hasCategory = activeCategory !== null && activeCategory !== "";
+  const hasCategories = activeCategories.length > 0;
   const hasMin = activeMin !== null && activeMin !== undefined;
   const hasMax = activeMax !== null && activeMax !== undefined;
-  const hasFilters = hasCategory || hasMin || hasMax;
-
-  const categoryName =
-    categories.find((c) => c.slug === activeCategory)?.name ?? activeCategory;
+  const hasQ = activeQ !== null && activeQ !== "";
+  const hasFilters = hasCategories || hasMin || hasMax || hasQ;
 
   const priceLabel =
-    hasMin && hasMax ? `$${activeMin} – $${activeMax}`
-    : hasMin ? `Min $${activeMin}`
-    : hasMax ? `Max $${activeMax}`
+    hasMin && hasMax ?
+      `₹${activeMin?.toLocaleString()} – ₹${activeMax?.toLocaleString()}`
+    : hasMin ? `Min ₹${activeMin?.toLocaleString()}`
+    : hasMax ? `Max ₹${activeMax?.toLocaleString()}`
     : null;
 
-  const clearCategory = () => {
-    void setFilters({ category: null, page: null });
+  const removeCategory = (slug: string) => {
+    void setFilters({
+      categories: activeCategories.filter((item) => item !== slug),
+      page: null,
+    });
   };
 
   const clearPrice = () => {
     void setFilters({ min: null, max: null, page: null });
   };
 
+  const clearQ = () => {
+    void setFilters({ q: null, page: null });
+  };
+
   const clearAll = () => {
-    void setFilters({ category: null, min: null, max: null, page: null });
+    void setFilters({
+      q: null,
+      categories: [],
+      min: null,
+      max: null,
+      page: null,
+    });
+  };
+
+  const [open, setOpen] = useState(false);
+  const [draftMin, setDraftMin] = useState(
+    filters.min != null ? String(filters.min) : "",
+  );
+  const [draftMax, setDraftMax] = useState(
+    filters.max != null ? String(filters.max) : "",
+  );
+  const [draftSort, setDraftSort] = useState(sort);
+
+  useEffect(() => {
+    if (open) return;
+    setDraftMin(filters.min != null ? String(filters.min) : "");
+    setDraftMax(filters.max != null ? String(filters.max) : "");
+    setDraftSort(sort);
+  }, [filters.min, filters.max, sort, open]);
+
+  const handleApply = () => {
+    const parsedMin = draftMin === "" ? null : Number(draftMin);
+    const parsedMax = draftMax === "" ? null : Number(draftMax);
+    if (draftMin !== "" && Number.isNaN(parsedMin)) return;
+    if (draftMax !== "" && Number.isNaN(parsedMax)) return;
+    const nextMin =
+      parsedMin !== null && !Number.isNaN(parsedMin) ? parsedMin : null;
+    const nextMax =
+      parsedMax !== null && !Number.isNaN(parsedMax) ? parsedMax : null;
+    void setFilters({
+      min: nextMin,
+      max: nextMax,
+      sort: draftSort,
+      page: null,
+    });
+    setOpen(false);
   };
 
   return (
     <div className="flex flex-col gap-3">
-      <div className="flex items-center justify-end">
-        <Select
-          value={sort}
-          onValueChange={(value) =>
-            void setFilters({ sort: value ?? null, page: null })
-          }
-          items={SORT_OPTIONS as unknown as { value: string; label: string }[]}>
-          <SelectTrigger
-            size="sm"
-            className="w-full sm:w-48">
-            <SelectValue>
-              {SORT_OPTIONS.find((o) => o.value === sort)?.label}
-            </SelectValue>
-          </SelectTrigger>
-          <SelectContent>
-            <SelectGroup>
-              {SORT_OPTIONS.map((option) => (
-                <SelectItem
-                  key={option.value}
-                  value={option.value}>
-                  {option.label}
-                </SelectItem>
-              ))}
-            </SelectGroup>
-          </SelectContent>
-        </Select>
+      <div className="flex items-center justify-between gap-3">
+        <Popover
+          open={open}
+          onOpenChange={setOpen}>
+          <PopoverTrigger
+            render={
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-1.5 rounded-full"
+              />
+            }>
+            <SlidersHorizontalIcon className="size-4" />
+            Filter by
+          </PopoverTrigger>
+          <PopoverContent
+            align="center"
+            sideOffset={8}
+            className="w-80 p-0">
+            <Card
+              size="sm"
+              className="border-0 shadow-none">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm">Filters</CardTitle>
+              </CardHeader>
+              <CardContent className="flex flex-col gap-5">
+                <div className="flex flex-col gap-2">
+                  <span className="text-xs font-medium">Price</span>
+                  <div className="flex gap-2">
+                    <Field className="flex-1">
+                      <FieldLabel htmlFor="filter-min">Min</FieldLabel>
+                      <Input
+                        id="filter-min"
+                        type="number"
+                        placeholder="Min"
+                        value={draftMin}
+                        onChange={(e) => setDraftMin(e.target.value)}
+                      />
+                    </Field>
+                    <Field className="flex-1">
+                      <FieldLabel htmlFor="filter-max">Max</FieldLabel>
+                      <Input
+                        id="filter-max"
+                        type="number"
+                        placeholder="Max"
+                        value={draftMax}
+                        onChange={(e) => setDraftMax(e.target.value)}
+                      />
+                    </Field>
+                  </div>
+                </div>
+                <div className="flex flex-col gap-2">
+                  <span className="text-xs font-medium">Sort by</span>
+                  <ToggleGroup
+                    orientation="vertical"
+                    value={[draftSort]}
+                    onValueChange={(values) => {
+                      const v = values[0];
+                      if (v) setDraftSort(v);
+                    }}
+                    className="w-full gap-1.5">
+                    {SORT_OPTIONS.map((option) => (
+                      <ToggleGroupItem
+                        key={option.value}
+                        value={option.value}
+                        variant="outline"
+                        className="data-[state=on]:bg-primary data-[state=on]:text-primary-foreground justify-start rounded-md px-3">
+                        {option.label}
+                      </ToggleGroupItem>
+                    ))}
+                  </ToggleGroup>
+                </div>
+                <Button
+                  size="sm"
+                  className="w-full"
+                  onClick={handleApply}>
+                  Apply
+                </Button>
+                {(hasMin || hasMax) && (
+                  <Button
+                    variant="ghost"
+                    size="xs"
+                    onClick={() => {
+                      void setFilters({ min: null, max: null, page: null });
+                      setOpen(false);
+                    }}>
+                    Clear price
+                  </Button>
+                )}
+              </CardContent>
+            </Card>
+          </PopoverContent>
+        </Popover>
+        <div className="text-muted-foreground hidden text-xs sm:block">
+          {SORT_OPTIONS.find((o) => o.value === sort)?.label}
+        </div>
       </div>
 
       {hasFilters && (
         <div className="flex flex-wrap items-center gap-2">
-          {hasCategory && (
+          {hasQ && (
             <Badge
               variant="secondary"
               className="gap-1 pr-1">
-              <span className="max-w-32 truncate">{categoryName}</span>
+              <span className="max-w-32 truncate">q: {activeQ}</span>
               <Button
                 variant="ghost"
                 size="icon-xs"
-                aria-label={`Remove ${categoryName} filter`}
-                onClick={clearCategory}
+                aria-label="Remove search filter"
+                onClick={clearQ}
                 className="size-5 rounded-full">
                 <XIcon className="size-3" />
               </Button>
             </Badge>
           )}
+          {activeCategories.map((slug) => {
+            const name =
+              categories.find((item) => item.slug === slug)?.name ?? slug;
+            return (
+              <Badge
+                key={slug}
+                variant="secondary"
+                className="gap-1 pr-1">
+                <span className="max-w-32 truncate">{name}</span>
+                <Button
+                  variant="ghost"
+                  size="icon-xs"
+                  aria-label={`Remove ${name} filter`}
+                  onClick={() => removeCategory(slug)}
+                  className="size-5 rounded-full">
+                  <XIcon className="size-3" />
+                </Button>
+              </Badge>
+            );
+          })}
 
           {priceLabel && (
             <Badge

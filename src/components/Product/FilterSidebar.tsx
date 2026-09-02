@@ -4,12 +4,14 @@
 
 import { useEffect, useRef, useState } from "react";
 import {
+  parseAsArrayOf,
   parseAsFloat,
   parseAsInteger,
   parseAsString,
   useQueryStates,
 } from "nuqs";
 import { Badge } from "@/components/shadcnui/badge";
+import { Card } from "@/components/shadcnui/card";
 import {
   Field,
   FieldGroup,
@@ -22,31 +24,36 @@ import {
   ToggleGroup,
   ToggleGroupItem,
 } from "@/components/shadcnui/toggle-group";
+import {
+  ALL_CATEGORY,
+  PRICE_MAX,
+  PRICE_MIN,
+  PRICE_STEP,
+  categoryIcons,
+  FallbackIcon,
+  type FilterCategory,
+} from "@/components/Product/categoryFilterMeta";
+import { TagIcon } from "lucide-react";
 
-export type FilterCategory = {
-  slug: string;
-  name: string;
-  count: number;
-};
-
-const ALL_CATEGORY = "all";
-
-const PRICE_MIN = 0;
-const PRICE_MAX = 250000;
-const PRICE_STEP = 1000;
+const categoryGroups: { label: string; slugs: string[] }[] = [
+  { label: "Phones", slugs: ["smartphones"] },
+  { label: "Laptops", slugs: ["laptops", "gaming-laptops"] },
+  { label: "Audio", slugs: ["headphones", "earbuds", "speakers"] },
+  { label: "Accessories", slugs: ["chargers-cables", "cases-protection"] },
+];
 
 const FilterSidebar = ({ categories }: { categories: FilterCategory[] }) => {
   const [filters, setFilters] = useQueryStates(
     {
-      category: parseAsString,
+      categories: parseAsArrayOf(parseAsString, ",").withDefault([]),
       min: parseAsFloat,
       max: parseAsFloat,
       page: parseAsInteger,
     },
-    { shallow: false },
+    { shallow: false, urlKeys: { categories: "categories" } },
   );
 
-  const activeCategory = filters.category;
+  const activeCategories = filters.categories;
   const [min, setMin] = useState(
     filters.min !== undefined && filters.min !== null ?
       String(filters.min)
@@ -104,8 +111,8 @@ const FilterSidebar = ({ categories }: { categories: FilterCategory[] }) => {
     return () => clearTimeout(timeout);
   }, [min, max, filters.min, filters.max, setFilters]);
 
-  const selectCategory = (slug: string | null) => {
-    void setFilters({ category: slug, page: null });
+  const selectCategories = (next: string[]) => {
+    void setFilters({ categories: next, page: null });
   };
 
   const handleSliderValueChange = (value: number | readonly number[]) => {
@@ -129,93 +136,157 @@ const FilterSidebar = ({ categories }: { categories: FilterCategory[] }) => {
     }, 0);
   };
 
-  return (
-    <aside className="flex w-full flex-col gap-6 lg:w-56 lg:shrink-0">
-      <FieldGroup className="gap-6">
-        <Field>
-          <FieldTitle>Category</FieldTitle>
-          <ToggleGroup
-            orientation="vertical"
-            className="w-full"
-            value={activeCategory ? [activeCategory] : [ALL_CATEGORY]}
-            onValueChange={(values) =>
-              selectCategory(
-                values[0] === ALL_CATEGORY ? null : (values[0] ?? null),
-              )
-            }>
-            <ToggleGroupItem
-              value={ALL_CATEGORY}
-              variant="outline"
-              className="w-full justify-between">
-              <span>All</span>
-            </ToggleGroupItem>
-            {categories.map((category) => (
-              <ToggleGroupItem
-                key={category.slug}
-                value={category.slug}
-                variant="outline"
-                className="w-full justify-between">
-                <span>{category.name}</span>
-                <Badge
-                  variant="outline"
-                  className="shrink-0 tabular-nums">
-                  {category.count}
-                </Badge>
-              </ToggleGroupItem>
-            ))}
-          </ToggleGroup>
-        </Field>
+  const isAll = activeCategories.length === 0;
+  const categoryBySlug = new Map(categories.map((c) => [c.slug, c]));
+  const ungrouped = categories.filter(
+    (c) => !categoryGroups.some((g) => g.slugs.includes(c.slug)),
+  );
 
-        <Field>
-          <FieldTitle>Price range</FieldTitle>
-          <div className="px-1 py-2">
-            <Slider
-              min={PRICE_MIN}
-              max={PRICE_MAX}
-              step={PRICE_STEP}
-              value={sliderValues}
-              onValueChange={handleSliderValueChange}
-              onValueCommitted={handleSliderCommitted}
-            />
-            <div className="text-muted-foreground mt-2 flex justify-between text-xs tabular-nums">
-              <span>₹{sliderValues[0].toLocaleString()}</span>
-              <span>₹{sliderValues[1].toLocaleString()}</span>
+  const renderPill = (category: FilterCategory) => {
+    const Icon = categoryIcons[category.slug] ?? FallbackIcon;
+    return (
+      <ToggleGroupItem
+        key={category.slug}
+        value={category.slug}
+        variant="outline"
+        className="data-[state=on]:bg-primary data-[state=on]:text-primary-foreground data-[state=on]:border-primary justify-between gap-1.5 rounded-full px-3">
+        <span className="flex items-center gap-1.5">
+          <Icon className="size-3.5" />
+          <span className="text-xs font-medium">{category.name}</span>
+        </span>
+        <Badge
+          variant="outline"
+          className="shrink-0 border-current bg-transparent px-1.5 py-0 text-[10px] tabular-nums data-[state=on]:bg-transparent">
+          {category.count}
+        </Badge>
+      </ToggleGroupItem>
+    );
+  };
+
+  return (
+    <aside className="hidden w-full flex-col gap-6 lg:flex lg:w-64 lg:shrink-0">
+      <Card className="flex flex-col gap-6 p-4">
+        <FieldGroup className="gap-6">
+          <Field>
+            <FieldTitle>Category</FieldTitle>
+            <div className="flex flex-col gap-4">
+              <ToggleGroup
+                multiple
+                orientation="vertical"
+                className="w-full gap-2"
+                value={isAll ? [ALL_CATEGORY] : []}
+                onValueChange={(values) => {
+                  if (values.includes(ALL_CATEGORY)) {
+                    selectCategories([]);
+                    return;
+                  }
+                  if (values.length === 0) {
+                    selectCategories([]);
+                    return;
+                  }
+                  selectCategories(
+                    values.filter((value) => value !== ALL_CATEGORY),
+                  );
+                }}>
+                <ToggleGroupItem
+                  value={ALL_CATEGORY}
+                  variant="outline"
+                  className="data-[state=on]:bg-primary data-[state=on]:text-primary-foreground data-[state=on]:border-primary justify-between gap-1.5 rounded-full px-3">
+                  <span className="flex items-center gap-1.5">
+                    <TagIcon className="size-3.5" />
+                    <span className="text-xs font-medium">All</span>
+                  </span>
+                </ToggleGroupItem>
+              </ToggleGroup>
+
+              {/* Single ToggleGroup for all category pills — preserves cross-group multi-select */}
+              <ToggleGroup
+                multiple
+                orientation="vertical"
+                className="w-full flex-col items-stretch gap-4"
+                value={activeCategories}
+                onValueChange={(values) => {
+                  const next = values.filter((value) => value !== ALL_CATEGORY);
+                  selectCategories(next);
+                }}>
+                {categoryGroups.map((group) => {
+                  const groupCats = group.slugs
+                    .map((slug) => categoryBySlug.get(slug))
+                    .filter((c): c is FilterCategory => Boolean(c));
+                  if (groupCats.length === 0) return null;
+                  return (
+                    <div
+                      key={group.label}
+                      className="flex flex-col gap-2">
+                      <span className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
+                        {group.label}
+                      </span>
+                      <div className="flex flex-col gap-2">
+                        {groupCats.map((category) => renderPill(category))}
+                      </div>
+                    </div>
+                  );
+                })}
+                {ungrouped.length > 0 && (
+                  <div className="flex flex-col gap-2">
+                    {ungrouped.map((category) => renderPill(category))}
+                  </div>
+                )}
+              </ToggleGroup>
             </div>
-          </div>
-          <div className="flex items-center gap-2">
-            <Field className="min-w-0 flex-1">
-              <FieldLabel
-                htmlFor="min-price"
-                className="sr-only">
-                Minimum price
-              </FieldLabel>
-              <Input
-                id="min-price"
-                type="number"
-                min={0}
-                placeholder="Min"
-                value={min}
-                onChange={(event) => setMin(event.target.value)}
+          </Field>
+
+          <Field>
+            <FieldTitle>Price range</FieldTitle>
+            <div className="px-1 py-2">
+              <Slider
+                min={PRICE_MIN}
+                max={PRICE_MAX}
+                step={PRICE_STEP}
+                value={sliderValues}
+                onValueChange={handleSliderValueChange}
+                onValueCommitted={handleSliderCommitted}
               />
-            </Field>
-            <Field className="min-w-0 flex-1">
-              <FieldLabel
-                htmlFor="max-price"
-                className="sr-only">
-                Maximum price
-              </FieldLabel>
-              <Input
-                id="max-price"
-                type="number"
-                min={0}
-                placeholder="Max"
-                value={max}
-                onChange={(event) => setMax(event.target.value)}
-              />
-            </Field>
-          </div>
-        </Field>
-      </FieldGroup>
+              <div className="text-muted-foreground mt-2 flex justify-between text-xs tabular-nums">
+                <span>₹{sliderValues[0].toLocaleString()}</span>
+                <span>₹{sliderValues[1].toLocaleString()}</span>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <Field className="min-w-0 flex-1">
+                <FieldLabel
+                  htmlFor="min-price"
+                  className="sr-only">
+                  Minimum price
+                </FieldLabel>
+                <Input
+                  id="min-price"
+                  type="number"
+                  min={0}
+                  placeholder="Min"
+                  value={min}
+                  onChange={(event) => setMin(event.target.value)}
+                />
+              </Field>
+              <Field className="min-w-0 flex-1">
+                <FieldLabel
+                  htmlFor="max-price"
+                  className="sr-only">
+                  Maximum price
+                </FieldLabel>
+                <Input
+                  id="max-price"
+                  type="number"
+                  min={0}
+                  placeholder="Max"
+                  value={max}
+                  onChange={(event) => setMax(event.target.value)}
+                />
+              </Field>
+            </div>
+          </Field>
+        </FieldGroup>
+      </Card>
     </aside>
   );
 };
