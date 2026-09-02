@@ -2,6 +2,7 @@
 
 import { PackageSearchIcon } from "lucide-react";
 import {
+  parseAsArrayOf,
   parseAsFloat,
   parseAsInteger,
   parseAsString,
@@ -20,21 +21,21 @@ import {
 const ProductsEmpty = () => {
   const [filters, setFilters] = useQueryStates(
     {
-      category: parseAsString,
+      categories: parseAsArrayOf(parseAsString, ",").withDefault([]),
       min: parseAsFloat,
       max: parseAsFloat,
       page: parseAsInteger,
     },
-    { shallow: false },
+    { shallow: false, urlKeys: { categories: "categories" } },
   );
 
   const hasActiveFilters =
-    (filters.category !== null && filters.category !== "") ||
+    filters.categories.length > 0 ||
     filters.min !== null ||
     filters.max !== null;
 
   const handleClear = () => {
-    void setFilters({ category: null, min: null, max: null, page: null });
+    void setFilters({ categories: [], min: null, max: null, page: null });
   };
 
   return (

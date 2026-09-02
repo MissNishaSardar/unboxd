@@ -4,16 +4,32 @@ import { prismaAdapter } from "better-auth/adapters/prisma";
 import { nextCookies } from "better-auth/next-js";
 import { admin } from "better-auth/plugins/admin";
 import prisma from "@/lib/dbClient/prisma";
+import { serverEnv } from "@/lib/env/serverEnv";
 
 export const auth = betterAuth({
   database: prismaAdapter(prisma, { provider: "sqlite" }),
+  baseURL: serverEnv.BETTER_AUTH_URL,
+  trustedOrigins: [serverEnv.BETTER_AUTH_URL],
+  rateLimit: {
+    window: 60,
+    max: 100,
+    storage: "memory",
+  },
   emailAndPassword: {
     enabled: true,
     sendResetPassword: async ({ user, url, token }) => {
+      const base = serverEnv.BETTER_AUTH_URL.replace(/\/$/, "");
+      const pageUrl = `${base}/auth/reset-password?token=${token}`;
       // Dev: formatted clickable link in the dev server terminal
       // Prod TODO: replace with Resend / email provider
       // Better Auth's `url` is the API route that redirects to `redirectTo` with ?token
-      const pageUrl = `http://localhost:3000/auth/reset-password?token=${token}`;
+      if (process.env.NODE_ENV === "production") {
+        // TODO: send via Resend/email provider using `url` or `pageUrl`
+        void console.log(
+          `[auth] password reset for ${user.email} → ${pageUrl}`,
+        );
+        return;
+      }
       void console.log(
         `\n` +
           `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n` +
@@ -53,10 +69,13 @@ export const auth = betterAuth({
         before: async (session) => {
           const user = await prisma.user.findUnique({
             where: { id: session.userId },
-            select: { deletedAt: true },
+            select: { deletedAt: true, banned: true },
           });
           if (user?.deletedAt) {
             throw new APIError("FORBIDDEN", { message: "Account deactivated" });
+          }
+          if (user?.banned) {
+            throw new APIError("FORBIDDEN", { message: "Account banned" });
           }
         },
       },

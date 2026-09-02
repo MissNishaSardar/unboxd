@@ -12,15 +12,34 @@ const PROTECTED = [
 ];
 const ADMIN = ["/admin"];
 
+function getClientIp(request: NextRequest): string | null {
+  const forwarded = request.headers.get("x-forwarded-for");
+  if (forwarded) return forwarded.split(",")[0]?.trim() ?? null;
+  return (
+    request.headers.get("x-real-ip") ??
+    (request as unknown as { ip?: string }).ip ??
+    null
+  );
+}
+
 function withShell(request: NextRequest, shell: string) {
   const requestHeaders = new Headers(request.headers);
   requestHeaders.set("x-route-shell", shell);
   requestHeaders.set("x-pathname", request.nextUrl.pathname);
+  const ip = getClientIp(request);
+  if (ip) requestHeaders.set("x-forwarded-for", ip);
+  const ua = request.headers.get("user-agent");
+  if (ua) requestHeaders.set("user-agent", ua);
   return NextResponse.next({
     request: {
       headers: requestHeaders,
     },
   });
+}
+
+function isPrivilegedBlocked(user: unknown): boolean {
+  const record = user as { deletedAt?: unknown; banned?: unknown } | null;
+  return Boolean(record?.deletedAt) || Boolean(record?.banned);
 }
 
 export async function proxy(request: NextRequest) {
@@ -35,11 +54,7 @@ export async function proxy(request: NextRequest) {
       loginUrl.searchParams.set("callbackUrl", pathname);
       return NextResponse.redirect(loginUrl);
     }
-    if (
-      session.user.role !== "admin" ||
-      (session.user as unknown as { deletedAt?: unknown }).deletedAt ||
-      (session.user as unknown as { banned?: unknown }).banned
-    ) {
+    if (session.user.role !== "admin" || isPrivilegedBlocked(session.user)) {
       return NextResponse.redirect(new URL("/forbidden", request.url));
     }
     return withShell(request, "admin");
@@ -48,6 +63,8 @@ export async function proxy(request: NextRequest) {
   if (!PROTECTED.some((p) => pathname.startsWith(p))) {
     const requestHeaders = new Headers(request.headers);
     requestHeaders.set("x-pathname", pathname);
+    const ip = getClientIp(request);
+    if (ip) requestHeaders.set("x-forwarded-for", ip);
     return NextResponse.next({
       request: {
         headers: requestHeaders,
@@ -65,6 +82,10 @@ export async function proxy(request: NextRequest) {
 
   const requestHeaders = new Headers(request.headers);
   requestHeaders.set("x-pathname", pathname);
+  const ip = getClientIp(request);
+  if (ip) requestHeaders.set("x-forwarded-for", ip);
+  const ua = request.headers.get("user-agent");
+  if (ua) requestHeaders.set("user-agent", ua);
   return NextResponse.next({
     request: {
       headers: requestHeaders,

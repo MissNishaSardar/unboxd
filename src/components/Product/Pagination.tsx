@@ -17,19 +17,20 @@ const Pagination = ({
   const searchParams = useSearchParams();
 
   const buildHref = (page: number) => {
-    const params = new URLSearchParams(searchParams);
+    const params = new URLSearchParams(searchParams.toString());
     params.set("page", String(page));
     return {
       pathname,
-      query: Object.fromEntries(params),
+      query: Object.fromEntries(params.entries()),
     } as const;
   };
 
   if (totalPages <= 1) return null;
 
+  const effectivePage = Math.min(Math.max(1, currentPage), totalPages);
   const pages: (number | string)[] = [];
-  const start = Math.max(1, currentPage - 2);
-  const end = Math.min(totalPages, currentPage + 2);
+  const start = Math.max(1, effectivePage - 2);
+  const end = Math.min(totalPages, effectivePage + 2);
   if (totalPages <= 7) {
     for (let page = 1; page <= totalPages; page++) pages.push(page);
   } else {
@@ -54,11 +55,11 @@ const Pagination = ({
       aria-label="Pagination"
       className="flex items-center justify-center gap-1.5">
       <Button
-        render={<Link href={buildHref(currentPage - 1)} />}
+        render={<Link href={buildHref(effectivePage - 1)} />}
         nativeButton={false}
         variant="outline"
         size="sm"
-        disabled={currentPage <= 1}
+        disabled={effectivePage <= 1}
         aria-label="Previous page">
         Prev
       </Button>
@@ -74,19 +75,19 @@ const Pagination = ({
             key={page}
             render={<Link href={buildHref(page)} />}
             nativeButton={false}
-            variant={page === currentPage ? "default" : "outline"}
+            variant={page === effectivePage ? "default" : "outline"}
             size="sm"
-            className={cn(page === currentPage && "pointer-events-none")}
-            aria-current={page === currentPage ? "page" : undefined}>
+            className={cn(page === effectivePage && "pointer-events-none")}
+            aria-current={page === effectivePage ? "page" : undefined}>
             {page}
           </Button>,
       )}
       <Button
-        render={<Link href={buildHref(currentPage + 1)} />}
+        render={<Link href={buildHref(effectivePage + 1)} />}
         nativeButton={false}
         variant="outline"
         size="sm"
-        disabled={currentPage >= totalPages}
+        disabled={effectivePage >= totalPages}
         aria-label="Next page">
         Next
       </Button>
