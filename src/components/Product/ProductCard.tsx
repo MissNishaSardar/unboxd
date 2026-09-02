@@ -4,17 +4,16 @@ import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { motion } from "motion/react";
-import { ShoppingCartIcon } from "lucide-react";
+import { ShoppingBagIcon, StarIcon, ZapIcon } from "lucide-react";
 import { authClient } from "@/lib/auth-client";
-import { Badge } from "@/components/shadcnui/badge";
 import { Button } from "@/components/shadcnui/button";
-import { Card, CardContent, CardFooter } from "@/components/shadcnui/card";
 import { toast } from "@/components/shadcnui/toast";
 import WishlistButton from "@/components/Product/WishlistButton";
 import { addToCart } from "@/lib/cart/atoms";
 import { formatPrice } from "@/lib/format";
 import { getPlaceholderPhotoUrl } from "@/lib/placeholder";
+import { getRatingSummary, getReviewsForProduct } from "@/lib/reviews";
+import { cn } from "@/lib/utils";
 
 export type ProductCardData = {
   id: string;
@@ -40,8 +39,10 @@ const ProductCard = ({ product }: { product: ProductCardData }) => {
   const price =
     Number(product.basePrice) + (variant ? Number(variant.priceDiff) : 0);
   const outOfStock = !variant || variant.stock === 0;
+  const lowStock = variant && variant.stock > 0 && variant.stock < 5;
   const { data: session, isPending } = authClient.useSession();
   const router = useRouter();
+  const rating = getRatingSummary(getReviewsForProduct(product.slug));
 
   const handleAddToCart = () => {
     if (isPending) return;
@@ -71,63 +72,149 @@ const ProductCard = ({ product }: { product: ProductCardData }) => {
     });
   };
 
+  const handleBuyNow = () => {
+    if (isPending) return;
+    if (!session) {
+      toast.add({ title: "Sign in to buy now", type: "error" });
+      router.push(`/auth/login?callbackUrl=/checkout`);
+      return;
+    }
+    if (!variant) return;
+    addToCart({
+      productId: product.id,
+      sku: variant.sku,
+      slug: product.slug,
+      name: product.name,
+      variantName: variant.name,
+      price,
+      image: thumbnailUrl,
+      maxStock: variant.stock,
+    });
+    router.push("/checkout");
+  };
+
   return (
-    <motion.div
-      whileHover={{ y: -4 }}
-      transition={{ type: "spring", stiffness: 300, damping: 24 }}
-      className="h-full">
-      <Card className="group relative flex h-full flex-col border border-transparent bg-transparent shadow-none ring-0 transition-colors hover:border-transparent">
+    <div className="group flex flex-col gap-2">
+      <Link
+        href={`/products/${product.slug}`}
+        className="bg-muted relative aspect-square w-full overflow-hidden rounded-2xl">
+        <Image
+          src={imgFailed ? "/placeholder.svg" : thumbnailUrl}
+          alt={thumbnailAlt}
+          fill
+          unoptimized
+          sizes="(max-width: 768px) 50vw, 25vw"
+          className="object-cover transition-transform duration-300 ease-out group-hover:scale-[1.04]"
+          onError={() => setImgFailed(true)}
+        />
+        <span className="pointer-events-none absolute top-2 left-2 rounded-full bg-black/55 px-2 py-1 text-[10px] font-medium tracking-wide text-white uppercase backdrop-blur md:hidden">
+          {product.category.name}
+        </span>
+        <div className="absolute top-2 right-2 z-10 hidden md:block">
+          <WishlistButton
+            productId={product.id}
+            variant="secondary"
+            size="icon-sm"
+            className="size-7 rounded-full border border-black/10 bg-white shadow-sm hover:bg-white dark:border-white/15 dark:bg-zinc-900"
+          />
+        </div>
+        <div className="absolute top-2 right-2 z-10 md:hidden">
+          <WishlistButton
+            productId={product.id}
+            variant="secondary"
+            size="icon-sm"
+            className="size-7 rounded-full border border-black/10 bg-white shadow-sm dark:border-white/15 dark:bg-zinc-900"
+          />
+        </div>
+      </Link>
+
+      <div className="flex flex-col gap-0.5 px-1">
+        <p className="text-muted-foreground hidden text-[11px] tracking-wide uppercase md:block">
+          {product.category.name}
+        </p>
         <Link
           href={`/products/${product.slug}`}
-          className="focus-visible:ring-ring/50 block flex-1 rounded-xl outline-none focus-visible:ring-3">
-          <div className="bg-muted relative aspect-square w-full overflow-hidden rounded-t-xl">
-            <Image
-              src={imgFailed ? "/placeholder.svg" : thumbnailUrl}
-              alt={thumbnailAlt}
-              fill
-              unoptimized
-              sizes="(max-width: 768px) 50vw, 25vw"
-              className="object-cover transition-transform duration-500 ease-out group-hover:scale-[1.12]"
-              onError={() => setImgFailed(true)}
-            />
-            <span className="bg-background/85 text-foreground pointer-events-none absolute right-2 bottom-2 inline-flex items-center rounded-full px-2 py-1 text-[10px] font-medium opacity-0 shadow transition-opacity group-hover:opacity-100">
-              Hover to zoom
-            </span>
-          </div>
-          <CardContent className="flex flex-col gap-2">
-            <Badge
-              variant="secondary"
-              className="w-fit">
-              {product.category.name}
-            </Badge>
-            <h3 className="font-heading line-clamp-2 text-base leading-snug font-medium">
-              {product.name}
-            </h3>
-          </CardContent>
+          className="line-clamp-2 text-sm leading-tight font-medium hover:underline">
+          {product.name}
         </Link>
-        <CardFooter className="justify-between gap-2 pb-5">
-          <p className="text-lg font-semibold tabular-nums">
+        <div className="flex items-center justify-between pt-1">
+          <p className="text-base font-semibold tabular-nums">
             {formatPrice(price)}
           </p>
-          <div className="flex items-center gap-2">
-            <Button
-              size="sm"
-              disabled={outOfStock}
-              onClick={handleAddToCart}
-              data-icon="inline-start">
-              <ShoppingCartIcon aria-hidden="true" />
-              {outOfStock ? "Out of stock" : "Add"}
-            </Button>
-            <WishlistButton
-              productId={product.id}
-              variant="outline"
-              size="icon-sm"
-              className="bg-background size-8 rounded-md border-2 shadow-xs"
-            />
-          </div>
-        </CardFooter>
-      </Card>
-    </motion.div>
+          {lowStock && (
+            <span className="text-[11px] font-medium text-amber-600 dark:text-amber-400">
+              Low stock
+            </span>
+          )}
+          {outOfStock && (
+            <span className="text-muted-foreground text-[11px] font-medium">
+              Out of stock
+            </span>
+          )}
+        </div>
+        {variant && (
+          <p className="text-muted-foreground line-clamp-1 text-xs">
+            {variant.name}
+          </p>
+        )}
+        <div className="flex items-center gap-1 pt-0.5">
+          <span
+            className="flex items-center gap-0.5"
+            aria-label={`${rating.average} out of 5 stars`}>
+            {Array.from({ length: 5 }).map((_, i) => (
+              <StarIcon
+                key={i}
+                className={cn(
+                  "size-3",
+                  i + 1 <= Math.round(rating.average) ?
+                    "fill-amber-400 text-amber-400"
+                  : "fill-muted text-muted-foreground/30",
+                )}
+              />
+            ))}
+          </span>
+          <span className="text-muted-foreground text-xs tabular-nums">
+            {rating.average.toFixed(1)} ({rating.count})
+          </span>
+        </div>
+        <div className="hidden gap-2 pt-1.5 md:flex">
+          <Button
+            size="sm"
+            variant="outline"
+            disabled={outOfStock}
+            onClick={handleAddToCart}
+            className="flex-1">
+            <ShoppingBagIcon className="size-3.5" />
+            Add
+          </Button>
+          <Button
+            size="sm"
+            disabled={outOfStock}
+            onClick={handleBuyNow}
+            className="flex-1">
+            <ZapIcon className="size-3.5" />
+            Buy Now
+          </Button>
+        </div>
+        <div className="grid grid-cols-2 gap-2 pt-1.5 md:hidden">
+          <Button
+            size="sm"
+            variant="outline"
+            disabled={outOfStock}
+            onClick={handleAddToCart}>
+            <ShoppingBagIcon className="size-4" />
+            Add
+          </Button>
+          <Button
+            size="sm"
+            disabled={outOfStock}
+            onClick={handleBuyNow}>
+            <ZapIcon className="size-4" />
+            Buy Now
+          </Button>
+        </div>
+      </div>
+    </div>
   );
 };
 
