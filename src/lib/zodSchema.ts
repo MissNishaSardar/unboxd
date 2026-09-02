@@ -64,26 +64,45 @@ const queryString = <T extends z.ZodType<string>>(schema: T) =>
     .union([schema, z.array(schema)])
     .transform((value) => (Array.isArray(value) ? value[0] : value));
 
+const csvStringArray = (schema: z.ZodType<string>) =>
+  z.preprocess((value) => {
+    if (value === undefined || value === "" || value === null) return [];
+    const raw = Array.isArray(value) ? value : [value];
+    return raw
+      .flatMap((entry) => String(entry).split(","))
+      .map((entry) => entry.trim())
+      .filter(Boolean);
+  }, z.array(schema).default([]));
+
 export const productSortSchema = z.enum(["price_asc", "price_desc", "newest"]);
 
-export const productListSearchParamsSchema = z.object({
-  q: queryString(z.string().trim().min(1).max(100)).optional(),
-  category: queryString(z.string().min(1).max(100)).optional(),
-  sort: productSortSchema.catch("newest"),
-  min: z
-    .preprocess(
-      (value) => (value === "" ? undefined : value),
-      z.coerce.number().min(0).optional(),
-    )
-    .catch(undefined),
-  max: z
-    .preprocess(
-      (value) => (value === "" ? undefined : value),
-      z.coerce.number().min(0).optional(),
-    )
-    .catch(undefined),
-  page: z.coerce.number().int().min(1).optional().catch(1),
-});
+export const productListSearchParamsSchema = z
+  .object({
+    q: queryString(z.string().trim().min(1).max(100)).optional(),
+    categories: csvStringArray(z.string().min(1).max(100)),
+    category: queryString(z.string().min(1).max(100)).optional(),
+    sort: productSortSchema.catch("newest"),
+    min: z
+      .preprocess(
+        (value) => (value === "" ? undefined : value),
+        z.coerce.number().min(0).optional(),
+      )
+      .catch(undefined),
+    max: z
+      .preprocess(
+        (value) => (value === "" ? undefined : value),
+        z.coerce.number().min(0).optional(),
+      )
+      .catch(undefined),
+    page: z.coerce.number().int().min(1).optional().catch(1),
+  })
+  .transform(({ category, categories, ...rest }) => ({
+    ...rest,
+    categories:
+      categories.length > 0 ? categories
+      : category ? [category]
+      : [],
+  }));
 
 export const searchSearchParamsSchema = z.object({
   q: queryString(z.string().trim().min(1).max(100)).optional(),

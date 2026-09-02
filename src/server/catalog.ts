@@ -68,24 +68,25 @@ export async function getFeaturedProducts() {
 }
 
 export async function getCategoriesWithCounts(params?: {
-  category?: string;
+  q?: string;
   min?: number;
   max?: number;
 }) {
   "use cache";
   cacheLife("hours");
   cacheTag("products");
+  const trimmedQ = params?.q?.trim();
   const whereProducts: Record<string, unknown> = { isActive: true };
+  if (trimmedQ) {
+    (whereProducts as Record<string, unknown>).OR = [
+      { name: { contains: trimmedQ } },
+      { description: { contains: trimmedQ } },
+    ];
+  }
   if (params?.min !== undefined || params?.max !== undefined) {
     (whereProducts as Record<string, unknown>).basePrice = {
       gte: params?.min,
       lte: params?.max,
-    };
-  }
-  if (params?.category) {
-    (whereProducts as Record<string, unknown>).category = {
-      slug: params.category,
-      deletedAt: null,
     };
   }
   const categories = await prisma.category.findMany({
@@ -110,7 +111,7 @@ export async function getCategoriesWithCounts(params?: {
 
 export type ProductListParams = {
   q?: string;
-  category?: string;
+  categories?: string[];
   sort?: z.infer<typeof productSortSchema>;
   min?: number;
   max?: number;
@@ -118,7 +119,10 @@ export type ProductListParams = {
 };
 
 export async function getProducts(params: ProductListParams) {
-  const { q, category, sort = "newest", min, max, page = 1 } = params;
+  "use cache";
+  cacheLife("hours");
+  cacheTag("products");
+  const { q, categories = [], sort = "newest", min, max, page = 1 } = params;
   const trimmedQ = q?.trim();
   const where = {
     isActive: true,
@@ -128,7 +132,9 @@ export async function getProducts(params: ProductListParams) {
         { description: { contains: trimmedQ } },
       ],
     }),
-    ...(category && { category: { slug: category, deletedAt: null } }),
+    ...(categories.length && {
+      category: { slug: { in: categories }, deletedAt: null },
+    }),
     ...((min !== undefined || max !== undefined) && {
       basePrice: {
         gte: min,
