@@ -97,6 +97,7 @@ export async function getAdminProductForEdit(id: string) {
     name: product.name,
     description: product.description,
     basePrice: String(product.basePrice),
+    brand: product.brand,
     categoryId: product.categoryId,
     isActive: product.isActive,
     categoryName: product.category.name,

@@ -81,6 +81,8 @@ export const productListSearchParamsSchema = z
     q: queryString(z.string().trim().min(1).max(100)).optional(),
     categories: csvStringArray(z.string().min(1).max(100)),
     category: queryString(z.string().min(1).max(100)).optional(),
+    brands: csvStringArray(z.string().min(1).max(40)),
+    brand: queryString(z.string().min(1).max(40)).optional(),
     sort: productSortSchema.catch("newest"),
     min: z
       .preprocess(
@@ -96,11 +98,15 @@ export const productListSearchParamsSchema = z
       .catch(undefined),
     page: z.coerce.number().int().min(1).optional().catch(1),
   })
-  .transform(({ category, categories, ...rest }) => ({
+  .transform(({ category, categories, brand, brands, ...rest }) => ({
     ...rest,
     categories:
       categories.length > 0 ? categories
       : category ? [category]
+      : [],
+    brands:
+      brands.length > 0 ? brands
+      : brand ? [brand]
       : [],
   }));
 
@@ -192,6 +198,11 @@ export const productFormSchema = z
       .min(10, { error: "Description must be at least 10 characters" })
       .max(2000, { error: "Description must be at most 2000 characters" }),
     basePrice: money("Base price"),
+    brand: z
+      .string()
+      .trim()
+      .min(1, { error: "Brand is required" })
+      .max(40, { error: "Brand must be at most 40 characters" }),
     categoryId: z.string().min(1, { error: "Select a category" }),
     isActive: z.boolean().default(true),
     variants: z

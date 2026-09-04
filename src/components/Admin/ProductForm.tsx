@@ -42,6 +42,7 @@ type ProductFormProps = {
     name: string;
     description: string;
     basePrice: string;
+    brand: string;
     categoryId: string;
     isActive: boolean;
     images: { url: string; alt: string | null }[];
@@ -73,6 +74,7 @@ const ProductForm = ({
           name: initialData.name,
           description: initialData.description,
           basePrice: Number(initialData.basePrice),
+          brand: initialData.brand,
           categoryId: initialData.categoryId,
           isActive: initialData.isActive,
           variants: initialData.variants.map((variant) => ({
@@ -89,6 +91,7 @@ const ProductForm = ({
           name: "",
           description: "",
           basePrice: 0,
+          brand: "",
           categoryId: "",
           isActive: true,
           variants: [{ name: "", stock: 0 }],
@@ -108,6 +111,7 @@ const ProductForm = ({
     "name",
     "description",
     "basePrice",
+    "brand",
     "categoryId",
   ].filter((key) => errors[key as keyof typeof errors]).length;
   const variantsErrorCount =

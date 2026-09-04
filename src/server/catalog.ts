@@ -12,6 +12,8 @@ type ProductRow = {
   slug: string;
   name: string;
   basePrice: { toString(): string };
+  brand: string;
+  brandSlug: string;
   category: { name: string; slug: string };
   images: { url: string; alt: string | null }[];
   variants: {
@@ -31,6 +33,8 @@ export function toProductCardData(product: ProductRow) {
     slug: product.slug,
     name: product.name,
     basePrice: String(product.basePrice),
+    brand: product.brand,
+    brandSlug: product.brandSlug,
     category: { name: product.category.name, slug: product.category.slug },
     images: product.images.map((image, index) => ({
       url: resolveProductImageUrl(image.url, product.slug, index),
@@ -69,6 +73,8 @@ export async function getFeaturedProducts() {
 
 export async function getCategoriesWithCounts(params?: {
   q?: string;
+  brands?: string[];
+  categories?: string[];
   min?: number;
   max?: number;
 }) {
@@ -82,6 +88,17 @@ export async function getCategoriesWithCounts(params?: {
       { name: { contains: trimmedQ } },
       { description: { contains: trimmedQ } },
     ];
+  }
+  if (params?.brands && params.brands.length > 0) {
+    (whereProducts as Record<string, unknown>).brandSlug = {
+      in: params.brands,
+    };
+  }
+  if (params?.categories && params.categories.length > 0) {
+    (whereProducts as Record<string, unknown>).category = {
+      slug: { in: params.categories },
+      deletedAt: null,
+    };
   }
   if (params?.min !== undefined || params?.max !== undefined) {
     (whereProducts as Record<string, unknown>).basePrice = {
@@ -112,6 +129,7 @@ export async function getCategoriesWithCounts(params?: {
 export type ProductListParams = {
   q?: string;
   categories?: string[];
+  brands?: string[];
   sort?: z.infer<typeof productSortSchema>;
   min?: number;
   max?: number;
@@ -122,7 +140,15 @@ export async function getProducts(params: ProductListParams) {
   "use cache";
   cacheLife("hours");
   cacheTag("products");
-  const { q, categories = [], sort = "newest", min, max, page = 1 } = params;
+  const {
+    q,
+    categories = [],
+    brands = [],
+    sort = "newest",
+    min,
+    max,
+    page = 1,
+  } = params;
   const trimmedQ = q?.trim();
   const where = {
     isActive: true,
@@ -134,6 +160,9 @@ export async function getProducts(params: ProductListParams) {
     }),
     ...(categories.length && {
       category: { slug: { in: categories }, deletedAt: null },
+    }),
+    ...(brands.length && {
+      brandSlug: { in: brands },
     }),
     ...((min !== undefined || max !== undefined) && {
       basePrice: {
@@ -188,6 +217,8 @@ export type ProductDetailData = {
   name: string;
   description: string;
   basePrice: string;
+  brand: string;
+  brandSlug: string;
   priceFrom: string;
   category: { name: string; slug: string };
   images: { url: string; alt: string | null }[];
@@ -229,6 +260,8 @@ function toProductDetailData(product: {
   name: string;
   description: string;
   basePrice: { toString(): string };
+  brand: string;
+  brandSlug: string;
   category: { name: string; slug: string };
   images: { url: string; alt: string | null }[];
   variants: {
@@ -260,6 +293,8 @@ function toProductDetailData(product: {
     name: product.name,
     description: product.description,
     basePrice: String(product.basePrice),
+    brand: product.brand,
+    brandSlug: product.brandSlug,
     priceFrom,
     category: { name: product.category.name, slug: product.category.slug },
     images: product.images.map((image, index) => ({

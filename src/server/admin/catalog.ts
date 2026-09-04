@@ -5,6 +5,7 @@ import { Prisma } from "@generated/prisma/client";
 import prisma from "@/lib/dbClient/prisma";
 import { requireAdmin } from "@/lib/guard";
 import { storage } from "@/lib/storage/adapter";
+import { brandToSlug } from "@/lib/brand";
 import { slugify } from "@/lib/utils";
 import { productFormSchema, updateVariantStockSchema } from "@/lib/zodSchema";
 
@@ -79,6 +80,7 @@ export async function createProduct(
     name,
     description,
     basePrice,
+    brand,
     categoryId,
     isActive,
     variants,
@@ -100,6 +102,8 @@ export async function createProduct(
             slug: candidate,
             description,
             basePrice: new Prisma.Decimal(basePrice),
+            brand,
+            brandSlug: brandToSlug(brand),
             categoryId,
             isActive,
             variants: {
@@ -150,6 +154,7 @@ export async function updateProduct(
     name,
     description,
     basePrice,
+    brand,
     categoryId,
     isActive,
     variants,
@@ -246,6 +251,8 @@ export async function updateProduct(
           name,
           description,
           basePrice: new Prisma.Decimal(basePrice),
+          brand,
+          brandSlug: brandToSlug(brand),
           categoryId,
           isActive,
         },

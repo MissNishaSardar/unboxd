@@ -60,6 +60,8 @@ model Product {
   name          String
   description   String
   basePrice     Decimal
+  brand         String          @default("Unknown")
+  brandSlug     String          @default("unknown")
   isActive      Boolean         @default(true)
   featured      Boolean         @default(false)
   categoryId    String
@@ -72,6 +74,8 @@ model Product {
   updatedAt     DateTime        @updatedAt
 
   @@index([categoryId])
+  @@index([brandSlug])
+  @@index([brand, isActive])
   @@index([isActive, featured])
 }
 

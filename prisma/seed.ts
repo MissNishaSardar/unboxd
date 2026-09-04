@@ -2,6 +2,7 @@ import "dotenv/config";
 import { PrismaClient } from "@generated/prisma/client";
 import { PrismaLibSql } from "@prisma/adapter-libsql";
 import { auth } from "@/lib/auth";
+import { BRAND_MAP, brandToSlug } from "@/lib/brand";
 
 const prisma = new PrismaClient({
   adapter: new PrismaLibSql({ url: process.env.DATABASE_URL ?? "" }),
@@ -423,12 +424,18 @@ async function seedCatalog() {
           ),
         )
       : p.images;
+    const brandInfo = BRAND_MAP[p.slug] ?? {
+      brand: p.name.split(" ")[0] ?? "Unknown",
+      brandSlug: brandToSlug(p.name.split(" ")[0] ?? "unknown"),
+    };
     const product = await prisma.product.create({
       data: {
         name: p.name,
         slug: p.slug,
         description: p.description,
         basePrice: p.basePrice,
+        brand: brandInfo.brand,
+        brandSlug: brandInfo.brandSlug,
         featured: p.featured ?? false,
         category: { connect: { slug: p.category } },
         images: {

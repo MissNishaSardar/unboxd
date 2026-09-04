@@ -20,6 +20,8 @@ export type ProductCardData = {
   slug: string;
   name: string;
   basePrice: string;
+  brand: string;
+  brandSlug: string;
   category: { name: string; slug: string };
   images: { url: string; alt: string | null }[];
   defaultVariant: {

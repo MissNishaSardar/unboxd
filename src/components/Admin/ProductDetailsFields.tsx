@@ -123,6 +123,25 @@ const ProductDetailsFields = ({
             />
 
             <Controller
+              name="brand"
+              control={control}
+              render={({ field, fieldState }) => (
+                <Field data-invalid={fieldState.invalid}>
+                  <FieldLabel htmlFor={field.name}>Brand</FieldLabel>
+                  <Input
+                    {...field}
+                    id={field.name}
+                    aria-invalid={fieldState.invalid}
+                    placeholder="Apple, Samsung, Sony..."
+                  />
+                  {fieldState.invalid && (
+                    <FieldError errors={[fieldState.error]} />
+                  )}
+                </Field>
+              )}
+            />
+
+            <Controller
               name="categoryId"
               control={control}
               render={({ field, fieldState }) => (
