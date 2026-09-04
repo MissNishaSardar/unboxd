@@ -30,6 +30,7 @@ import {
   ToggleGroupItem,
 } from "@/components/shadcnui/toggle-group";
 import type { FilterCategory } from "@/components/Product/categoryFilterMeta";
+import type { BrandWithCount } from "@/server/brands";
 
 const SORT_OPTIONS = [
   { value: "newest", label: "Newest" },
@@ -39,32 +40,36 @@ const SORT_OPTIONS = [
 
 type Props = {
   categories: FilterCategory[];
+  brands?: BrandWithCount[];
 };
 
-const ProductToolbar = ({ categories }: Props) => {
+const ProductToolbar = ({ categories, brands }: Props) => {
   const [filters, setFilters] = useQueryStates(
     {
       q: parseAsString,
       categories: parseAsArrayOf(parseAsString, ",").withDefault([]),
+      brands: parseAsArrayOf(parseAsString, ",").withDefault([]),
       sort: parseAsString,
       min: parseAsFloat,
       max: parseAsFloat,
       page: parseAsInteger,
     },
-    { shallow: false, urlKeys: { categories: "categories" } },
+    { shallow: false, urlKeys: { categories: "categories", brands: "brand" } },
   );
 
   const sort = filters.sort ?? "newest";
   const activeCategories = filters.categories;
+  const activeBrands = filters.brands;
   const activeMin = filters.min ?? null;
   const activeMax = filters.max ?? null;
   const activeQ = filters.q ?? null;
 
   const hasCategories = activeCategories.length > 0;
+  const hasBrands = activeBrands.length > 0;
   const hasMin = activeMin !== null && activeMin !== undefined;
   const hasMax = activeMax !== null && activeMax !== undefined;
   const hasQ = activeQ !== null && activeQ !== "";
-  const hasFilters = hasCategories || hasMin || hasMax || hasQ;
+  const hasFilters = hasCategories || hasBrands || hasMin || hasMax || hasQ;
 
   const priceLabel =
     hasMin && hasMax ?
@@ -76,6 +81,13 @@ const ProductToolbar = ({ categories }: Props) => {
   const removeCategory = (slug: string) => {
     void setFilters({
       categories: activeCategories.filter((item) => item !== slug),
+      page: null,
+    });
+  };
+
+  const removeBrand = (slug: string) => {
+    void setFilters({
+      brands: activeBrands.filter((item) => item !== slug),
       page: null,
     });
   };
@@ -92,6 +104,7 @@ const ProductToolbar = ({ categories }: Props) => {
     void setFilters({
       q: null,
       categories: [],
+      brands: [],
       min: null,
       max: null,
       page: null,
@@ -263,6 +276,26 @@ const ProductToolbar = ({ categories }: Props) => {
                   size="icon-xs"
                   aria-label={`Remove ${name} filter`}
                   onClick={() => removeCategory(slug)}
+                  className="size-5 rounded-full">
+                  <XIcon className="size-3" />
+                </Button>
+              </Badge>
+            );
+          })}
+          {activeBrands.map((slug) => {
+            const name =
+              brands?.find((item) => item.slug === slug)?.name ?? slug;
+            return (
+              <Badge
+                key={slug}
+                variant="secondary"
+                className="gap-1 pr-1">
+                <span className="max-w-32 truncate">{name}</span>
+                <Button
+                  variant="ghost"
+                  size="icon-xs"
+                  aria-label={`Remove ${name} filter`}
+                  onClick={() => removeBrand(slug)}
                   className="size-5 rounded-full">
                   <XIcon className="size-3" />
                 </Button>

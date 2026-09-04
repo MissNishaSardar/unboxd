@@ -18,6 +18,7 @@ import {
   getFeaturedProducts,
   getProducts,
 } from "@/server/catalog";
+import { getBrandsWithCounts } from "@/server/brands";
 import Link from "next/link";
 
 export const metadata: Metadata = {
@@ -32,6 +33,8 @@ const ProductsPage = async ({
     q?: string | string[];
     categories?: string | string[];
     category?: string | string[];
+    brands?: string | string[];
+    brand?: string | string[];
     sort?: string | string[];
     min?: string | string[];
     max?: string | string[];
@@ -40,13 +43,18 @@ const ProductsPage = async ({
 }) => {
   const sp = productListSearchParamsSchema.parse(await searchParams);
   const isFiltered = Boolean(
-    sp.q || sp.categories.length > 0 || sp.min != null || sp.max != null,
+    sp.q ||
+    sp.categories.length > 0 ||
+    sp.brands.length > 0 ||
+    sp.min != null ||
+    sp.max != null,
   );
 
-  const [data, categories, featured] = await Promise.all([
+  const [data, categories, brands, featured] = await Promise.all([
     getProducts({
       q: sp.q,
       categories: sp.categories,
+      brands: sp.brands,
       sort: sp.sort,
       min: sp.min,
       max: sp.max,
@@ -54,6 +62,13 @@ const ProductsPage = async ({
     }),
     getCategoriesWithCounts({
       q: sp.q,
+      brands: sp.brands,
+      min: sp.min,
+      max: sp.max,
+    }),
+    getBrandsWithCounts({
+      q: sp.q,
+      categories: sp.categories,
       min: sp.min,
       max: sp.max,
     }),
@@ -82,14 +97,18 @@ const ProductsPage = async ({
           {data.total} item{data.total === 1 ? "" : "s"} •{" "}
           {sp.categories.length === 0 ?
             "All categories"
-          : sp.categories.join(", ")}
+          : sp.categories.join(", ")}{" "}
+          {sp.brands.length > 0 && `• ${sp.brands.join(", ")}`}
         </p>
       </header>
 
       <CategoryPillsRow categories={categories} />
 
       <div className="flex min-w-0 flex-col gap-4">
-        <ProductToolbar categories={categories} />
+        <ProductToolbar
+          categories={categories}
+          brands={brands}
+        />
         <ProductGrid products={data.products} />
         {data.total > 0 && data.totalPages > 1 && (
           <Pagination

@@ -131,3 +131,26 @@
     @apply font-sans;
   }
 }
+
+.scrollbar-none {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
+}
+
+.search-cancel-hidden::-webkit-search-cancel-button,
+.search-cancel-hidden::-webkit-search-decoration,
+.search-cancel-hidden::-webkit-search-results-button,
+.search-cancel-hidden::-webkit-search-results-decoration {
+  -webkit-appearance: none;
+  appearance: none;
+  display: none;
+}
+.search-cancel-hidden::-ms-clear,
+.search-cancel-hidden::-ms-reveal {
+  display: none;
+  width: 0;
+  height: 0;
+}

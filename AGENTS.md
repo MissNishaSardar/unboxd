@@ -2,25 +2,29 @@
 
 # This is NOT the Next.js you know
 
-This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` before writing any code. Heed deprecation notices.
+This version has breaking changes. APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` before writing any code. Heed deprecation notices.
 
 <!-- END:nextjs-agent-rules -->
 
 ## Stack
 
-| Pkg           | Ver                | Note                                                                                                                                                                                                                                          |
-| ------------- | ------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Next.js       | ^16.2              | `reactCompiler: true`, `typedRoutes: true`                                                                                                                                                                                                    |
-| React         | ^19.2              |                                                                                                                                                                                                                                               |
-| TypeScript    | ^5.9               | strict, ESNext module, bundler resolution                                                                                                                                                                                                     |
-| Prisma        | ^7.9               | Uses `prisma-client` generator (not `prisma-client-js`). Output: `generated/prisma`. Driver adapter: `@prisma/adapter-libsql` for SQLite. Config: `prisma.config.ts`. SQLite rejects `@db.*` native annotations (P1012) — omit until Postgres |
-| shadcn/ui     | base-vega style    | Components in `src/components/shadcnui/`. Aliased as `@/components/shadcnui`                                                                                                                                                                  |
-| Base UI React | ^1.6               | Primitive provider for shadcn components (e.g., `@base-ui/react/button`)                                                                                                                                                                      |
-| Tailwind CSS  | ^4.3               | `@tailwindcss/postcss` plugin, `tw-animate-css`, `shadcn/tailwind.css`                                                                                                                                                                        |
-| Zod           | ^4.4               | Schema validation                                                                                                                                                                                                                             |
-| env           | @t3-oss/env-nextjs | Split: `src/lib/env/serverEnv.ts` + `clientEnv.ts`                                                                                                                                                                                            |
+| Pkg           | Ver                | Note                                                                                                                                                                                                                                         |
+| ------------- | ------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Next.js       | ^16.2              | `reactCompiler: true`, `typedRoutes: true`                                                                                                                                                                                                   |
+| React         | ^19.2              |                                                                                                                                                                                                                                              |
+| TypeScript    | ^5.9               | strict, ESNext module, bundler resolution                                                                                                                                                                                                    |
+| Prisma        | ^7.9               | Uses `prisma-client` generator (not `prisma-client-js`). Output: `generated/prisma`. Driver adapter: `@prisma/adapter-libsql` for SQLite. Config: `prisma.config.ts`. SQLite rejects `@db.*` native annotations (P1012), omit until Postgres |
+| shadcn/ui     | base-vega style    | Components in `src/components/shadcnui/`. Aliased as `@/components/shadcnui`                                                                                                                                                                 |
+| Base UI React | ^1.6               | Primitive provider for shadcn components (e.g., `@base-ui/react/button`)                                                                                                                                                                     |
+| Tailwind CSS  | ^4.3               | `@tailwindcss/postcss` plugin, `tw-animate-css`, `shadcn/tailwind.css`                                                                                                                                                                       |
+| Zod           | ^4.4               | Schema validation                                                                                                                                                                                                                            |
+| env           | @t3-oss/env-nextjs | Split: `src/lib/env/serverEnv.ts` + `clientEnv.ts`                                                                                                                                                                                           |
 
 Path aliases: `@/*` → `./src/*`, `@generated/*` → `./generated/*`.
+
+## Style: no em dashes
+
+Never use em dashes (—) anywhere in this project. No em dashes in code, comments, docs, commit messages, or generated text. Use periods or commas instead. En dashes (–) and hyphen-as-dash substitutes are also banned. This is a hard user preference, remember it for all future turns.
 
 ## Agent behavior
 
@@ -30,11 +34,11 @@ Path aliases: `@/*` → `./src/*`, `@generated/*` → `./generated/*`.
 
 ## Verification
 
-- **Lint**: `bun lint` — runs `eslint` only (the package.json `lint` script; no typegen/tsc)
-- **Type check**: `bun run typecheck` — `next typegen && tsc --noEmit`
-- **Build gate**: `bun run build` — `prisma generate && next build`
-- **Full prod**: `bun prod` — `prisma generate && next build && next start` (before schema/env changes)
-- **Seed**: `bun run seed` (or `bunx --bun prisma db seed`) — idempotent; use `bunx --bun prisma migrate reset` to wipe + re-seed
+- **Lint**: `bun lint` runs `eslint` only (the package.json `lint` script; no typegen/tsc)
+- **Type check**: `bun run typecheck` is `next typegen && tsc --noEmit`
+- **Build gate**: `bun run build` is `prisma generate && next build`
+- **Full prod**: `bun prod` is `prisma generate && next build && next start` (before schema/env changes)
+- **Seed**: `bun run seed` (or `bunx --bun prisma db seed`) is idempotent; use `bunx --bun prisma migrate reset` to wipe + re-seed
 - **Gotcha**: a running `next dev` server writes `.next/dev/types` concurrently with `next typegen`/`tsc`, producing torn files and cascading false LSP/type errors (e.g. "Property 'refresh' does not exist on AppRouterInstance"). Fix: kill the dev server, `Remove-Item -Recurse -Force .next/dev/types`, re-run typegen.
 
 ## Smoke testing (Playwright)
@@ -88,15 +92,14 @@ public/uploads/     # User uploads (all files ignored except .gitkeep)
 ## DB conventions (SQLite, Prisma 7)
 
 - **No native enums, no scalar lists, no `@db.*` annotations** (P1012). Statuses are `String`; re-add `@db.Decimal(10, 2)` / `@db.Text` during the Day 13 Postgres migration (`app-execution.md` pitfall #9).
-- **CLI**: always `bunx --bun prisma ...`. v7 `migrate dev` does NOT auto-generate — use `bun run migrate` (runs generate) or generate explicitly after any schema change.
-- **Seed**: configured via `migrations.seed` in `prisma.config.ts` (`bun prisma/seed.ts`). Guard skips if products OR categories exist (partial-state safety); full reset requires `migrate reset`.
-- **Money**: `Decimal` everywhere (basePrice, priceDiff, order totals, snapshots). `OrderItem` freezes `nameSnapshot` + `priceSnapshot` at purchase — never reference live product data on receipts.
-- **Order.status**: `PENDING | CONFIRMED | SHIPPED | DELIVERED | CANCELLED | RETURNED` (COD-first; RETURNED covers delivery refusals).
-- **Seed images** are `placehold.co` placeholders — swap for real uploads when the Day 8 pipeline lands.
+- **CLI**: always `bunx --bun prisma ...`. v7 `migrate dev` does NOT auto-generate, use `bun run migrate` (runs generate) or generate explicitly after any schema change.
+- **Seed**: configured via `migrations.seed` in `prisma.config.ts` (`bun prisma/seed.ts`). Guard skips if products OR categories exist (partial-state safety), full reset requires `migrate reset`.
+- **Money**: `Decimal` everywhere (basePrice, priceDiff, order totals, snapshots). `OrderItem` freezes `nameSnapshot` + `priceSnapshot` at purchase, never reference live product data on receipts.
+- **Seed images** are `placehold.co` placeholders, swap for real uploads when the Day 8 pipeline lands.
 
 ## Gitignore pattern: uploads
 
-`public/uploads/*` + `!public/uploads/.gitkeep` — ignores all uploaded files but keeps empty dir tracked via `.gitkeep`. Do not add `public/uploads/` itself to gitignore.
+`public/uploads/*` + `!public/uploads/.gitkeep` ignores all uploaded files but keeps empty dir tracked via `.gitkeep`. Do not add `public/uploads/` itself to gitignore.
 
 ## Key restrictions
 
@@ -105,7 +108,7 @@ public/uploads/     # User uploads (all files ignored except .gitkeep)
 
 ## Form patterns
 
-Schemas in `src/lib/zodSchema.ts` — export both schema and `type X = z.infer<typeof xSchema>`.
+Schemas in `src/lib/zodSchema.ts` export both schema and `type X = z.infer<typeof xSchema>`.
 
 Components use `"use client"`, `react-hook-form` + `@hookform/resolvers/zod`, and shadcn primitives:
 

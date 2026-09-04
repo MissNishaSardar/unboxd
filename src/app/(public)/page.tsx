@@ -1,22 +1,12 @@
+import HeroCarousel from "@/components/Home/HeroCarousel";
+import PerksRow from "@/components/Home/PerksRow";
+import CategoryPillsRow from "@/components/Product/CategoryPillsRow";
 import ProductGrid from "@/components/Product/ProductGrid";
+import ProductCard from "@/components/Product/ProductCard";
 import { Badge } from "@/components/shadcnui/badge";
 import { Button } from "@/components/shadcnui/button";
 import { getCategoriesWithCounts, getFeaturedProducts } from "@/server/catalog";
-import type { LucideIcon } from "lucide-react";
-import {
-  ArrowRightIcon,
-  AudioLinesIcon,
-  BanknoteIcon,
-  CableIcon,
-  Gamepad2Icon,
-  HeadphonesIcon,
-  RotateCcwIcon,
-  ShieldCheckIcon,
-  SmartphoneIcon,
-  SpeakerIcon,
-  TagIcon,
-  TruckIcon,
-} from "lucide-react";
+import { ArrowRightIcon } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 
@@ -28,117 +18,33 @@ export const metadata: Metadata = {
     "Shop smartphones, laptops, audio, and accessories with fast COD delivery.",
 };
 
-const categoryIcons: Record<string, LucideIcon> = {
-  smartphones: SmartphoneIcon,
-  "gaming-laptops": Gamepad2Icon,
-  headphones: HeadphonesIcon,
-  earbuds: AudioLinesIcon,
-  speakers: SpeakerIcon,
-  "chargers-cables": CableIcon,
-  "cases-protection": ShieldCheckIcon,
-};
-
-const trustItems: { icon: LucideIcon; label: string }[] = [
-  { icon: BanknoteIcon, label: "Cash on Delivery" },
-  { icon: TruckIcon, label: "Fast Delivery" },
-  { icon: RotateCcwIcon, label: "Easy Returns" },
-];
-
 const HomePage = async () => {
   const [featured, categories] = await Promise.all([
     getFeaturedProducts(),
     getCategoriesWithCounts(),
   ]);
 
-  return (
-    <div className="flex flex-col gap-20">
-      <section className="border-border bg-card relative overflow-hidden rounded-3xl border px-6 py-16 md:px-12 md:py-24">
-        <div
-          aria-hidden
-          className="bg-primary/20 pointer-events-none absolute -top-32 right-0 size-96 rounded-full blur-3xl"
-        />
-        <div className="relative flex flex-col items-start gap-6">
-          <Badge variant="secondary">New season, unboxed</Badge>
-          <h1 className="font-heading max-w-2xl text-4xl font-semibold tracking-tight md:text-5xl">
-            Electronics, unboxed
-          </h1>
-          <p className="text-muted-foreground max-w-xl text-lg">
-            Latest smartphones, laptops, audio gear, and accessories. Order with
-            cash on delivery and unbox it the same week.
-          </p>
-          <div className="flex flex-wrap gap-3">
-            <Button
-              size="lg"
-              render={<Link href="/products" />}
-              nativeButton={false}
-              data-icon="inline-end">
-              Shop now
-              <ArrowRightIcon aria-hidden="true" />
-            </Button>
-            <Button
-              size="lg"
-              variant="outline"
-              render={<Link href="#categories" />}
-              nativeButton={false}>
-              Browse categories
-            </Button>
-          </div>
-          <div className="flex flex-wrap gap-x-6 gap-y-2 pt-2">
-            {trustItems.map((item) => (
-              <div
-                key={item.label}
-                className="text-muted-foreground flex items-center gap-2 text-sm">
-                <item.icon
-                  aria-hidden="true"
-                  className="text-primary size-4"
-                />
-                {item.label}
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
+  const heroCollections = [
+    { label: "Under 30k", href: "/products?max=30000" },
+    { label: "Audio essentials", href: "/products?category=headphones" },
+    { label: "Ready to ship", href: "/products" },
+    { label: "Staff picks", href: "/products" },
+  ];
 
-      <section
-        id="categories"
-        className="flex scroll-mt-24 flex-col gap-6">
-        <h2 className="font-heading text-2xl font-semibold tracking-tight">
-          Shop by category
-        </h2>
-        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
-          {categories.map((category) => {
-            const Icon = categoryIcons[category.slug] ?? TagIcon;
-            return (
-              <Link
-                key={category.slug}
-                href={{
-                  pathname: "/products",
-                  query: { category: category.slug },
-                }}
-                className="group border-border bg-card hover:border-border relative flex flex-col gap-3 overflow-hidden rounded-xl border p-5 transition-all hover:-translate-y-1">
-                <div
-                  aria-hidden
-                  className="bg-primary/20 pointer-events-none absolute -top-10 -right-10 size-32 rounded-full blur-2xl"
-                />
-                <div className="text-primary bg-muted relative flex size-10 items-center justify-center rounded-lg">
-                  <Icon
-                    aria-hidden="true"
-                    className="size-5"
-                  />
-                </div>
-                <div className="relative flex flex-col gap-1">
-                  <span className="font-heading text-sm font-medium">
-                    {category.name}
-                  </span>
-                  <span className="text-muted-foreground text-xs tabular-nums">
-                    {category.count} item{category.count === 1 ? "" : "s"}
-                  </span>
-                </div>
-              </Link>
-            );
-          })}
+  return (
+    <div className="-mt-8 flex flex-col gap-10 lg:gap-16">
+      <div className="flex flex-col gap-3">
+        <CategoryPillsRow
+          categories={categories}
+          navigateBasePath="/products"
+        />
+
+        <div className="relative right-1/2 left-1/2 -mx-[50vw] w-screen">
+          <HeroCarousel products={featured} />
         </div>
-      </section>
+      </div>
+
+      <PerksRow />
 
       <section className="flex flex-col gap-6">
         <div className="flex items-end justify-between">
@@ -155,20 +61,44 @@ const HomePage = async () => {
             <ArrowRightIcon aria-hidden="true" />
           </Button>
         </div>
-        <ProductGrid products={featured} />
+        {featured.length > 0 ?
+          <div className="grid grid-cols-2 gap-3 md:grid-cols-3 md:gap-4 lg:grid-cols-4">
+            {featured.map((product) => (
+              <ProductCard
+                key={product.slug}
+                product={product}
+              />
+            ))}
+          </div>
+        : <ProductGrid products={featured} />}
       </section>
 
-      <section className="border-border bg-card relative overflow-hidden rounded-3xl border px-6 py-14 text-center md:py-20">
+      <section
+        aria-label="Collections"
+        className="flex scrollbar-none gap-2 overflow-x-auto pb-2">
+        {heroCollections.map((c) => (
+          <Link
+            key={c.label}
+            href={c.href as never}
+            className="border-border bg-card hover:bg-muted inline-flex shrink-0 snap-start items-center rounded-full border px-4 py-1.5 text-sm font-medium whitespace-nowrap transition-colors">
+            {c.label}
+          </Link>
+        ))}
+      </section>
+
+      <section className="border-border bg-card relative grid overflow-hidden rounded-3xl border p-6 md:p-10 lg:grid-cols-2 lg:gap-6">
         <div
-          aria-hidden
-          className="bg-primary/20 pointer-events-none absolute -bottom-32 left-1/2 size-96 -translate-x-1/2 rounded-full blur-3xl"
+          className="bg-primary/20 pointer-events-none absolute -bottom-32 left-1/2 hidden size-96 -translate-x-1/2 rounded-full blur-3xl md:block"
+          aria-hidden="true"
         />
-        <div className="relative flex flex-col items-center gap-4">
+        <div className="relative flex flex-col items-start gap-4 lg:justify-center">
+          <Badge variant="secondary">Ready to unbox</Badge>
           <h2 className="font-heading text-3xl font-semibold tracking-tight md:text-4xl">
             Ready to unbox?
           </h2>
           <p className="text-muted-foreground max-w-md">
-            Browse the full catalog and find your next favorite gadget.
+            Browse the full catalog and find your next favorite gadget. Cash on
+            delivery and tracked delivery across India.
           </p>
           <Button
             size="lg"
@@ -178,6 +108,25 @@ const HomePage = async () => {
             Shop the catalog
             <ArrowRightIcon aria-hidden="true" />
           </Button>
+        </div>
+        <div className="relative mt-6 grid grid-cols-3 gap-3 lg:mt-0">
+          {featured.slice(1, 4).map((product, i) => (
+            <div
+              key={product.slug}
+              className={`bg-muted aspect-square overflow-hidden rounded-2xl ${i === 1 ? "translate-y-3" : ""} ${
+                i === 2 ? "-rotate-2"
+                : i === 0 ? "rotate-2"
+                : ""
+              }`}>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={product.images[0]?.url ?? "/placeholder.svg"}
+                alt={product.name}
+                className="h-full w-full object-cover"
+                loading="lazy"
+              />
+            </div>
+          ))}
         </div>
       </section>
     </div>
