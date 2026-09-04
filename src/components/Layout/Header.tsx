@@ -1,7 +1,6 @@
 "use client";
 
 import UnboxdLogo from "@/components/Brand/UnboxdLogo";
-import ThemeToggleButton from "@/components/Layout/ThemeToggleButton";
 import { Button } from "@/components/shadcnui/button";
 import {
   DropdownMenu,
@@ -24,35 +23,44 @@ import { authClient } from "@/lib/auth-client";
 import { cartCountAtom, cartDrawerOpenAtom, clearCart } from "@/lib/cart/atoms";
 import { PUBLIC_NAV } from "@/lib/nav";
 import { cn } from "@/lib/utils";
-import { wishlistAtom } from "@/lib/wishlist/atoms";
 import { useAtomValue, useSetAtom } from "jotai";
 import {
-  HeartIcon,
   LayoutDashboardIcon,
   LogOutIcon,
   MenuIcon,
   SearchIcon,
   ShieldIcon,
   ShoppingCartIcon,
+  UserIcon,
+  XIcon,
 } from "lucide-react";
+import BrandDropdown from "@/components/Layout/BrandDropdown";
+import type { BrandWithCount } from "@/server/brands";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
-import { Suspense, useState } from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { Suspense, useEffect, useState } from "react";
 import HeaderSearch from "@/components/Search/HeaderSearch";
+import SearchAutocompleteInput from "@/components/Search/SearchAutocompleteInput";
 
 const iconButtonClass =
-  "size-[38px] shrink-0 rounded-full border border-transparent text-muted-foreground hover:bg-muted hover:text-foreground hover:border-border/50 transition-colors";
+  "size-[38px] shrink-0 rounded-full border border-white/10 bg-white/5 text-white/70 hover:bg-white/10 hover:text-white hover:border-white/15 transition-colors";
 
-const Header = () => {
+const Header = ({ brands }: { brands?: BrandWithCount[] }) => {
   const { data: session, isPending } = authClient.useSession();
   const cartCount = useAtomValue(cartCountAtom);
-  const wishlistCount = useAtomValue(wishlistAtom).length;
   const setCartOpen = useSetAtom(cartDrawerOpenAtom);
   const router = useRouter();
   const mounted = useMounted();
   const pathname = usePathname();
+  const searchParams = useSearchParams();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
+  const [searchValue, setSearchValue] = useState(searchParams.get("q") ?? "");
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setSearchValue(searchParams.get("q") ?? "");
+  }, [searchParams]);
 
   const handleCartClick = () => {
     if (!mounted || isPending) return;
@@ -63,25 +71,20 @@ const Header = () => {
     }
   };
 
-  const handleWishlistClick = () => {
-    if (!mounted || isPending) return;
-    if (session) {
-      router.push("/wishlist" as never);
+  const handleSearchSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const trimmed = searchValue.trim();
+    if (trimmed) {
+      router.push(`/search?q=${encodeURIComponent(trimmed)}` as never);
     } else {
-      router.push("/auth/login?callbackUrl=/wishlist" as never);
+      router.push("/search" as never);
     }
   };
 
   return (
     <>
-      <header className="border-border/40 bg-background/70 supports-[backdrop-filter]:bg-background/60 dark:bg-background/40 dark:border-border/30 sticky top-0 z-40 w-full border-b backdrop-blur-xl">
-        {/* subtle page glow that shows through the glass */}
-        <div
-          aria-hidden="true"
-          className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(700px_circle_at_50%_-10%,oklch(0.62_0.16_277/0.10),transparent_70%)] dark:bg-[radial-gradient(800px_circle_at_50%_-10%,oklch(0.55_0.18_277/0.16),transparent_70%)]"
-        />
+      <header className="sticky top-0 z-40 w-full border-b border-white/10 bg-[rgba(5,5,9,0.85)] backdrop-blur-xl">
         <div className="mx-auto flex h-[60px] max-w-7xl items-center gap-3 px-4 sm:px-6">
-          {/* left: hamburger + brand */}
           <div className="flex shrink-0 items-center gap-2">
             <Sheet
               open={mobileOpen}
@@ -144,8 +147,32 @@ const Header = () => {
                     );
                   })}
                 </nav>
+                {brands && brands.length > 0 && (
+                  <div className="flex flex-col gap-2 px-4 pt-4">
+                    <span className="text-muted-foreground px-3.5 text-xs font-semibold tracking-widest uppercase">
+                      Brands
+                    </span>
+                    <div className="flex flex-col gap-1">
+                      {brands.slice(0, 8).map((brand) => (
+                        <Link
+                          key={brand.slug}
+                          href={
+                            `/products?brand=${encodeURIComponent(brand.slug)}` as never
+                          }
+                          onClick={() => setMobileOpen(false)}
+                          className="text-muted-foreground hover:bg-muted hover:text-foreground rounded-full px-3.5 py-2 text-sm font-medium transition-colors">
+                          {brand.name}
+                          <span className="text-muted-foreground/70 ml-2 text-xs tabular-nums">
+                            {brand.count}
+                          </span>
+                        </Link>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </SheetContent>
             </Sheet>
+
             <Link
               href="/"
               className="flex items-center gap-2">
@@ -153,46 +180,34 @@ const Header = () => {
                 className="size-7 shrink-0"
                 aria-hidden="true"
               />
-              <span className="font-heading text-[17px] font-semibold tracking-tight">
+              <span className="font-heading text-[17px] font-semibold tracking-tight text-white">
                 Unboxd
               </span>
             </Link>
-            {/* desktop nav pills — visible ≥920px */}
-            <nav
-              aria-label="Primary"
-              className="ml-2 hidden items-center gap-1.5 min-[920px]:flex">
-              {PUBLIC_NAV.map((item) => {
-                const isActive =
-                  pathname === item.href ||
-                  pathname.startsWith(`${item.href}/`);
-                return (
-                  <Link
-                    key={item.href}
-                    href={item.href as never}
-                    aria-current={isActive ? "page" : undefined}
-                    className={cn(
-                      "rounded-full px-3.5 py-1.5 text-sm font-medium transition-colors",
-                      isActive ?
-                        "bg-foreground text-background shadow-sm"
-                      : "text-muted-foreground hover:bg-muted hover:text-foreground",
-                    )}>
-                    {item.label}
-                  </Link>
-                );
-              })}
-            </nav>
+            {brands && brands.length > 0 && <BrandDropdown brands={brands} />}
           </div>
 
-          {/* center: search auto-centers flex:1 max-w-[420px] mx-auto */}
           <div className="hidden flex-1 justify-center min-[640px]:flex">
-            <Suspense>
-              <HeaderSearch className="max-w-[420px]" />
-            </Suspense>
+            <div className="flex w-full max-w-[560px] flex-1 items-center">
+              <SearchAutocompleteInput
+                value={searchValue}
+                onValueChange={setSearchValue}
+                onSubmit={(q) => {
+                  const trimmed = q.trim();
+                  if (trimmed) {
+                    router.push(
+                      `/search?q=${encodeURIComponent(trimmed)}` as never,
+                    );
+                  } else {
+                    router.push("/search" as never);
+                  }
+                }}
+                variant="dark"
+              />
+            </div>
           </div>
 
-          {/* right: actions — all 38px hover buttons */}
           <div className="flex shrink-0 items-center gap-1">
-            {/* search collapses to icon <640px */}
             <Button
               variant="ghost"
               size="icon"
@@ -205,22 +220,7 @@ const Header = () => {
                 className="size-[18px]"
               />
             </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              aria-label="Wishlist"
-              className={cn(iconButtonClass, "relative")}
-              onClick={handleWishlistClick}>
-              <HeartIcon
-                aria-hidden="true"
-                className="size-[18px]"
-              />
-              {mounted && session && wishlistCount > 0 && (
-                <span className="bg-primary text-primary-foreground border-background absolute -top-1 -right-1 flex h-[18px] min-w-[18px] items-center justify-center rounded-full border-2 px-1 text-[11px] leading-none font-semibold tabular-nums shadow-sm">
-                  {wishlistCount > 99 ? "99+" : wishlistCount}
-                </span>
-              )}
-            </Button>
+
             <Button
               variant="ghost"
               size="icon"
@@ -232,20 +232,18 @@ const Header = () => {
                 className="size-[18px]"
               />
               {mounted && cartCount > 0 && (
-                <span className="bg-primary text-primary-foreground border-background absolute -top-1 -right-1 flex h-[18px] min-w-[18px] items-center justify-center rounded-full border-2 px-1 text-[11px] leading-none font-semibold tabular-nums shadow-sm">
+                <span className="absolute -top-1 -right-1 flex h-[18px] min-w-[18px] items-center justify-center rounded-full border-2 border-[rgba(5,5,9,0.85)] bg-violet-600 px-1 text-[11px] leading-none font-semibold text-white tabular-nums shadow-sm">
                   {cartCount > 99 ? "99+" : cartCount}
                 </span>
               )}
             </Button>
-            <div className="flex items-center">
-              <ThemeToggleButton className={iconButtonClass} />
-            </div>
+
             {isPending ?
               null
             : session ?
               <DropdownMenu>
                 <DropdownMenuTrigger
-                  className="focus-visible:ring-ring border-border/50 bg-muted/50 hover:border-border ml-1 flex size-[38px] shrink-0 items-center justify-center overflow-hidden rounded-full border transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
+                  className="ml-1 flex size-[38px] shrink-0 items-center justify-center overflow-hidden rounded-full border border-white/10 bg-white/5 transition-colors hover:bg-white/10 focus-visible:ring-2 focus-visible:ring-white/30 focus-visible:outline-none"
                   aria-label="User menu">
                   {session.user.image ?
                     // eslint-disable-next-line @next/next/no-img-element
@@ -257,7 +255,7 @@ const Header = () => {
                       height={38}
                       className="size-full object-cover"
                     />
-                  : <span className="bg-muted text-muted-foreground flex size-full items-center justify-center text-xs font-semibold">
+                  : <span className="flex size-full items-center justify-center bg-white/10 text-xs font-semibold text-white">
                       {session.user.name
                         .trim()
                         .split(/\s+/)
@@ -304,9 +302,7 @@ const Header = () => {
                       onClick={async () => {
                         try {
                           await authClient.signOut();
-                        } catch {
-                          // ignore server unexpected response, still clear local state
-                        }
+                        } catch {}
                         clearCart();
                         router.push("/");
                         router.refresh();
@@ -317,19 +313,21 @@ const Header = () => {
                   </DropdownMenuGroup>
                 </DropdownMenuContent>
               </DropdownMenu>
-            : <Button
-                render={<Link href="/auth/login" />}
-                nativeButton={false}
-                size="sm"
-                className="hover:shadow-primary/20 ml-1 rounded-full px-4 font-medium shadow-sm transition-shadow hover:shadow-[0_0_20px_oklch(0.55_0.2_277/0.35)]">
-                Sign in
-              </Button>
+            : <Link
+                href="/auth/login"
+                aria-label="Sign in"
+                className="ml-1 flex size-[38px] items-center justify-center rounded-full border border-white/10 bg-white/5 text-white/70 transition-colors hover:bg-white/10 hover:text-white">
+                <UserIcon
+                  aria-hidden="true"
+                  className="size-[18px]"
+                />
+              </Link>
             }
           </div>
         </div>
-        {/* mobile search bar — expands when icon tapped, always hidden ≥640px */}
+
         {searchOpen && (
-          <div className="border-border/40 bg-background/80 border-t px-4 py-2 backdrop-blur-xl min-[640px]:hidden">
+          <div className="border-t border-white/10 bg-[rgba(5,5,9,0.85)] px-4 py-2 backdrop-blur-xl min-[640px]:hidden">
             <Suspense>
               <HeaderSearch
                 autoFocus
@@ -340,7 +338,6 @@ const Header = () => {
           </div>
         )}
       </header>
-      {/* legacy second row for <640 no-JS fallback — hidden by new icon toggle, keep for sheet only */}
     </>
   );
 };
