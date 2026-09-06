@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
-import Pagination from "@/components/Product/Pagination";
-import ProductGrid from "@/components/Product/ProductGrid";
+import ProductLoadMoreGrid from "@/components/Product/ProductLoadMoreGrid";
 import { searchSearchParamsSchema } from "@/lib/zodSchema";
 import { getProducts } from "@/server/catalog";
 
@@ -51,14 +50,11 @@ const SearchPage = async ({
         </p>
       </header>
 
-      <ProductGrid products={data.products} />
-      {data.total > 0 && data.totalPages > 1 && (
-        <Pagination
-          currentPage={data.page}
-          totalPages={data.totalPages}
-          pathname="/search"
-        />
-      )}
+      <ProductLoadMoreGrid
+        initialProducts={data.products}
+        total={data.total}
+        pathname="/search"
+      />
     </div>
   );
 };

@@ -1,7 +1,6 @@
 import { PackageIcon } from "lucide-react";
 import OrderFilters from "@/components/Admin/OrderFilters";
-import OrdersTable from "@/components/Admin/OrdersTable";
-import Pagination from "@/components/Product/Pagination";
+import AdminOrdersLoadMore from "@/components/Admin/AdminOrdersLoadMore";
 import {
   Empty,
   EmptyDescription,
@@ -33,7 +32,7 @@ const AdminOrdersPage = async ({
     page = 1,
   } = adminOrderListSearchParamsSchema.parse(await searchParams);
 
-  const { orders, total, totalPages } = await getAdminOrders({
+  const { orders, total } = await getAdminOrders({
     search,
     status,
     date,
@@ -65,15 +64,11 @@ const AdminOrdersPage = async ({
             </EmptyDescription>
           </EmptyHeader>
         </Empty>
-      : <OrdersTable orders={orders} />}
-
-      {orders.length > 0 && (
-        <Pagination
-          currentPage={page}
-          totalPages={totalPages}
-          pathname="/admin/orders"
+      : <AdminOrdersLoadMore
+          initialOrders={orders}
+          total={total}
         />
-      )}
+      }
     </div>
   );
 };

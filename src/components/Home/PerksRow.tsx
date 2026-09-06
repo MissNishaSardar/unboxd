@@ -23,8 +23,8 @@ const perks = [
   },
   {
     icon: TruckIcon,
-    title: "Fast Dispatch",
-    line: "Tracked delivery across India",
+    title: "2-4 Day Delivery",
+    line: "Tracked delivery in 2 to 4 days across India",
   },
 ] as const;
 
@@ -32,22 +32,22 @@ const PerksRow = () => {
   return (
     <section
       aria-label="Store perks"
-      className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      className="flex [scrollbar-width:none] gap-2 overflow-x-auto pb-1 sm:grid sm:grid-cols-2 sm:overflow-visible sm:pb-0 lg:grid-cols-4 lg:gap-3 [&::-webkit-scrollbar]:hidden">
       {perks.map((perk) => (
         <div
           key={perk.title}
-          className="border-border bg-card flex gap-4 rounded-2xl border p-5">
-          <div className="bg-muted flex size-10 shrink-0 items-center justify-center overflow-hidden rounded-lg">
+          className="border-border bg-card flex w-[calc(50%-4px)] shrink-0 snap-start items-center gap-3 rounded-2xl border px-3.5 py-2.5 shadow-sm sm:w-auto sm:shrink sm:snap-align-none sm:px-4 sm:py-3">
+          <div className="bg-muted flex size-8 shrink-0 items-center justify-center overflow-hidden rounded-xl border">
             <perk.icon
               aria-hidden="true"
-              className="text-primary size-5 shrink-0"
+              className="text-primary size-4 shrink-0"
             />
           </div>
-          <div className="flex min-w-0 flex-col gap-1">
-            <span className="font-heading text-sm font-medium tracking-tight">
+          <div className="flex min-w-0 flex-col">
+            <span className="font-heading truncate text-sm font-medium tracking-tight">
               {perk.title}
             </span>
-            <span className="text-muted-foreground text-xs leading-relaxed">
+            <span className="text-muted-foreground truncate text-xs leading-none">
               {perk.line}
             </span>
           </div>

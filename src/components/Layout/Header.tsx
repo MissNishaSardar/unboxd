@@ -32,7 +32,6 @@ import {
   ShieldIcon,
   ShoppingCartIcon,
   UserIcon,
-  XIcon,
 } from "lucide-react";
 import BrandDropdown from "@/components/Layout/BrandDropdown";
 import type { BrandWithCount } from "@/server/brands";
@@ -68,16 +67,6 @@ const Header = ({ brands }: { brands?: BrandWithCount[] }) => {
       setCartOpen(true);
     } else {
       router.push("/auth/login?callbackUrl=/cart");
-    }
-  };
-
-  const handleSearchSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    const trimmed = searchValue.trim();
-    if (trimmed) {
-      router.push(`/search?q=${encodeURIComponent(trimmed)}` as never);
-    } else {
-      router.push("/search" as never);
     }
   };
 

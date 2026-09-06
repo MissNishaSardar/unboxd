@@ -131,78 +131,80 @@ const OrdersTable = ({ orders }: { orders: AdminOrderRow[] }) => {
         </div>
       )}
 
-      <Card>
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="w-10">
-                  <Checkbox
-                    checked={allSelected}
-                    onCheckedChange={(checked) => toggleAll(checked === true)}
-                    aria-label="Select all orders"
-                  />
-                </TableHead>
-                <TableHead>Order</TableHead>
-                <TableHead>Date</TableHead>
-                <TableHead>Customer</TableHead>
-                <TableHead>Items</TableHead>
-                <TableHead>Total</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {orders.map((order) => (
-                <TableRow key={order.id}>
-                  <TableCell>
+      <Card className="overflow-hidden">
+        <CardContent className="p-0 sm:p-6">
+          <div className="-mx-6 overflow-x-auto px-6 sm:mx-0 sm:overflow-visible sm:px-0">
+            <Table className="min-w-[720px]">
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="w-10">
                     <Checkbox
-                      checked={selected.has(order.id)}
-                      onCheckedChange={() => toggle(order.id)}
-                      aria-label={`Select order ${order.id}`}
+                      checked={allSelected}
+                      onCheckedChange={(checked) => toggleAll(checked === true)}
+                      aria-label="Select all orders"
                     />
-                  </TableCell>
-                  <TableCell className="max-w-40">
-                    <p className="truncate text-sm font-medium">{order.id}</p>
-                  </TableCell>
-                  <TableCell className="text-muted-foreground whitespace-nowrap">
-                    {formatDate(order.createdAt)}
-                  </TableCell>
-                  <TableCell>
-                    <p className="truncate text-sm font-medium">
-                      {order.customerName}
-                    </p>
-                    <p className="text-muted-foreground truncate text-xs">
-                      {order.customerEmail}
-                    </p>
-                  </TableCell>
-                  <TableCell className="tabular-nums">
-                    {order.itemCount}
-                  </TableCell>
-                  <TableCell className="tabular-nums">
-                    {formatPrice(order.total)}
-                  </TableCell>
-                  <TableCell>
-                    <OrderStatusBadge status={order.status} />
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex items-center justify-end">
-                      <Button
-                        render={
-                          <Link href={`/admin/orders/${order.id}` as Route} />
-                        }
-                        nativeButton={false}
-                        variant="ghost"
-                        size="icon-sm"
-                        aria-label={`View order ${order.id}`}>
-                        <EyeIcon aria-hidden="true" />
-                      </Button>
-                    </div>
-                  </TableCell>
+                  </TableHead>
+                  <TableHead>Order</TableHead>
+                  <TableHead>Date</TableHead>
+                  <TableHead>Customer</TableHead>
+                  <TableHead>Items</TableHead>
+                  <TableHead>Total</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+              </TableHeader>
+              <TableBody>
+                {orders.map((order) => (
+                  <TableRow key={order.id}>
+                    <TableCell>
+                      <Checkbox
+                        checked={selected.has(order.id)}
+                        onCheckedChange={() => toggle(order.id)}
+                        aria-label={`Select order ${order.id}`}
+                      />
+                    </TableCell>
+                    <TableCell className="max-w-40">
+                      <p className="truncate text-sm font-medium">{order.id}</p>
+                    </TableCell>
+                    <TableCell className="text-muted-foreground whitespace-nowrap">
+                      {formatDate(order.createdAt)}
+                    </TableCell>
+                    <TableCell>
+                      <p className="truncate text-sm font-medium">
+                        {order.customerName}
+                      </p>
+                      <p className="text-muted-foreground truncate text-xs">
+                        {order.customerEmail}
+                      </p>
+                    </TableCell>
+                    <TableCell className="tabular-nums">
+                      {order.itemCount}
+                    </TableCell>
+                    <TableCell className="tabular-nums">
+                      {formatPrice(order.total)}
+                    </TableCell>
+                    <TableCell>
+                      <OrderStatusBadge status={order.status} />
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center justify-end">
+                        <Button
+                          render={
+                            <Link href={`/admin/orders/${order.id}` as Route} />
+                          }
+                          nativeButton={false}
+                          variant="ghost"
+                          size="icon-sm"
+                          aria-label={`View order ${order.id}`}>
+                          <EyeIcon aria-hidden="true" />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
         </CardContent>
       </Card>
     </div>

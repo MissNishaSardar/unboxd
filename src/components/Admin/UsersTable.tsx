@@ -260,127 +260,133 @@ const UsersTable = ({
           </div>
         )}
 
-        <Card>
-          <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="w-10">
-                    <Checkbox
-                      checked={allSelected}
-                      onCheckedChange={(checked) => toggleAll(checked === true)}
-                      aria-label="Select all users"
-                    />
-                  </TableHead>
-                  <TableHead>User</TableHead>
-                  <TableHead>Role</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Joined</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {users.map((user) => {
-                  const isSelf = user.id === currentUserId;
-                  return (
-                    <TableRow key={user.id}>
-                      <TableCell>
-                        <Checkbox
-                          checked={selected.has(user.id)}
-                          onCheckedChange={() => toggle(user.id)}
-                          aria-label={`Select user ${user.name}`}
-                          disabled={isSelf}
-                        />
-                      </TableCell>
-                      <TableCell>
-                        <p className="truncate text-sm font-medium">
-                          {user.name}
-                        </p>
-                        <p className="text-muted-foreground truncate text-xs">
-                          {user.email}
-                        </p>
-                      </TableCell>
-                      <TableCell>
-                        <Badge
-                          variant={
-                            user.role === "admin" ? "default" : "secondary"
-                          }>
-                          {user.role === "admin" ? "Admin" : "Customer"}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        <UserStatusBadge
-                          banned={user.banned}
-                          banExpires={user.banExpires}
-                          deletedAt={user.deletedAt}
-                        />
-                      </TableCell>
-                      <TableCell className="text-muted-foreground whitespace-nowrap">
-                        {formatDate(user.createdAt)}
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center justify-end">
-                          <DropdownMenu>
-                            <DropdownMenuTrigger
-                              render={
-                                <Button
-                                  variant="ghost"
-                                  size="icon-sm"
-                                  aria-label={`Actions for ${user.name}`}
-                                />
-                              }>
-                              <MoreHorizontalIcon aria-hidden="true" />
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                              <DropdownMenuGroup>
-                                <DropdownMenuItem
-                                  onClick={() => handleRole(user)}
-                                  disabled={isPending || isSelf}>
-                                  {user.role === "admin" ?
-                                    <ShieldOffIcon aria-hidden="true" />
-                                  : <ShieldIcon aria-hidden="true" />}
-                                  {user.role === "admin" ?
-                                    "Demote to customer"
-                                  : "Promote to admin"}
-                                </DropdownMenuItem>
-                                <DropdownMenuItem
-                                  onClick={() => handleBan(user)}
-                                  disabled={isPending || isSelf}>
-                                  {user.banned ?
-                                    <UnlockIcon aria-hidden="true" />
-                                  : <BanIcon aria-hidden="true" />}
-                                  {user.banned ? "Unban user" : "Ban user"}
-                                </DropdownMenuItem>
-                                <DropdownMenuItem
-                                  onClick={() => handleImpersonate(user)}
-                                  disabled={isPending || user.role === "admin"}>
-                                  <EyeIcon aria-hidden="true" />
-                                  View as user
-                                </DropdownMenuItem>
-                              </DropdownMenuGroup>
-                              <DropdownMenuSeparator />
-                              <DropdownMenuGroup>
-                                <DropdownMenuItem
-                                  variant="destructive"
-                                  onClick={() => setDeactivateTarget(user)}
-                                  disabled={isPending || isSelf}>
-                                  {user.deletedAt ?
-                                    <RotateCcwIcon aria-hidden="true" />
-                                  : <UserXIcon aria-hidden="true" />}
-                                  {user.deletedAt ?
-                                    "Reactivate user"
-                                  : "Deactivate user"}
-                                </DropdownMenuItem>
-                              </DropdownMenuGroup>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  );
-                })}
-              </TableBody>
-            </Table>
+        <Card className="overflow-hidden">
+          <CardContent className="p-0 sm:p-6">
+            <div className="-mx-6 overflow-x-auto px-6 sm:mx-0 sm:overflow-visible sm:px-0">
+              <Table className="min-w-[720px]">
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="w-10">
+                      <Checkbox
+                        checked={allSelected}
+                        onCheckedChange={(checked) =>
+                          toggleAll(checked === true)
+                        }
+                        aria-label="Select all users"
+                      />
+                    </TableHead>
+                    <TableHead>User</TableHead>
+                    <TableHead>Role</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Joined</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {users.map((user) => {
+                    const isSelf = user.id === currentUserId;
+                    return (
+                      <TableRow key={user.id}>
+                        <TableCell>
+                          <Checkbox
+                            checked={selected.has(user.id)}
+                            onCheckedChange={() => toggle(user.id)}
+                            aria-label={`Select user ${user.name}`}
+                            disabled={isSelf}
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <p className="truncate text-sm font-medium">
+                            {user.name}
+                          </p>
+                          <p className="text-muted-foreground truncate text-xs">
+                            {user.email}
+                          </p>
+                        </TableCell>
+                        <TableCell>
+                          <Badge
+                            variant={
+                              user.role === "admin" ? "default" : "secondary"
+                            }>
+                            {user.role === "admin" ? "Admin" : "Customer"}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          <UserStatusBadge
+                            banned={user.banned}
+                            banExpires={user.banExpires}
+                            deletedAt={user.deletedAt}
+                          />
+                        </TableCell>
+                        <TableCell className="text-muted-foreground whitespace-nowrap">
+                          {formatDate(user.createdAt)}
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center justify-end">
+                            <DropdownMenu>
+                              <DropdownMenuTrigger
+                                render={
+                                  <Button
+                                    variant="ghost"
+                                    size="icon-sm"
+                                    aria-label={`Actions for ${user.name}`}
+                                  />
+                                }>
+                                <MoreHorizontalIcon aria-hidden="true" />
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end">
+                                <DropdownMenuGroup>
+                                  <DropdownMenuItem
+                                    onClick={() => handleRole(user)}
+                                    disabled={isPending || isSelf}>
+                                    {user.role === "admin" ?
+                                      <ShieldOffIcon aria-hidden="true" />
+                                    : <ShieldIcon aria-hidden="true" />}
+                                    {user.role === "admin" ?
+                                      "Demote to customer"
+                                    : "Promote to admin"}
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem
+                                    onClick={() => handleBan(user)}
+                                    disabled={isPending || isSelf}>
+                                    {user.banned ?
+                                      <UnlockIcon aria-hidden="true" />
+                                    : <BanIcon aria-hidden="true" />}
+                                    {user.banned ? "Unban user" : "Ban user"}
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem
+                                    onClick={() => handleImpersonate(user)}
+                                    disabled={
+                                      isPending || user.role === "admin"
+                                    }>
+                                    <EyeIcon aria-hidden="true" />
+                                    View as user
+                                  </DropdownMenuItem>
+                                </DropdownMenuGroup>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuGroup>
+                                  <DropdownMenuItem
+                                    variant="destructive"
+                                    onClick={() => setDeactivateTarget(user)}
+                                    disabled={isPending || isSelf}>
+                                    {user.deletedAt ?
+                                      <RotateCcwIcon aria-hidden="true" />
+                                    : <UserXIcon aria-hidden="true" />}
+                                    {user.deletedAt ?
+                                      "Reactivate user"
+                                    : "Deactivate user"}
+                                  </DropdownMenuItem>
+                                </DropdownMenuGroup>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
+            </div>
           </CardContent>
         </Card>
       </div>

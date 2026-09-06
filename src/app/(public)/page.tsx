@@ -24,13 +24,6 @@ const HomePage = async () => {
     getCategoriesWithCounts(),
   ]);
 
-  const heroCollections = [
-    { label: "Under 30k", href: "/products?max=30000" },
-    { label: "Audio essentials", href: "/products?category=headphones" },
-    { label: "Ready to ship", href: "/products" },
-    { label: "Staff picks", href: "/products" },
-  ];
-
   return (
     <div className="-mt-8 flex flex-col gap-10 lg:gap-16">
       <div className="flex flex-col gap-3">
@@ -71,19 +64,6 @@ const HomePage = async () => {
             ))}
           </div>
         : <ProductGrid products={featured} />}
-      </section>
-
-      <section
-        aria-label="Collections"
-        className="flex scrollbar-none gap-2 overflow-x-auto pb-2">
-        {heroCollections.map((c) => (
-          <Link
-            key={c.label}
-            href={c.href as never}
-            className="border-border bg-card hover:bg-muted inline-flex shrink-0 snap-start items-center rounded-full border px-4 py-1.5 text-sm font-medium whitespace-nowrap transition-colors">
-            {c.label}
-          </Link>
-        ))}
       </section>
 
       <section className="border-border bg-card relative grid overflow-hidden rounded-3xl border p-6 md:p-10 lg:grid-cols-2 lg:gap-6">

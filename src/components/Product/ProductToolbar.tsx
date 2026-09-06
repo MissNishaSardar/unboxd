@@ -48,17 +48,31 @@ const ProductToolbar = ({ categories, brands }: Props) => {
     {
       q: parseAsString,
       categories: parseAsArrayOf(parseAsString, ",").withDefault([]),
+      category: parseAsString,
       brands: parseAsArrayOf(parseAsString, ",").withDefault([]),
       sort: parseAsString,
       min: parseAsFloat,
       max: parseAsFloat,
       page: parseAsInteger,
     },
-    { shallow: false, urlKeys: { categories: "categories", brands: "brand" } },
+    {
+      shallow: false,
+      urlKeys: {
+        categories: "categories",
+        category: "category",
+        brands: "brand",
+      },
+    },
   );
 
   const sort = filters.sort ?? "newest";
-  const activeCategories = filters.categories;
+  const singleCategory = filters.category;
+  const activeCategories = Array.from(
+    new Set([
+      ...filters.categories,
+      ...(singleCategory ? [singleCategory] : []),
+    ]),
+  );
   const activeBrands = filters.brands;
   const activeMin = filters.min ?? null;
   const activeMax = filters.max ?? null;
@@ -79,8 +93,26 @@ const ProductToolbar = ({ categories, brands }: Props) => {
     : null;
 
   const removeCategory = (slug: string) => {
+    const nextCategories = activeCategories.filter((item) => item !== slug);
+    // nuqs stores singular ?category and plural ?categories separately,
+    // keep both in sync when hero lands with ?category=...
+    const nextCategory =
+      singleCategory === slug ? null : (singleCategory ?? null);
+    // if we removed the singular alias and kept the array, write both
+    const filteredPlural = filters.categories.filter((item) => item !== slug);
+    const keepSingular = nextCategory !== null ? nextCategory : null;
+    // when only singular existed, move remaining to plural to avoid alias drift
+    if (filters.categories.length === 0 && singleCategory) {
+      void setFilters({
+        categories: nextCategories.filter((c) => c !== singleCategory),
+        category: keepSingular,
+        page: null,
+      });
+      return;
+    }
     void setFilters({
-      categories: activeCategories.filter((item) => item !== slug),
+      categories: filteredPlural,
+      category: keepSingular,
       page: null,
     });
   };
@@ -104,6 +136,7 @@ const ProductToolbar = ({ categories, brands }: Props) => {
     void setFilters({
       q: null,
       categories: [],
+      category: null,
       brands: [],
       min: null,
       max: null,
@@ -165,7 +198,7 @@ const ProductToolbar = ({ categories, brands }: Props) => {
           <PopoverContent
             align="center"
             sideOffset={8}
-            className="w-80 p-0">
+            className="w-80 max-w-[calc(100vw-24px)] p-0">
             <Card
               size="sm"
               className="border-0 shadow-none">

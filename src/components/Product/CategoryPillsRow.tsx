@@ -30,21 +30,28 @@ const CategoryPillsRow = ({
   const [filters, setFilters] = useQueryStates(
     {
       categories: parseAsArrayOf(parseAsString, ",").withDefault([]),
+      category: parseAsString,
       page: parseAsInteger,
     },
     {
       shallow: false,
-      urlKeys: { categories: "categories" },
+      urlKeys: { categories: "categories", category: "category" },
     },
   );
-  const activeCategories = filters.categories;
+  const singleCategory = filters.category;
+  const activeCategories = Array.from(
+    new Set([
+      ...filters.categories,
+      ...(singleCategory ? [singleCategory] : []),
+    ]),
+  );
 
   const isAll = activeCategories.length === 0;
 
   return (
     <div
       aria-label="Categories"
-      className="[&::-webkit-scrollbar-track]:bg-muted [&::-webkit-scrollbar-thumb]:bg-border hover:[&::-webkit-scrollbar-thumb]:bg-foreground/20 flex [scrollbar-width:thin] [scrollbar-color:oklch(0.92_0.004_286.32)_transparent] gap-2 overflow-x-auto pb-2 [&::-webkit-scrollbar]:h-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-track]:rounded-full">
+      className="[&::-webkit-scrollbar-track]:bg-muted [&::-webkit-scrollbar-thumb]:bg-border hover:[&::-webkit-scrollbar-thumb]:bg-foreground/20 flex snap-x snap-mandatory scroll-px-4 [scrollbar-width:thin] [scrollbar-color:oklch(0.92_0.004_286.32)_transparent] gap-2 overflow-x-auto pb-2 [&::-webkit-scrollbar]:h-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-track]:rounded-full">
       <ToggleGroup
         multiple
         orientation="horizontal"
@@ -77,20 +84,20 @@ const CategoryPillsRow = ({
             return;
           }
           if (values.length === 0) {
-            void setFilters({ categories: [], page: null });
+            void setFilters({ categories: [], category: null, page: null });
             return;
           }
           if (values.includes(ALL_CATEGORY)) {
             if (isAll) {
               const next = values.filter((value) => value !== ALL_CATEGORY);
-              void setFilters({ categories: next, page: null });
+              void setFilters({ categories: next, category: null, page: null });
               return;
             }
-            void setFilters({ categories: [], page: null });
+            void setFilters({ categories: [], category: null, page: null });
             return;
           }
           const next = values.filter((value) => value !== ALL_CATEGORY);
-          void setFilters({ categories: next, page: null });
+          void setFilters({ categories: next, category: null, page: null });
         }}>
         {(() => {
           const Icon = FallbackIcon;

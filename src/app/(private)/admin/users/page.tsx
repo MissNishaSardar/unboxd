@@ -1,7 +1,6 @@
 import { UsersIcon } from "lucide-react";
 import UserFilters from "@/components/Admin/UserFilters";
-import UsersTable from "@/components/Admin/UsersTable";
-import Pagination from "@/components/Product/Pagination";
+import AdminUsersLoadMore from "@/components/Admin/AdminUsersLoadMore";
 import {
   Empty,
   EmptyDescription,
@@ -32,7 +31,7 @@ const AdminUsersPage = async ({
     page = 1,
   } = adminUserListSearchParamsSchema.parse(await searchParams);
 
-  const { users, total, totalPages } = await getAdminUsers({
+  const { users, total } = await getAdminUsers({
     search,
     role,
     page,
@@ -63,21 +62,12 @@ const AdminUsersPage = async ({
             </EmptyDescription>
           </EmptyHeader>
         </Empty>
-      : <UsersTable
-          users={users}
+      : <AdminUsersLoadMore
+          initialUsers={users}
+          total={total}
           currentUserId={session.user.id}
         />
       }
-
-      {users.length > 0 && (
-        <div className="flex justify-end">
-          <Pagination
-            currentPage={page}
-            totalPages={totalPages}
-            pathname="/admin/users"
-          />
-        </div>
-      )}
     </div>
   );
 };

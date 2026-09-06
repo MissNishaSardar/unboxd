@@ -1,5 +1,6 @@
 "use client";
 
+/* eslint-disable react-hooks/set-state-in-effect -- closing dropdown on route change is intentional sync */
 import { Button } from "@/components/shadcnui/button";
 import { cn } from "@/lib/utils";
 import type { BrandWithCount } from "@/server/brands";

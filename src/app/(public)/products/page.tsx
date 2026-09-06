@@ -1,8 +1,6 @@
 import type { Metadata } from "next";
 import CategoryPillsRow from "@/components/Product/CategoryPillsRow";
-import Pagination from "@/components/Product/Pagination";
-import ProductGrid from "@/components/Product/ProductGrid";
-import ProductsHero from "@/components/Product/ProductsHero";
+import ProductLoadMoreGrid from "@/components/Product/ProductLoadMoreGrid";
 import ProductToolbar from "@/components/Product/ProductToolbar";
 import {
   Breadcrumb,
@@ -13,11 +11,7 @@ import {
   BreadcrumbSeparator,
 } from "@/components/shadcnui/breadcrumb";
 import { productListSearchParamsSchema } from "@/lib/zodSchema";
-import {
-  getCategoriesWithCounts,
-  getFeaturedProducts,
-  getProducts,
-} from "@/server/catalog";
+import { getCategoriesWithCounts, getProducts } from "@/server/catalog";
 import { getBrandsWithCounts } from "@/server/brands";
 import Link from "next/link";
 
@@ -42,65 +36,102 @@ const ProductsPage = async ({
   }>;
 }) => {
   const sp = productListSearchParamsSchema.parse(await searchParams);
-  const isFiltered = Boolean(
-    sp.q ||
-    sp.categories.length > 0 ||
-    sp.brands.length > 0 ||
-    sp.min != null ||
-    sp.max != null,
+  const [data, categories, brands, allCategories, allBrands] =
+    await Promise.all([
+      getProducts({
+        q: sp.q,
+        categories: sp.categories,
+        brands: sp.brands,
+        sort: sp.sort,
+        min: sp.min,
+        max: sp.max,
+        page: sp.page,
+      }),
+      getCategoriesWithCounts({
+        q: sp.q,
+        brands: sp.brands,
+        min: sp.min,
+        max: sp.max,
+      }),
+      getBrandsWithCounts({
+        q: sp.q,
+        categories: sp.categories,
+        min: sp.min,
+        max: sp.max,
+      }),
+      getCategoriesWithCounts(),
+      getBrandsWithCounts(),
+    ]);
+
+  const brandNameMap = new Map(
+    [...brands, ...allBrands].map((b) => [b.slug, b.name] as const),
   );
 
-  const [data, categories, brands, featured] = await Promise.all([
-    getProducts({
-      q: sp.q,
-      categories: sp.categories,
-      brands: sp.brands,
-      sort: sp.sort,
-      min: sp.min,
-      max: sp.max,
-      page: sp.page,
-    }),
-    getCategoriesWithCounts({
-      q: sp.q,
-      brands: sp.brands,
-      min: sp.min,
-      max: sp.max,
-    }),
-    getBrandsWithCounts({
-      q: sp.q,
-      categories: sp.categories,
-      min: sp.min,
-      max: sp.max,
-    }),
-    getFeaturedProducts(),
-  ]);
+  const categoryNameMap = new Map(
+    [...categories, ...allCategories].map((c) => [c.slug, c.name] as const),
+  );
+
+  const activeBrandNames = sp.brands.map(
+    (slug) => brandNameMap.get(slug) ?? slug,
+  );
+  const activeCategoryNames = sp.categories.map(
+    (slug) => categoryNameMap.get(slug) ?? slug,
+  );
+
+  const hasActiveFilter =
+    activeBrandNames.length > 0 || activeCategoryNames.length > 0;
 
   return (
-    <div className="flex flex-col gap-8">
-      {!isFiltered && <ProductsHero products={featured.slice(0, 5)} />}
-      <Breadcrumb>
-        <BreadcrumbList>
-          <BreadcrumbItem>
-            <BreadcrumbLink render={<Link href="/" />}>Home</BreadcrumbLink>
-          </BreadcrumbItem>
-          <BreadcrumbSeparator />
-          <BreadcrumbItem>
-            <BreadcrumbPage>Products</BreadcrumbPage>
-          </BreadcrumbItem>
-        </BreadcrumbList>
-      </Breadcrumb>
-      <header className="flex flex-col gap-1">
-        <h1 className="font-heading text-2xl font-semibold tracking-tight md:text-3xl">
-          Products
-        </h1>
-        <p className="text-muted-foreground text-sm tabular-nums">
-          {data.total} item{data.total === 1 ? "" : "s"} •{" "}
-          {sp.categories.length === 0 ?
-            "All categories"
-          : sp.categories.join(", ")}{" "}
-          {sp.brands.length > 0 && `• ${sp.brands.join(", ")}`}
-        </p>
-      </header>
+    <div className="-mt-8 flex flex-col gap-6 lg:gap-8">
+      <div className="flex flex-col gap-3">
+        <Breadcrumb>
+          <BreadcrumbList>
+            <BreadcrumbItem>
+              <BreadcrumbLink render={<Link href="/" />}>Home</BreadcrumbLink>
+            </BreadcrumbItem>
+            <BreadcrumbSeparator />
+            <BreadcrumbItem>
+              {hasActiveFilter ?
+                <BreadcrumbLink render={<Link href="/products" />}>
+                  Products
+                </BreadcrumbLink>
+              : <BreadcrumbPage>Products</BreadcrumbPage>}
+            </BreadcrumbItem>
+            {activeBrandNames.map((name) => (
+              <span
+                key={`brand-${name}`}
+                className="contents">
+                <BreadcrumbSeparator />
+                <BreadcrumbItem>
+                  <BreadcrumbPage>{name}</BreadcrumbPage>
+                </BreadcrumbItem>
+              </span>
+            ))}
+            {activeCategoryNames.map((name) => (
+              <span
+                key={`cat-${name}`}
+                className="contents">
+                <BreadcrumbSeparator />
+                <BreadcrumbItem>
+                  <BreadcrumbPage>{name}</BreadcrumbPage>
+                </BreadcrumbItem>
+              </span>
+            ))}
+          </BreadcrumbList>
+        </Breadcrumb>
+        <header className="flex flex-col gap-1">
+          <h1 className="font-heading text-2xl font-semibold tracking-tight md:text-3xl">
+            Products
+          </h1>
+          <p className="text-muted-foreground text-sm tabular-nums">
+            {data.total} item{data.total === 1 ? "" : "s"} •{" "}
+            {sp.categories.length === 0 ?
+              "All categories"
+            : sp.categories.join(", ")}{" "}
+            {sp.brands.length > 0 && `• ${sp.brands.join(", ")}`}
+          </p>
+        </header>
+      </div>
 
       <CategoryPillsRow categories={categories} />
 
@@ -109,13 +140,10 @@ const ProductsPage = async ({
           categories={categories}
           brands={brands}
         />
-        <ProductGrid products={data.products} />
-        {data.total > 0 && data.totalPages > 1 && (
-          <Pagination
-            currentPage={data.page}
-            totalPages={data.totalPages}
-          />
-        )}
+        <ProductLoadMoreGrid
+          initialProducts={data.products}
+          total={data.total}
+        />
       </div>
     </div>
   );
