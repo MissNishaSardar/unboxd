@@ -1,5 +1,4 @@
-import { cacheLife } from "next/cache";
-import { cacheTag } from "next/cache";
+import { cacheLife, cacheTag } from "next/cache";
 import { z } from "zod";
 import prisma from "@/lib/dbClient/prisma";
 import { resolveProductImageUrl } from "@/lib/placeholder";
