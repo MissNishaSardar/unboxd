@@ -1,8 +1,10 @@
 import type { Metadata } from "next";
 import type { Route } from "next";
 import { headers } from "next/headers";
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import SignInForm from "@/components/Auth/SignInForm";
+import UnboxdLogo from "@/components/Brand/UnboxdLogo";
 import { auth } from "@/lib/auth";
 import {
   Card,
@@ -36,8 +38,18 @@ const LoginPage = async ({
   }
 
   return (
-    <Card className="w-full max-w-md border-white/[0.08] bg-[rgba(255,255,255,0.03)] backdrop-blur-xl">
+    <Card
+      withGradient
+      className="w-full max-w-md shadow-lg">
       <CardHeader className="items-center justify-items-center text-center">
+        <Link
+          href="/"
+          className="flex items-center gap-2">
+          <UnboxdLogo size={32} />
+          <span className="font-heading text-[17px] font-semibold tracking-tight">
+            Unboxd
+          </span>
+        </Link>
         <CardTitle className="text-lg">Sign in</CardTitle>
         <CardDescription>Welcome back to Unboxd.</CardDescription>
       </CardHeader>

@@ -87,7 +87,7 @@ const ProductToolbar = ({ categories, brands }: Props) => {
 
   const priceLabel =
     hasMin && hasMax ?
-      `₹${activeMin?.toLocaleString()} – ₹${activeMax?.toLocaleString()}`
+      `₹${activeMin?.toLocaleString()} to ₹${activeMax?.toLocaleString()}`
     : hasMin ? `Min ₹${activeMin?.toLocaleString()}`
     : hasMax ? `Max ₹${activeMax?.toLocaleString()}`
     : null;

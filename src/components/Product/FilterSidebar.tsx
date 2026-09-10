@@ -199,7 +199,7 @@ const FilterSidebar = ({ categories }: { categories: FilterCategory[] }) => {
                 </ToggleGroupItem>
               </ToggleGroup>
 
-              {/* Single ToggleGroup for all category pills — preserves cross-group multi-select */}
+              {/* Single ToggleGroup for all category pills, preserves cross-group multi-select */}
               <ToggleGroup
                 multiple
                 orientation="vertical"

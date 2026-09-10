@@ -159,7 +159,7 @@ const AdminOrderDetailPage = async ({
                     </div>
                   </TableCell>
                   <TableCell className="text-muted-foreground">
-                    {item.sku ?? "—"}
+                    {item.sku ?? "-"}
                   </TableCell>
                   <TableCell className="tabular-nums">
                     {item.quantity}

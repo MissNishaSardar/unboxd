@@ -6,7 +6,7 @@ import { auth } from "@/lib/auth";
 
 export const metadata: Metadata = {
   title: "Dashboard",
-  description: "Your Unboxd overview — orders, activity, and quick actions.",
+  description: "Your Unboxd overview. Orders, activity, and quick actions.",
 };
 import { headers } from "next/headers";
 import { formatDate } from "@/lib/format";

@@ -1,10 +1,11 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Loader2Icon } from "lucide-react";
+import { EyeIcon, EyeOffIcon, Loader2Icon } from "lucide-react";
 import type { Route } from "next";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
+import { useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { authClient } from "@/lib/auth-client";
 import { signinSchema, signinType } from "@/lib/zodSchema";
@@ -17,6 +18,12 @@ import {
   FieldLabel,
 } from "@/components/shadcnui/field";
 import { Input } from "@/components/shadcnui/input";
+import {
+  InputGroup,
+  InputGroupAddon,
+  InputGroupButton,
+  InputGroupInput,
+} from "@/components/shadcnui/input-group";
 import { toast } from "@/components/shadcnui/toast";
 
 const SignInForm = () => {
@@ -27,6 +34,7 @@ const SignInForm = () => {
     rawCallbackUrl?.startsWith("/") && !rawCallbackUrl.startsWith("//") ?
       rawCallbackUrl
     : "/dashboard";
+  const [showPassword, setShowPassword] = useState(false);
 
   const {
     handleSubmit,
@@ -37,7 +45,7 @@ const SignInForm = () => {
     defaultValues: {
       email: "",
       password: "",
-      rememberMe: true,
+      rememberMe: false,
     },
     mode: "all",
   });
@@ -107,13 +115,29 @@ const SignInForm = () => {
                   Forgot password?
                 </Link>
               </div>
-              <Input
-                {...field}
-                id={field.name}
-                type="password"
-                autoComplete="current-password"
-                aria-invalid={fieldState.invalid}
-              />
+              <InputGroup data-invalid={fieldState.invalid}>
+                <InputGroupInput
+                  {...field}
+                  id={field.name}
+                  type={showPassword ? "text" : "password"}
+                  placeholder="Enter your password"
+                  autoComplete="current-password"
+                  aria-invalid={fieldState.invalid}
+                />
+                <InputGroupAddon align="inline-end">
+                  <InputGroupButton
+                    aria-label={
+                      showPassword ? "Hide password" : "Show password"
+                    }
+                    aria-pressed={showPassword}
+                    onClick={() => setShowPassword((v) => !v)}
+                    size="icon-xs">
+                    {showPassword ?
+                      <EyeOffIcon aria-hidden="true" />
+                    : <EyeIcon aria-hidden="true" />}
+                  </InputGroupButton>
+                </InputGroupAddon>
+              </InputGroup>
               {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
             </Field>
           )}

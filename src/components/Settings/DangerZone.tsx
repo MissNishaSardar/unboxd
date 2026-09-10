@@ -55,7 +55,7 @@ const DangerZone = () => {
         type: "success",
       });
 
-      // Sign out and redirect to home — clears session cookie
+      // Sign out and redirect to home, clears session cookie
       try {
         await authClient.signOut();
       } catch {

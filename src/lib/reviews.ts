@@ -125,7 +125,7 @@ export function getReviewsForProduct(slug: string): Review[] {
     if (usedTitles.has(title)) {
       const unused = titlePool.find((t) => !usedTitles.has(t));
       if (unused) title = unused;
-      else title = `${title} — ${i + 1}`;
+      else title = `${title} ${i + 1}`;
     }
     usedTitles.add(title);
     const body = bodyPool[Math.floor(rand() * bodyPool.length)];

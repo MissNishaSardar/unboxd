@@ -32,7 +32,7 @@ const AccountDetails = ({
       <CardContent className="p-0">
         {/* Email full-width row */}
         <div className="grid grid-cols-1 gap-0 md:grid-cols-2 md:gap-4 md:p-6 md:pt-0">
-          {/* Email — spans 2 cols */}
+          {/* Email spans 2 cols */}
           <div className="border-border bg-muted/20 flex flex-col gap-1 border-y p-4 md:col-span-2 md:rounded-lg md:border">
             <span className="text-muted-foreground flex items-center gap-1.5 text-xs font-medium tracking-wide uppercase">
               <MailIcon

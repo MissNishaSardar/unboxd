@@ -365,7 +365,7 @@ const ProductInfo = ({
                   <span className="text-sm font-medium">
                     Model:{" "}
                     <span className="text-muted-foreground font-normal">
-                      {selectedModel ?? "—"}
+                      {selectedModel ?? "-"}
                     </span>
                   </span>
                   <div className="flex flex-wrap gap-2">
@@ -429,7 +429,7 @@ const ProductInfo = ({
             />
           </div>
 
-          {/* Delivery + trust — fills the dead space */}
+          {/* Delivery and trust, fills the dead space */}
           <div className="bg-muted/40 flex flex-col gap-3 rounded-xl border p-4">
             <div className="flex items-start gap-3 text-sm">
               <TruckIcon

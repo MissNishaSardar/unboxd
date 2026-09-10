@@ -94,7 +94,7 @@ export async function getReviewsBySlug(slug: string): Promise<ReviewDTO[]> {
   if (rows.length === 0) {
     return getReviewsForProduct(slug).map(mockToDTO);
   }
-  // keep social proof until real reviews reach threshold — avoid 9→1 drop
+  // keep social proof until real reviews reach threshold, avoid 9 to 1 drop
   if (rows.length < 6) {
     const mocks = getReviewsForProduct(slug).map(mockToDTO);
     const need = Math.min(mocks.length, 6 - rows.length);

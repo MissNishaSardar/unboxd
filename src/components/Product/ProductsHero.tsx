@@ -107,7 +107,7 @@ const ProductsHero = ({ products }: { products: ProductCardData[] }) => {
         </motion.div>
       </AnimatePresence>
 
-      {/* Scrim tied to page background #0a0a0a — melts into page on left */}
+      {/* Scrim tied to page background #0a0a0a, melts into page on left */}
       <div
         aria-hidden
         className="absolute inset-0 bg-gradient-to-r from-[#0a0a0a] via-[#0a0a0a]/85 via-[42%] to-transparent"

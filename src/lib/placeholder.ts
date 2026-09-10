@@ -1,6 +1,6 @@
 export const isUploadedImage = (url: string) => url.startsWith("/uploads/");
 
-// Single source: picsum.photos only — deterministic per slug/index.
+// Single source: picsum.photos only, deterministic per slug and index.
 // Keep placehold.co fallback for existing DBs that still contain legacy URLs.
 export const getPlaceholderPhotoUrl = (seed: string) =>
   `https://picsum.photos/seed/${encodeURIComponent(seed)}/800/800`;

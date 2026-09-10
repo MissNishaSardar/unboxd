@@ -24,7 +24,7 @@ Path aliases: `@/*` → `./src/*`, `@generated/*` → `./generated/*`.
 
 ## Style: no em dashes
 
-Never use em dashes (—) anywhere in this project. No em dashes in code, comments, docs, commit messages, or generated text. Use periods or commas instead. En dashes (–) and hyphen-as-dash substitutes are also banned. This is a hard user preference, remember it for all future turns.
+Never use em dashes (—) anywhere in this project. No em dashes in code, comments, docs, commit messages, or generated text. Use periods or commas instead. En dashes (–) and hyphen-as-dash substitutes are also banned. This is a hard user preference confirmed 2026-09-11, remember it for all future turns and all file types including src, docs, and generated output. Replace any existing em or en dash with a comma or period.
 
 ## Agent behavior
 

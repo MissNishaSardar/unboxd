@@ -1,9 +1,10 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Loader2Icon } from "lucide-react";
+import { EyeIcon, EyeOffIcon, Loader2Icon } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { authClient } from "@/lib/auth-client";
 import { signupSchema, signupType } from "@/lib/zodSchema";
@@ -15,10 +16,18 @@ import {
   FieldLabel,
 } from "@/components/shadcnui/field";
 import { Input } from "@/components/shadcnui/input";
+import {
+  InputGroup,
+  InputGroupAddon,
+  InputGroupButton,
+  InputGroupInput,
+} from "@/components/shadcnui/input-group";
 import { toast } from "@/components/shadcnui/toast";
 
 const SignUpForm = () => {
   const router = useRouter();
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const {
     handleSubmit,
@@ -109,13 +118,29 @@ const SignUpForm = () => {
           render={({ field, fieldState }) => (
             <Field data-invalid={fieldState.invalid}>
               <FieldLabel htmlFor={field.name}>Password</FieldLabel>
-              <Input
-                {...field}
-                id={field.name}
-                type="password"
-                autoComplete="new-password"
-                aria-invalid={fieldState.invalid}
-              />
+              <InputGroup data-invalid={fieldState.invalid}>
+                <InputGroupInput
+                  {...field}
+                  id={field.name}
+                  type={showPassword ? "text" : "password"}
+                  placeholder="Create a password"
+                  autoComplete="new-password"
+                  aria-invalid={fieldState.invalid}
+                />
+                <InputGroupAddon align="inline-end">
+                  <InputGroupButton
+                    aria-label={
+                      showPassword ? "Hide password" : "Show password"
+                    }
+                    aria-pressed={showPassword}
+                    onClick={() => setShowPassword((v) => !v)}
+                    size="icon-xs">
+                    {showPassword ?
+                      <EyeOffIcon aria-hidden="true" />
+                    : <EyeIcon aria-hidden="true" />}
+                  </InputGroupButton>
+                </InputGroupAddon>
+              </InputGroup>
               {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
             </Field>
           )}
@@ -126,13 +151,29 @@ const SignUpForm = () => {
           render={({ field, fieldState }) => (
             <Field data-invalid={fieldState.invalid}>
               <FieldLabel htmlFor={field.name}>Confirm password</FieldLabel>
-              <Input
-                {...field}
-                id={field.name}
-                type="password"
-                autoComplete="new-password"
-                aria-invalid={fieldState.invalid}
-              />
+              <InputGroup data-invalid={fieldState.invalid}>
+                <InputGroupInput
+                  {...field}
+                  id={field.name}
+                  type={showConfirmPassword ? "text" : "password"}
+                  placeholder="Confirm your password"
+                  autoComplete="new-password"
+                  aria-invalid={fieldState.invalid}
+                />
+                <InputGroupAddon align="inline-end">
+                  <InputGroupButton
+                    aria-label={
+                      showConfirmPassword ? "Hide password" : "Show password"
+                    }
+                    aria-pressed={showConfirmPassword}
+                    onClick={() => setShowConfirmPassword((v) => !v)}
+                    size="icon-xs">
+                    {showConfirmPassword ?
+                      <EyeOffIcon aria-hidden="true" />
+                    : <EyeIcon aria-hidden="true" />}
+                  </InputGroupButton>
+                </InputGroupAddon>
+              </InputGroup>
               {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
             </Field>
           )}

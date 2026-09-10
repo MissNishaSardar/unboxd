@@ -24,7 +24,7 @@ export async function deleteAccount(): Promise<DeleteAccountResult> {
     if (!user) return { ok: false, error: "FORBIDDEN" };
     if (user.deletedAt) return { ok: false, error: "ALREADY_DELETED" };
 
-    // Admin protection — hide danger zone, but harden server too
+    // Admin protection, hide danger zone, but harden server too
     if (user.role === "admin") {
       return { ok: false, error: "ADMIN_PROTECTED" };
     }

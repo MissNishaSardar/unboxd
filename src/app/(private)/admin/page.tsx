@@ -7,7 +7,7 @@ import { requireAdminPage } from "@/lib/guard";
 export const metadata: Metadata = {
   title: "Admin Dashboard",
   description:
-    "Unboxd admin overview — manage products, orders, inventory, and users.",
+    "Unboxd admin overview. Manage products, orders, inventory, and users.",
 };
 import SalesSummaryCard from "@/components/Admin/SalesSummaryCard";
 import { Button } from "@/components/shadcnui/button";

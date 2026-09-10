@@ -392,3 +392,24 @@ export const reviewHelpfulSchema = z.object({
 });
 
 export type reviewHelpfulType = z.infer<typeof reviewHelpfulSchema>;
+
+export const contactSchema = z.object({
+  name: z
+    .string()
+    .trim()
+    .min(2, { error: "Name must be at least 2 characters" })
+    .max(80, { error: "Name must be at most 80 characters" }),
+  email: z.email({ error: "Enter a valid email" }),
+  subject: z
+    .string()
+    .trim()
+    .min(5, { error: "Subject must be at least 5 characters" })
+    .max(120, { error: "Subject must be at most 120 characters" }),
+  message: z
+    .string()
+    .trim()
+    .min(10, { error: "Message must be at least 10 characters" })
+    .max(1000, { error: "Message must be at most 1000 characters" }),
+});
+
+export type contactType = z.infer<typeof contactSchema>;

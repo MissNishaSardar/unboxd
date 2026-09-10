@@ -24,7 +24,7 @@ const ProfileHero = ({
       className="border-border bg-card">
       <CardContent className="p-6">
         <div className="flex items-center gap-4">
-          {/* Avatar — clean, no banner overlap */}
+          {/* Avatar, clean, no banner overlap */}
           <div className="bg-muted border-border flex size-20 shrink-0 items-center justify-center overflow-hidden rounded-full border shadow-sm md:size-24">
             {image ?
               // eslint-disable-next-line @next/next/no-img-element
@@ -41,7 +41,7 @@ const ProfileHero = ({
             }
           </div>
 
-          {/* User info — name + bio */}
+          {/* User info, name and bio */}
           <div className="min-w-0 flex-1">
             <h2 className="font-heading truncate text-lg font-semibold tracking-tight md:text-xl">
               {name}
@@ -51,12 +51,12 @@ const ProfileHero = ({
                 {bio.trim()}
               </p>
             : <p className="text-muted-foreground/60 text-sm italic">
-                No bio yet — tap pencil to add
+                No bio yet, tap pencil to add
               </p>
             }
           </div>
 
-          {/* Edit — top-right header instead of avatar overlay */}
+          {/* Edit, top-right header instead of avatar overlay */}
           <Button
             variant="ghost"
             size="icon"

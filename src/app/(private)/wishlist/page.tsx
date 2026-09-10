@@ -3,7 +3,7 @@ import WishlistClient from "./WishlistClient";
 
 export const metadata: Metadata = {
   title: "Wishlist",
-  description: "Your saved Unboxd products — ready to revisit and purchase.",
+  description: "Your saved Unboxd products, ready to revisit and purchase.",
 };
 
 const WishlistPage = () => <WishlistClient />;

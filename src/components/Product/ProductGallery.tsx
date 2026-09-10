@@ -29,14 +29,14 @@ const ProductGallery = ({
       }))
     : [{ url: getPlaceholderPhotoUrl(seed), alt: name }];
 
-  // Fill up to 4 thumbnails so strip is never empty — use local placeholder, not fake picsum
+  // Fill up to 4 thumbnails so strip is never empty. Use local placeholder, not fake picsum
   const resolvedImages = (() => {
     if (baseResolved.length >= 4) return baseResolved;
     const filled = [...baseResolved];
     while (filled.length < 4) {
       filled.push({
         url: "/placeholder.svg",
-        alt: `${name} — no image`,
+        alt: `${name} no image`,
       });
     }
     return filled;

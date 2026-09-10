@@ -63,7 +63,7 @@ const SettingsPage = async () => {
         </p>
       </div>
 
-      {/* 1. Hero Profile Section — avatar + name + bio */}
+      {/* 1. Hero Profile Section, avatar and name and bio */}
       <ProfileHero
         name={user.name}
         image={user.image ?? null}
@@ -71,7 +71,7 @@ const SettingsPage = async () => {
         bio={user.bio ?? null}
       />
 
-      {/* 2. Account Details — read-only grid: email (full-width) + role/memberSince */}
+      {/* 2. Account Details, read-only grid with email full-width and role and memberSince */}
       <AccountDetails
         email={user.email}
         role={user.role}
@@ -80,7 +80,7 @@ const SettingsPage = async () => {
         banned={user.banned}
       />
 
-      {/* Security — always visible (was Security tab) */}
+      {/* Security, always visible, was Security tab */}
       <Card className="border-border bg-card">
         <CardHeader>
           <CardTitle>Security</CardTitle>
@@ -91,7 +91,7 @@ const SettingsPage = async () => {
         </CardContent>
       </Card>
 
-      {/* 3. Danger Zone — hidden for admins, red for regular users */}
+      {/* 3. Danger Zone, hidden for admins, red for regular users */}
       {!isAdmin && <DangerZone />}
     </div>
   );

@@ -34,6 +34,7 @@ import {
   UserIcon,
 } from "lucide-react";
 import BrandDropdown from "@/components/Layout/BrandDropdown";
+import ThemeToggleButton from "@/components/Layout/ThemeToggleButton";
 import type { BrandWithCount } from "@/server/brands";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
@@ -159,6 +160,10 @@ const Header = ({ brands }: { brands?: BrandWithCount[] }) => {
                     </div>
                   </div>
                 )}
+                <div className="mt-auto flex items-center justify-between border-t px-4 py-3">
+                  <span className="text-sm font-medium">Theme</span>
+                  <ThemeToggleButton />
+                </div>
               </SheetContent>
             </Sheet>
 
@@ -232,7 +237,7 @@ const Header = ({ brands }: { brands?: BrandWithCount[] }) => {
             : session ?
               <DropdownMenu>
                 <DropdownMenuTrigger
-                  className="ml-1 flex size-[38px] shrink-0 items-center justify-center overflow-hidden rounded-full border border-white/10 bg-white/5 transition-colors hover:bg-white/10 focus-visible:ring-2 focus-visible:ring-white/30 focus-visible:outline-none"
+                  className="flex size-[38px] shrink-0 items-center justify-center overflow-hidden rounded-full border border-white/10 bg-white/5 transition-colors hover:bg-white/10 focus-visible:ring-2 focus-visible:ring-white/30 focus-visible:outline-none"
                   aria-label="User menu">
                   {session.user.image ?
                     // eslint-disable-next-line @next/next/no-img-element
@@ -305,13 +310,15 @@ const Header = ({ brands }: { brands?: BrandWithCount[] }) => {
             : <Link
                 href="/auth/login"
                 aria-label="Sign in"
-                className="ml-1 flex size-[38px] items-center justify-center rounded-full border border-white/10 bg-white/5 text-white/70 transition-colors hover:bg-white/10 hover:text-white">
+                className="flex size-[38px] items-center justify-center rounded-full border border-white/10 bg-white/5 text-white/70 transition-colors hover:bg-white/10 hover:text-white">
                 <UserIcon
                   aria-hidden="true"
                   className="size-[18px]"
                 />
               </Link>
             }
+
+            <ThemeToggleButton className={cn(iconButtonClass, "ml-1")} />
           </div>
         </div>
 
