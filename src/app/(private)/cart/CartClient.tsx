@@ -8,7 +8,7 @@ import {
   ArrowRightIcon,
   RotateCcwIcon,
   ShieldCheckIcon,
-  ShoppingCartIcon,
+  ShoppingBagIcon,
   Trash2Icon,
 } from "lucide-react";
 import { authClient } from "@/lib/auth-client";
@@ -46,7 +46,7 @@ const CartClient = () => {
   const shipping = total >= FREE_SHIPPING_THRESHOLD ? 0 : SHIPPING_FLAT_RATE;
 
   return (
-    <div className="flex max-w-5xl mx-auto flex-col gap-8">
+    <div className="mx-auto flex max-w-5xl flex-col gap-8">
       <header className="flex flex-col gap-1">
         <h1 className="font-heading text-2xl font-semibold tracking-tight md:text-3xl">
           Your cart
@@ -62,7 +62,7 @@ const CartClient = () => {
         <Empty>
           <EmptyHeader>
             <EmptyMedia variant="icon">
-              <ShoppingCartIcon />
+              <ShoppingBagIcon />
             </EmptyMedia>
             <EmptyTitle>Your cart is empty</EmptyTitle>
             <EmptyDescription>

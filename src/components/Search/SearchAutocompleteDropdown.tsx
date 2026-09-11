@@ -8,6 +8,13 @@ import type {
 } from "@/server/search";
 import { resolveProductImageUrl } from "@/lib/placeholder";
 import { cn } from "@/lib/utils";
+import {
+  parseAsArrayOf,
+  parseAsInteger,
+  parseAsString,
+  useQueryStates,
+} from "nuqs";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
 type Props = {
   q: string;
@@ -46,6 +53,45 @@ const SearchAutocompleteDropdown = ({
   onSelect,
   setActiveIndex,
 }: Props) => {
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const [filters, setFilters] = useQueryStates(
+    {
+      brands: parseAsArrayOf(parseAsString, ",").withDefault([]),
+      categories: parseAsArrayOf(parseAsString, ",").withDefault([]),
+      category: parseAsString,
+      page: parseAsInteger,
+    },
+    {
+      shallow: false,
+      urlKeys: {
+        brands: "brand",
+        categories: "categories",
+        category: "category",
+      },
+    },
+  );
+
+  const handleBrandClick = (slug: string) => {
+    onSelect();
+    const isActive = filters.brands.includes(slug);
+    const next =
+      isActive ?
+        filters.brands.filter((s) => s !== slug)
+      : [...filters.brands, slug];
+    if (pathname === "/products") {
+      void setFilters({ brands: next, page: null });
+    } else {
+      const params = new URLSearchParams(searchParams.toString());
+      if (next.length > 0) params.set("brand", next.join(","));
+      else params.delete("brand");
+      params.delete("page");
+      const qs = params.toString() ? `?${params.toString()}` : "";
+      router.push(`/products${qs}` as never);
+    }
+  };
+
   const isDark = variant === "dark";
   const total = brands.length + products.length;
   const hasResults = total > 0;
@@ -123,15 +169,13 @@ const SearchAutocompleteDropdown = ({
               const idx = i;
               const active = idx === activeIndex;
               return (
-                <Link
+                <button
                   key={brand.slug}
-                  href={
-                    `/products?brand=${encodeURIComponent(brand.slug)}` as never
-                  }
-                  onClick={onSelect}
+                  type="button"
+                  onClick={() => handleBrandClick(brand.slug)}
                   onMouseEnter={() => setActiveIndex(idx)}
                   className={cn(
-                    "flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition-colors",
+                    "flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm transition-colors",
                     active ?
                       isDark ? "bg-white/10 text-white"
                       : "bg-muted text-foreground"
@@ -158,7 +202,7 @@ const SearchAutocompleteDropdown = ({
                     )}>
                     {brand.count}
                   </span>
-                </Link>
+                </button>
               );
             })}
           </div>

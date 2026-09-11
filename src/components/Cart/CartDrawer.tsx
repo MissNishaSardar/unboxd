@@ -5,7 +5,7 @@ import { useAtomValue, useSetAtom } from "jotai";
 import { AnimatePresence, motion } from "motion/react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ShoppingCartIcon, XIcon } from "lucide-react";
+import { ShoppingBagIcon, XIcon } from "lucide-react";
 import { authClient } from "@/lib/auth-client";
 import { cartAtom, cartDrawerOpenAtom, cartTotalAtom } from "@/lib/cart/atoms";
 import { formatPrice } from "@/lib/format";
@@ -79,7 +79,7 @@ const CartDrawer = () => {
                 <Empty>
                   <EmptyHeader>
                     <EmptyMedia variant="icon">
-                      <ShoppingCartIcon />
+                      <ShoppingBagIcon />
                     </EmptyMedia>
                     <EmptyTitle>Your cart is empty</EmptyTitle>
                     <EmptyDescription>

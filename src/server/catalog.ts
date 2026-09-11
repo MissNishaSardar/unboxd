@@ -2,6 +2,7 @@ import { cacheLife, cacheTag } from "next/cache";
 import { z } from "zod";
 import prisma from "@/lib/dbClient/prisma";
 import { resolveProductImageUrl } from "@/lib/placeholder";
+import { getRatingSummary, getReviewsForProduct } from "@/lib/reviews";
 import { productSortSchema } from "@/lib/zodSchema";
 
 export const PRODUCTS_PER_PAGE = 12;
@@ -139,6 +140,7 @@ export async function getProducts(params: ProductListParams) {
   "use cache";
   cacheLife("hours");
   cacheTag("products");
+  cacheTag("reviews");
   const {
     q,
     categories = [],
@@ -170,11 +172,94 @@ export async function getProducts(params: ProductListParams) {
       },
     }),
   };
+  if (sort === "rating_desc" || sort === "rating_asc") {
+    const matching = await prisma.product.findMany({
+      where,
+      select: { id: true, slug: true },
+    });
+    const total = matching.length;
+    if (total === 0) {
+      return {
+        products: [],
+        total: 0,
+        page,
+        totalPages: 1,
+      };
+    }
+    const ids = matching.map((m) => m.id);
+    const slugById = new Map(matching.map((m) => [m.id, m.slug] as const));
+    const groups = await prisma.review.groupBy({
+      by: ["productId"],
+      where: { productId: { in: ids } },
+      _avg: { rating: true },
+      _count: { _all: true },
+    });
+    const avgById = new Map<string, number | null>();
+    const countById = new Map<string, number>();
+    for (const g of groups) {
+      const avg = (g as unknown as { _avg: { rating: number | null } })._avg
+        .rating;
+      const count = (g as unknown as { _count: { _all: number } })._count._all;
+      avgById.set(g.productId, avg);
+      countById.set(g.productId, count);
+    }
+    const effectiveRating = new Map<string, number>();
+    const effectiveCount = new Map<string, number>(countById);
+    for (const m of matching) {
+      const realAvg = avgById.get(m.id);
+      if (realAvg != null) {
+        effectiveRating.set(m.id, Math.round(realAvg * 10) / 10);
+      } else {
+        const mock = getReviewsForProduct(m.slug);
+        const summary = getRatingSummary(mock);
+        effectiveRating.set(m.id, summary.average);
+        effectiveCount.set(m.id, summary.count);
+      }
+    }
+    const sortedIds = [...ids].sort((a, b) => {
+      const aR = effectiveRating.get(a)!;
+      const bR = effectiveRating.get(b)!;
+      if (aR !== bR) {
+        return sort === "rating_desc" ? bR - aR : aR - bR;
+      }
+      const aC = effectiveCount.get(a) ?? 0;
+      const bC = effectiveCount.get(b) ?? 0;
+      if (aC !== bC) return bC - aC;
+      const aSlug = slugById.get(a)!;
+      const bSlug = slugById.get(b)!;
+      return aSlug.localeCompare(bSlug);
+    });
+    const start = (page - 1) * PRODUCTS_PER_PAGE;
+    const pagedIds = sortedIds.slice(start, start + PRODUCTS_PER_PAGE);
+    if (pagedIds.length === 0) {
+      return {
+        products: [],
+        total,
+        page,
+        totalPages: Math.max(1, Math.ceil(total / PRODUCTS_PER_PAGE)),
+      };
+    }
+    const products = await prisma.product.findMany({
+      where: { id: { in: pagedIds } },
+      include: productCardInclude,
+    });
+    const productsById = new Map(products.map((p) => [p.id, p] as const));
+    const ordered = pagedIds
+      .map((id) => productsById.get(id))
+      .filter((p): p is NonNullable<typeof p> => Boolean(p));
+    return {
+      products: ordered.map(toProductCardData),
+      total,
+      page,
+      totalPages: Math.max(1, Math.ceil(total / PRODUCTS_PER_PAGE)),
+    };
+  }
+
   const orderBy = {
     price_asc: { basePrice: "asc" as const },
     price_desc: { basePrice: "desc" as const },
     newest: [{ createdAt: "desc" as const }, { id: "asc" as const }],
-  }[sort];
+  }[sort as "price_asc" | "price_desc" | "newest"];
 
   const [products, total] = await Promise.all([
     prisma.product.findMany({

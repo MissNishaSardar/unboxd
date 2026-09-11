@@ -23,6 +23,12 @@ import { authClient } from "@/lib/auth-client";
 import { cartCountAtom, cartDrawerOpenAtom, clearCart } from "@/lib/cart/atoms";
 import { PUBLIC_NAV } from "@/lib/nav";
 import { cn } from "@/lib/utils";
+import {
+  parseAsArrayOf,
+  parseAsInteger,
+  parseAsString,
+  useQueryStates,
+} from "nuqs";
 import { useAtomValue, useSetAtom } from "jotai";
 import {
   LayoutDashboardIcon,
@@ -30,7 +36,7 @@ import {
   MenuIcon,
   SearchIcon,
   ShieldIcon,
-  ShoppingCartIcon,
+  ShoppingBagIcon,
   UserIcon,
 } from "lucide-react";
 import BrandDropdown from "@/components/Layout/BrandDropdown";
@@ -54,6 +60,41 @@ const Header = ({ brands }: { brands?: BrandWithCount[] }) => {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [mobileFilters, setMobileFilters] = useQueryStates(
+    {
+      brands: parseAsArrayOf(parseAsString, ",").withDefault([]),
+      categories: parseAsArrayOf(parseAsString, ",").withDefault([]),
+      category: parseAsString,
+      page: parseAsInteger,
+    },
+    {
+      shallow: false,
+      urlKeys: {
+        brands: "brand",
+        categories: "categories",
+        category: "category",
+      },
+    },
+  );
+  const activeBrands = mobileFilters.brands;
+  const toggleMobileBrand = (slug: string) => {
+    const isActive = activeBrands.includes(slug);
+    const next =
+      isActive ?
+        activeBrands.filter((s) => s !== slug)
+      : [...activeBrands, slug];
+    if (pathname === "/products") {
+      void setMobileFilters({ brands: next, page: null });
+    } else {
+      const params = new URLSearchParams(searchParams.toString());
+      if (next.length > 0) params.set("brand", next.join(","));
+      else params.delete("brand");
+      params.delete("page");
+      const qs = params.toString() ? `?${params.toString()}` : "";
+      router.push(`/products${qs}` as never);
+    }
+    setMobileOpen(false);
+  };
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchValue, setSearchValue] = useState(searchParams.get("q") ?? "");
 
@@ -143,20 +184,33 @@ const Header = ({ brands }: { brands?: BrandWithCount[] }) => {
                       Brands
                     </span>
                     <div className="flex flex-col gap-1">
-                      {brands.slice(0, 8).map((brand) => (
-                        <Link
-                          key={brand.slug}
-                          href={
-                            `/products?brand=${encodeURIComponent(brand.slug)}` as never
-                          }
-                          onClick={() => setMobileOpen(false)}
-                          className="text-muted-foreground hover:bg-muted hover:text-foreground rounded-full px-3.5 py-2 text-sm font-medium transition-colors">
-                          {brand.name}
-                          <span className="text-muted-foreground/70 ml-2 text-xs tabular-nums">
-                            {brand.count}
-                          </span>
-                        </Link>
-                      ))}
+                      {brands.slice(0, 8).map((brand) => {
+                        const isActive = activeBrands.includes(brand.slug);
+                        return (
+                          <button
+                            key={brand.slug}
+                            type="button"
+                            aria-pressed={isActive}
+                            onClick={() => toggleMobileBrand(brand.slug)}
+                            className={cn(
+                              "rounded-full px-3.5 py-2 text-left text-sm font-medium transition-colors",
+                              isActive ?
+                                "bg-primary text-primary-foreground"
+                              : "text-muted-foreground hover:bg-muted hover:text-foreground",
+                            )}>
+                            {brand.name}
+                            <span
+                              className={cn(
+                                "ml-2 text-xs tabular-nums",
+                                isActive ? "text-white/70" : (
+                                  "text-muted-foreground/70"
+                                ),
+                              )}>
+                              {brand.count}
+                            </span>
+                          </button>
+                        );
+                      })}
                     </div>
                   </div>
                 )}
@@ -221,7 +275,7 @@ const Header = ({ brands }: { brands?: BrandWithCount[] }) => {
               aria-label="Open cart"
               className={cn(iconButtonClass, "relative")}
               onClick={handleCartClick}>
-              <ShoppingCartIcon
+              <ShoppingBagIcon
                 aria-hidden="true"
                 className="size-[18px]"
               />

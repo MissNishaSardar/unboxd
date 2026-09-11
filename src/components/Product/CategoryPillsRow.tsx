@@ -6,7 +6,7 @@ import {
   parseAsString,
   useQueryStates,
 } from "nuqs";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Badge } from "@/components/shadcnui/badge";
 import {
   ToggleGroup,
@@ -27,15 +27,21 @@ const CategoryPillsRow = ({
   navigateBasePath?: string;
 }) => {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [filters, setFilters] = useQueryStates(
     {
       categories: parseAsArrayOf(parseAsString, ",").withDefault([]),
       category: parseAsString,
+      brands: parseAsArrayOf(parseAsString, ",").withDefault([]),
       page: parseAsInteger,
     },
     {
       shallow: false,
-      urlKeys: { categories: "categories", category: "category" },
+      urlKeys: {
+        categories: "categories",
+        category: "category",
+        brands: "brand",
+      },
     },
   );
   const singleCategory = filters.category;
@@ -45,6 +51,7 @@ const CategoryPillsRow = ({
       ...(singleCategory ? [singleCategory] : []),
     ]),
   );
+  const activeBrands = filters.brands;
 
   const isAll = activeCategories.length === 0;
 
@@ -60,10 +67,12 @@ const CategoryPillsRow = ({
         onValueChange={(values) => {
           if (navigateBasePath) {
             const pushTo = (cats: string[]) => {
-              const qs =
-                cats.length > 0 ?
-                  `?categories=${encodeURIComponent(cats.join(","))}`
-                : "";
+              const params = new URLSearchParams(searchParams.toString());
+              if (cats.length > 0) params.set("categories", cats.join(","));
+              else params.delete("categories");
+              params.delete("category");
+              params.delete("page");
+              const qs = params.toString() ? `?${params.toString()}` : "";
               router.push(`${navigateBasePath}${qs}` as never);
             };
             if (values.length === 0) {

@@ -2,7 +2,14 @@
 
 /* eslint-disable react-hooks/set-state-in-effect -- syncing URL query state to draft inputs for popover is intentional */
 import { useEffect, useState } from "react";
-import { SlidersHorizontalIcon, XIcon } from "lucide-react";
+import {
+  ArrowDownIcon,
+  ArrowUpIcon,
+  ClockIcon,
+  SlidersHorizontalIcon,
+  StarIcon,
+  XIcon,
+} from "lucide-react";
 import {
   parseAsArrayOf,
   parseAsFloat,
@@ -33,9 +40,36 @@ import type { FilterCategory } from "@/components/Product/categoryFilterMeta";
 import type { BrandWithCount } from "@/server/brands";
 
 const SORT_OPTIONS = [
-  { value: "newest", label: "Newest" },
-  { value: "price_asc", label: "Price: Low to High" },
-  { value: "price_desc", label: "Price: High to Low" },
+  {
+    value: "newest",
+    label: "Newest First",
+    description: "Recently added",
+    icon: ClockIcon,
+  },
+  {
+    value: "price_asc",
+    label: "Price: Low to High",
+    description: "Cheapest first",
+    icon: ArrowUpIcon,
+  },
+  {
+    value: "price_desc",
+    label: "Price: High to Low",
+    description: "Most expensive first",
+    icon: ArrowDownIcon,
+  },
+  {
+    value: "rating_desc",
+    label: "Highest Rated",
+    description: "Best reviews first (5★ → 1★)",
+    icon: StarIcon,
+  },
+  {
+    value: "rating_asc",
+    label: "Lowest Rated",
+    description: "Lowest reviews first (1★ → 5★)",
+    icon: StarIcon,
+  },
 ] as const;
 
 type Props = {
@@ -241,15 +275,33 @@ const ProductToolbar = ({ categories, brands }: Props) => {
                       if (v) setDraftSort(v);
                     }}
                     className="w-full gap-1.5">
-                    {SORT_OPTIONS.map((option) => (
-                      <ToggleGroupItem
-                        key={option.value}
-                        value={option.value}
-                        variant="outline"
-                        className="data-[state=on]:bg-primary data-[state=on]:text-primary-foreground justify-start rounded-md px-3">
-                        {option.label}
-                      </ToggleGroupItem>
-                    ))}
+                    {SORT_OPTIONS.map((option) => {
+                      const Icon = option.icon;
+                      const isRating = option.value.startsWith("rating_");
+                      return (
+                        <ToggleGroupItem
+                          key={option.value}
+                          value={option.value}
+                          variant="outline"
+                          className="data-[state=on]:bg-primary data-[state=on]:text-primary-foreground h-auto justify-start rounded-md px-3 py-2">
+                          <Icon
+                            className={
+                              isRating ?
+                                "size-3.5 shrink-0 fill-amber-400 text-amber-400 data-[state=on]:fill-white data-[state=on]:text-white"
+                              : "size-3.5 shrink-0"
+                            }
+                          />
+                          <span className="flex flex-col items-start leading-none">
+                            <span className="text-xs font-medium">
+                              {option.label}
+                            </span>
+                            <span className="text-[11px] font-normal opacity-70 data-[state=on]:opacity-90">
+                              {option.description}
+                            </span>
+                          </span>
+                        </ToggleGroupItem>
+                      );
+                    })}
                   </ToggleGroup>
                 </div>
                 <Button

@@ -74,7 +74,13 @@ const csvStringArray = (schema: z.ZodType<string>) =>
       .filter(Boolean);
   }, z.array(schema).default([]));
 
-export const productSortSchema = z.enum(["price_asc", "price_desc", "newest"]);
+export const productSortSchema = z.enum([
+  "price_asc",
+  "price_desc",
+  "newest",
+  "rating_desc",
+  "rating_asc",
+]);
 
 export const productListSearchParamsSchema = z
   .object({

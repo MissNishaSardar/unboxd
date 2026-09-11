@@ -10,7 +10,7 @@ import {
   ChevronDownIcon,
   RotateCcwIcon,
   ShieldCheckIcon,
-  ShoppingCartIcon,
+  ShoppingBagIcon,
   TruckIcon,
   ZapIcon,
 } from "lucide-react";
@@ -409,7 +409,7 @@ const ProductInfo = ({
               disabled={outOfStock}
               onClick={handleAddToCart}
               data-icon="inline-start">
-              <ShoppingCartIcon aria-hidden="true" />
+              <ShoppingBagIcon aria-hidden="true" />
               {outOfStock ? "Out of Stock" : "Add to Cart"}
             </Button>
             <Button

@@ -2,8 +2,14 @@
 
 /* eslint-disable react-hooks/set-state-in-effect -- syncing debounced query to suggestion state is intentional */
 import { useEffect, useRef, useState } from "react";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { SearchIcon, XIcon } from "lucide-react";
+import {
+  parseAsArrayOf,
+  parseAsInteger,
+  parseAsString,
+  useQueryStates,
+} from "nuqs";
 import {
   InputGroup,
   InputGroupAddon,
@@ -37,6 +43,41 @@ const SearchAutocompleteInput = ({
   onNavigate,
 }: Props) => {
   const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const [brandFilters, setBrandFilters] = useQueryStates(
+    {
+      brands: parseAsArrayOf(parseAsString, ",").withDefault([]),
+      categories: parseAsArrayOf(parseAsString, ",").withDefault([]),
+      category: parseAsString,
+      page: parseAsInteger,
+    },
+    {
+      shallow: false,
+      urlKeys: {
+        brands: "brand",
+        categories: "categories",
+        category: "category",
+      },
+    },
+  );
+  const navigateToBrand = (slug: string) => {
+    const isActive = brandFilters.brands.includes(slug);
+    const next =
+      isActive ?
+        brandFilters.brands.filter((s) => s !== slug)
+      : [...brandFilters.brands, slug];
+    if (pathname === "/products") {
+      void setBrandFilters({ brands: next, page: null });
+    } else {
+      const params = new URLSearchParams(searchParams.toString());
+      if (next.length > 0) params.set("brand", next.join(","));
+      else params.delete("brand");
+      params.delete("page");
+      const qs = params.toString() ? `?${params.toString()}` : "";
+      router.push(`/products${qs}` as never);
+    }
+  };
   const debounced = useDebouncedValue(value, 300);
   const [brands, setBrands] = useState<SearchSuggestionBrand[]>([]);
   const [products, setProducts] = useState<SearchSuggestionProduct[]>([]);
@@ -120,7 +161,7 @@ const SearchAutocompleteInput = ({
           const b = brands[activeIndex];
           setOpen(false);
           onNavigate?.();
-          router.push(`/products?brand=${encodeURIComponent(b.slug)}` as never);
+          navigateToBrand(b.slug);
         } else if (activeIndex < total) {
           const p = products[activeIndex - brands.length];
           setOpen(false);
@@ -152,9 +193,7 @@ const SearchAutocompleteInput = ({
               const b = brands[activeIndex];
               setOpen(false);
               onNavigate?.();
-              router.push(
-                `/products?brand=${encodeURIComponent(b.slug)}` as never,
-              );
+              navigateToBrand(b.slug);
               return;
             }
             if (activeIndex < total) {

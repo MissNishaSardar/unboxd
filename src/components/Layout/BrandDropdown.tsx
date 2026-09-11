@@ -5,14 +5,59 @@ import { Button } from "@/components/shadcnui/button";
 import { cn } from "@/lib/utils";
 import type { BrandWithCount } from "@/server/brands";
 import { ChevronDownIcon, Grid2x2Icon, TagIcon } from "lucide-react";
+import {
+  parseAsArrayOf,
+  parseAsInteger,
+  parseAsString,
+  useQueryStates,
+} from "nuqs";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 
 const BrandDropdown = ({ brands }: { brands: BrandWithCount[] }) => {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
   const pathname = usePathname();
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const [filters, setFilters] = useQueryStates(
+    {
+      brands: parseAsArrayOf(parseAsString, ",").withDefault([]),
+      categories: parseAsArrayOf(parseAsString, ",").withDefault([]),
+      category: parseAsString,
+      page: parseAsInteger,
+    },
+    {
+      shallow: false,
+      urlKeys: {
+        brands: "brand",
+        categories: "categories",
+        category: "category",
+      },
+    },
+  );
+
+  const activeBrands = filters.brands;
+
+  const toggleBrand = (slug: string) => {
+    const isActive = activeBrands.includes(slug);
+    const nextBrands =
+      isActive ?
+        activeBrands.filter((s) => s !== slug)
+      : [...activeBrands, slug];
+    if (pathname === "/products") {
+      void setFilters({ brands: nextBrands, page: null });
+    } else {
+      const params = new URLSearchParams(searchParams.toString());
+      if (nextBrands.length > 0) params.set("brand", nextBrands.join(","));
+      else params.delete("brand");
+      params.delete("page");
+      const qs = params.toString() ? `?${params.toString()}` : "";
+      router.push(`/products${qs}` as never);
+    }
+    setOpen(false);
+  };
 
   useEffect(() => {
     setOpen(false);
@@ -70,29 +115,52 @@ const BrandDropdown = ({ brands }: { brands: BrandWithCount[] }) => {
           className="absolute top-full left-0 z-50 mt-2 w-[680px] max-w-[calc(100vw-32px)]">
           <div className="border-border bg-popover flex gap-6 rounded-2xl border p-6 shadow-xl backdrop-blur-xl">
             <div className="grid flex-1 grid-cols-2 gap-2.5 lg:grid-cols-3">
-              {display.map((brand) => (
-                <Link
-                  key={brand.slug}
-                  href={{ pathname: "/products", query: { brand: brand.slug } }}
-                  onClick={() => setOpen(false)}
-                  title={brand.name}
-                  className="group hover:bg-accent flex min-w-0 items-center gap-2.5 overflow-hidden rounded-xl p-2.5 transition-colors">
-                  <div className="bg-muted text-muted-foreground flex size-10 shrink-0 items-center justify-center overflow-hidden rounded-lg">
-                    <TagIcon
-                      aria-hidden="true"
-                      className="size-5"
-                    />
-                  </div>
-                  <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
-                    <span className="text-foreground block w-full truncate text-sm font-medium">
-                      {brand.name}
-                    </span>
-                    <span className="text-muted-foreground text-xs tabular-nums">
-                      {brand.count} items
-                    </span>
-                  </div>
-                </Link>
-              ))}
+              {display.map((brand) => {
+                const isActive = activeBrands.includes(brand.slug);
+                return (
+                  <button
+                    key={brand.slug}
+                    type="button"
+                    onClick={() => toggleBrand(brand.slug)}
+                    title={brand.name}
+                    aria-pressed={isActive}
+                    className={cn(
+                      "group flex min-w-0 items-center gap-2.5 overflow-hidden rounded-xl p-2.5 text-left transition-colors",
+                      isActive ?
+                        "bg-primary text-primary-foreground"
+                      : "hover:bg-accent",
+                    )}>
+                    <div
+                      className={cn(
+                        "flex size-10 shrink-0 items-center justify-center overflow-hidden rounded-lg",
+                        isActive ?
+                          "bg-white/20 text-white"
+                        : "bg-muted text-muted-foreground",
+                      )}>
+                      <TagIcon
+                        aria-hidden="true"
+                        className="size-5"
+                      />
+                    </div>
+                    <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
+                      <span
+                        className={cn(
+                          "block w-full truncate text-sm font-medium",
+                          isActive ? "text-white" : "text-foreground",
+                        )}>
+                        {brand.name}
+                      </span>
+                      <span
+                        className={cn(
+                          "text-xs tabular-nums",
+                          isActive ? "text-white/70" : "text-muted-foreground",
+                        )}>
+                        {brand.count} items
+                      </span>
+                    </div>
+                  </button>
+                );
+              })}
             </div>
             <div className="relative hidden w-[180px] shrink-0 overflow-hidden rounded-xl bg-gradient-to-br from-violet-600 to-indigo-700 p-5 lg:flex lg:flex-col lg:justify-between">
               <div

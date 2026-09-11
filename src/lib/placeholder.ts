@@ -50,11 +50,11 @@ const REAL_PRODUCT_IMAGES: Record<string, string> = {
   "apple-20w-adapter":
     "https://images.unsplash.com/photo-1583863788434-e58a36330cf0?auto=format&fit=crop&w=800&q=80",
   "anker-usb-c-240w":
-    "https://images.unsplash.com/photo-1629131726692-1bdd1d04c55a?auto=format&fit=crop&w=800&q=80",
+    "https://images.unsplash.com/photo-1596570689888-52906bdd68a9?auto=format&fit=crop&w=800&q=80",
   "spigen-ultra-hybrid":
     "https://images.unsplash.com/photo-1605236453806-6ff36851218e?auto=format&fit=crop&w=800&q=80",
   "samsung-25w-charger":
-    "https://images.unsplash.com/photo-1586816001966-79b736744398?auto=format&fit=crop&w=800&q=80",
+    "https://images.unsplash.com/photo-1610056494249-5d7f111cf78f?auto=format&fit=crop&w=800&q=80",
 };
 
 // Fallback by category when slug not in map, also distinct per category

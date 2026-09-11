@@ -7,7 +7,7 @@ import {
   Loader2Icon,
   RotateCcwIcon,
   ShieldCheckIcon,
-  ShoppingCartIcon,
+  ShoppingBagIcon,
   TruckIcon,
 } from "lucide-react";
 import Link from "next/link";
@@ -111,7 +111,7 @@ const CheckoutClient = () => {
         <Empty>
           <EmptyHeader>
             <EmptyMedia variant="icon">
-              <ShoppingCartIcon />
+              <ShoppingBagIcon />
             </EmptyMedia>
             <EmptyTitle>Your cart is empty</EmptyTitle>
             <EmptyDescription>
