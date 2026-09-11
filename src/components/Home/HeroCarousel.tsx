@@ -16,8 +16,9 @@ import {
   SparklesIcon,
   TruckIcon,
 } from "lucide-react";
-import { getPlaceholderPhotoUrl } from "@/lib/placeholder";
+import { resolveProductImageUrl } from "@/lib/placeholder";
 import type { ProductCardData } from "@/components/Product/ProductCard";
+import UnboxdLogo from "@/components/Brand/UnboxdLogo";
 import Image from "next/image";
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -27,24 +28,20 @@ type Slide = {
   heading: string;
   subtext: string;
   primary: { label: string; href: string };
-  secondary: { label: string; href: string };
+  secondary?: { label: string; href: string };
   discIcon: typeof SmartphoneIcon;
   chips: { icon: typeof BanknoteIcon; label: string }[];
 };
 
 const slides: Slide[] = [
   {
-    eyebrow: "New season, unboxed",
-    heading: "Electronics, unboxed.",
-    subtext:
-      "Latest smartphones, laptops, audio gear and accessories. Cash on delivery and tracked delivery across India.",
+    eyebrow: "Welcome to Unboxd",
+    heading: "Made to be unboxed.",
+    subtext: "The finest tech, curated for modern living.",
     primary: { label: "Shop now", href: "/products" },
-    secondary: { label: "Browse categories", href: "/products" },
+    secondary: { label: "Know about us", href: "/about" },
     discIcon: SmartphoneIcon,
-    chips: [
-      { icon: BanknoteIcon, label: "COD available" },
-      { icon: TruckIcon, label: "Same-week delivery" },
-    ],
+    chips: [],
   },
   {
     eyebrow: "Audio Week",
@@ -52,7 +49,6 @@ const slides: Slide[] = [
     subtext:
       "Up to 25% off headphones, earbuds and speakers. Limited time during Audio Week.",
     primary: { label: "Shop Audio", href: "/products?category=headphones" },
-    secondary: { label: "View deals", href: "/products?category=audio" },
     discIcon: HeadphonesIcon,
     chips: [
       { icon: AudioLinesIcon, label: "Up to 25% off" },
@@ -68,7 +64,6 @@ const slides: Slide[] = [
       label: "Shop Gaming",
       href: "/products?category=gaming-laptops",
     },
-    secondary: { label: "Browse all", href: "/products" },
     discIcon: Gamepad2Icon,
     chips: [
       { icon: TruckIcon, label: "24h dispatch" },
@@ -81,7 +76,6 @@ const slides: Slide[] = [
     subtext:
       "Ultrabooks from MacBook Air to ThinkPad X1. Fanless M3 power with all day battery.",
     primary: { label: "Shop Laptops", href: "/products?category=laptops" },
-    secondary: { label: "View deals", href: "/products?category=laptops" },
     discIcon: LaptopIcon,
     chips: [
       { icon: TruckIcon, label: "Same-day dispatch" },
@@ -96,10 +90,6 @@ const slides: Slide[] = [
     primary: {
       label: "Shop Accessories",
       href: "/products?category=chargers-cables",
-    },
-    secondary: {
-      label: "Browse cases",
-      href: "/products?category=cases-protection",
     },
     discIcon: CableIcon,
     chips: [
@@ -157,7 +147,7 @@ const HeroCarousel = ({ products }: { products?: ProductCardData[] }) => {
 
   const getProductForSlide = (idx: number): ProductCardData | null => {
     if (!products || products.length === 0) return null;
-    if (idx === 0) return products[0] ?? null;
+    if (idx === 0) return null;
     if (idx === 1) {
       const audio = products.find((p) =>
         ["headphones", "earbuds", "speakers"].includes(p.category.slug),
@@ -205,9 +195,14 @@ const HeroCarousel = ({ products }: { products?: ProductCardData[] }) => {
           {slides.map((slide, slideIdx) => {
             const DiscIcon = slide.discIcon;
             const product = getProductForSlide(slideIdx);
+            const isFirst = slideIdx === 0;
             const imageUrl =
               product ?
-                (product.images[0]?.url ?? getPlaceholderPhotoUrl(product.slug))
+                resolveProductImageUrl(
+                  product.images[0]?.url ?? "",
+                  product.slug,
+                  0,
+                )
               : null;
             const imageAlt =
               product ?
@@ -219,6 +214,17 @@ const HeroCarousel = ({ products }: { products?: ProductCardData[] }) => {
                 className="flex min-w-full flex-none justify-center px-6 py-10 md:px-10 md:py-14">
                 <div className="flex w-full max-w-7xl flex-col gap-6 lg:grid lg:grid-cols-2 lg:items-center lg:gap-8">
                   <div className="flex flex-col items-start gap-4">
+                    {isFirst && (
+                      <div className="flex items-center gap-2">
+                        <UnboxdLogo
+                          className="size-7 shrink-0"
+                          aria-hidden
+                        />
+                        <span className="font-heading text-[17px] font-semibold tracking-tight">
+                          Unboxd
+                        </span>
+                      </div>
+                    )}
                     <span className="border-border bg-muted inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-medium">
                       <SparklesIcon
                         aria-hidden="true"
@@ -232,6 +238,28 @@ const HeroCarousel = ({ products }: { products?: ProductCardData[] }) => {
                     <p className="text-muted-foreground max-w-xl text-base md:text-lg">
                       {slide.subtext}
                     </p>
+                    {isFirst && (
+                      <div className="flex flex-wrap gap-2">
+                        {[
+                          { icon: BanknoteIcon, label: "Cash on delivery" },
+                          { icon: TruckIcon, label: "Tracked delivery" },
+                          { icon: ShieldCheckIcon, label: "Verified brands" },
+                        ].map((item) => {
+                          const Icon = item.icon;
+                          return (
+                            <span
+                              key={item.label}
+                              className="border-border bg-muted inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-xs font-medium">
+                              <Icon
+                                aria-hidden="true"
+                                className="size-3.5"
+                              />
+                              {item.label}
+                            </span>
+                          );
+                        })}
+                      </div>
+                    )}
                     <div className="flex flex-wrap gap-3 pt-1">
                       <Button
                         size="lg"
@@ -241,67 +269,86 @@ const HeroCarousel = ({ products }: { products?: ProductCardData[] }) => {
                         {slide.primary.label}
                         <ArrowRightIcon aria-hidden="true" />
                       </Button>
-                      <Button
-                        size="lg"
-                        variant="outline"
-                        render={<Link href={slide.secondary.href as never} />}
-                        nativeButton={false}>
-                        {slide.secondary.label}
-                      </Button>
+                      {isFirst && slide.secondary && (
+                        <Button
+                          size="lg"
+                          variant="outline"
+                          render={<Link href={slide.secondary.href as never} />}
+                          nativeButton={false}>
+                          {slide.secondary.label}
+                        </Button>
+                      )}
                     </div>
                   </div>
                   <div className="relative flex h-[340px] w-full shrink-0 items-center justify-center overflow-hidden md:h-[420px] lg:h-[440px]">
-                    <div className="relative flex size-[260px] items-center justify-center overflow-hidden rounded-2xl bg-[radial-gradient(circle_at_30%_30%,oklch(0.65_0.18_277/0.9),oklch(0.35_0.15_277/0.6)_70%,oklch(0.2_0.05_285/1)_100%)] shadow-lg md:size-[300px] lg:size-[340px]">
-                      {imageUrl ?
+                    {isFirst ?
+                      <div className="relative h-full w-full overflow-hidden rounded-2xl shadow-lg">
                         <Image
-                          src={imageUrl}
-                          alt={imageAlt}
+                          src="https://images.unsplash.com/photo-1633202595695-8f9f6981e7ed?auto=format&fit=crop&w=800&q=80"
+                          alt="White desk topped with electronics and a laptop"
                           fill
                           unoptimized
-                          priority={slideIdx === 0}
-                          sizes="(max-width:768px) 260px, 340px"
+                          priority
+                          sizes="(max-width:1024px) 100vw, 600px"
                           className="object-cover"
                         />
-                      : <DiscIcon
+                        <div
                           aria-hidden="true"
-                          className="size-20 text-white drop-shadow md:size-24"
+                          className="pointer-events-none absolute inset-0 rounded-2xl ring-1 ring-white/10"
                         />
-                      }
-                      <div
-                        aria-hidden="true"
-                        className="pointer-events-none absolute top-12 left-12 size-20 rounded-full bg-white/20 blur-xl"
-                      />
-                      <div
-                        className="pointer-events-none absolute inset-0 rounded-2xl ring-1 ring-white/10"
-                        aria-hidden="true"
-                      />
-                    </div>
-                    {(() => {
-                      const Chip0 = slide.chips[0]?.icon;
-                      const Chip1 = slide.chips[1]?.icon;
-                      return (
-                        <>
-                          {Chip0 && (
-                            <div className="absolute top-6 right-6 hidden items-center gap-1.5 rounded-full border border-white/20 bg-white/10 px-3 py-1.5 text-xs font-medium shadow-sm backdrop-blur-md md:flex lg:right-10">
-                              <Chip0
-                                aria-hidden="true"
-                                className="size-3.5"
-                              />
-                              {slide.chips[0].label}
-                            </div>
-                          )}
-                          {Chip1 && (
-                            <div className="absolute bottom-8 left-2 hidden items-center gap-1.5 rounded-full border border-white/20 bg-white/10 px-3 py-1.5 text-xs font-medium shadow-sm backdrop-blur-md md:flex lg:left-6">
-                              <Chip1
-                                aria-hidden="true"
-                                className="size-3.5"
-                              />
-                              {slide.chips[1].label}
-                            </div>
-                          )}
-                        </>
-                      );
-                    })()}
+                      </div>
+                    : <div className="relative flex size-[260px] items-center justify-center overflow-hidden rounded-2xl bg-[radial-gradient(circle_at_30%_30%,oklch(0.65_0.18_277/0.9),oklch(0.35_0.15_277/0.6)_70%,oklch(0.2_0.05_285/1)_100%)] shadow-lg md:size-[300px] lg:size-[340px]">
+                        {imageUrl ?
+                          <Image
+                            src={imageUrl}
+                            alt={imageAlt}
+                            fill
+                            unoptimized
+                            sizes="(max-width:768px) 260px, 340px"
+                            className="object-cover"
+                          />
+                        : <DiscIcon
+                            aria-hidden="true"
+                            className="size-20 text-white drop-shadow md:size-24"
+                          />
+                        }
+                        <div
+                          aria-hidden="true"
+                          className="pointer-events-none absolute top-12 left-12 size-20 rounded-full bg-white/20 blur-xl"
+                        />
+                        <div
+                          className="pointer-events-none absolute inset-0 rounded-2xl ring-1 ring-white/10"
+                          aria-hidden="true"
+                        />
+                      </div>
+                    }
+                    {!isFirst &&
+                      (() => {
+                        const Chip0 = slide.chips[0]?.icon;
+                        const Chip1 = slide.chips[1]?.icon;
+                        return (
+                          <>
+                            {Chip0 && (
+                              <div className="absolute top-6 right-6 hidden items-center gap-1.5 rounded-full border border-white/20 bg-white/10 px-3 py-1.5 text-xs font-medium shadow-sm backdrop-blur-md md:flex lg:right-10">
+                                <Chip0
+                                  aria-hidden="true"
+                                  className="size-3.5"
+                                />
+                                {slide.chips[0].label}
+                              </div>
+                            )}
+                            {Chip1 && (
+                              <div className="absolute bottom-8 left-2 hidden items-center gap-1.5 rounded-full border border-white/20 bg-white/10 px-3 py-1.5 text-xs font-medium shadow-sm backdrop-blur-md md:flex lg:left-6">
+                                <Chip1
+                                  aria-hidden="true"
+                                  className="size-3.5"
+                                />
+                                {slide.chips[1].label}
+                              </div>
+                            )}
+                          </>
+                        );
+                      })()}
                   </div>
                 </div>
               </div>

@@ -27,7 +27,7 @@ const PublicLayout = async ({ children }: LayoutProps) => {
         <ImpersonationBanner name={session.user.name} />
       )}
       <Header brands={brands} />
-      <main className="flex-1">
+      <main className="flex-1 overflow-x-clip">
         <Container className="py-10">{children}</Container>
       </main>
       <Footer categories={categories} />

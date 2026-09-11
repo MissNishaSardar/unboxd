@@ -42,10 +42,18 @@ const OrdersPage = async ({
       orderBy: { createdAt: "desc" },
       skip: (page - 1) * ORDERS_PER_PAGE,
       take: ORDERS_PER_PAGE,
-      include: { items: true },
+      include: { items: { select: { quantity: true } } },
     }),
     prisma.order.count({ where: { userId: session.user.id } }),
   ]);
+
+  const serializedOrders = orders.map((order) => ({
+    id: order.id,
+    status: order.status,
+    total: String(order.total),
+    createdAt: order.createdAt.toISOString(),
+    items: order.items,
+  }));
 
   return (
     <div className="mx-auto flex max-w-3xl flex-col gap-6">
@@ -77,7 +85,7 @@ const OrdersPage = async ({
           </EmptyContent>
         </Empty>
       : <OrdersLoadMore
-          initialOrders={orders as never}
+          initialOrders={serializedOrders}
           total={total}
         />
       }

@@ -51,7 +51,7 @@ const BrandDropdown = ({ brands }: { brands: BrandWithCount[] }) => {
         aria-controls="brand-mega-menu"
         aria-haspopup="true"
         onClick={() => setOpen((v) => !v)}
-        className="rounded-full border border-white/10 bg-white/5 px-3 py-1.5 font-medium text-white/90 hover:bg-white/10 hover:text-white">
+        className="border-border bg-background text-foreground hover:bg-accent hover:text-accent-foreground rounded-full border px-3 py-1.5 font-medium">
         <Grid2x2Icon
           aria-hidden="true"
           className="size-4"
@@ -68,7 +68,7 @@ const BrandDropdown = ({ brands }: { brands: BrandWithCount[] }) => {
           role="dialog"
           aria-label="All brands"
           className="absolute top-full left-0 z-50 mt-2 w-[680px] max-w-[calc(100vw-32px)]">
-          <div className="flex gap-6 rounded-2xl border border-white/10 bg-[rgba(15,15,20,0.98)] p-6 shadow-xl backdrop-blur-xl">
+          <div className="border-border bg-popover flex gap-6 rounded-2xl border p-6 shadow-xl backdrop-blur-xl">
             <div className="grid flex-1 grid-cols-2 gap-2.5 lg:grid-cols-3">
               {display.map((brand) => (
                 <Link
@@ -76,18 +76,18 @@ const BrandDropdown = ({ brands }: { brands: BrandWithCount[] }) => {
                   href={{ pathname: "/products", query: { brand: brand.slug } }}
                   onClick={() => setOpen(false)}
                   title={brand.name}
-                  className="group flex min-w-0 items-center gap-2.5 overflow-hidden rounded-xl p-2.5 transition-colors hover:bg-white/5">
-                  <div className="flex size-10 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-white/10 text-white">
+                  className="group hover:bg-accent flex min-w-0 items-center gap-2.5 overflow-hidden rounded-xl p-2.5 transition-colors">
+                  <div className="bg-muted text-muted-foreground flex size-10 shrink-0 items-center justify-center overflow-hidden rounded-lg">
                     <TagIcon
                       aria-hidden="true"
                       className="size-5"
                     />
                   </div>
                   <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
-                    <span className="block w-full truncate text-sm font-medium text-white">
+                    <span className="text-foreground block w-full truncate text-sm font-medium">
                       {brand.name}
                     </span>
-                    <span className="text-xs text-white/60 tabular-nums">
+                    <span className="text-muted-foreground text-xs tabular-nums">
                       {brand.count} items
                     </span>
                   </div>

@@ -48,7 +48,7 @@ const products: SeedProduct[] = [
       "Titanium-framed flagship with the A17 Pro chip, a 48MP pro camera system and an always-on ProMotion display.",
     basePrice: 119900,
     featured: true,
-    images: ["https://picsum.photos/seed/iphone-15-pro/800/800"],
+    images: ["https://images.unsplash.com/photo-1592750475338-74b7b21085ab?auto=format&fit=crop&w=800&q=80"],
     variants: [
       { name: "Natural Titanium / 256GB", priceDiff: 0, stock: 12 },
       { name: "Blue Titanium / 256GB", priceDiff: 0, stock: 8 },
@@ -63,7 +63,7 @@ const products: SeedProduct[] = [
       "Galaxy AI-powered flagship with a 200MP camera, built-in S Pen and a 6.8-inch QHD+ AMOLED display.",
     basePrice: 129999,
     featured: true,
-    images: ["https://picsum.photos/seed/galaxy-s24-ultra/800/800"],
+    images: ["https://images.unsplash.com/photo-1610945264803-c22b62d2a7b3?auto=format&fit=crop&w=800&q=80"],
     variants: [
       { name: "Titanium Gray / 256GB", priceDiff: 0, stock: 15 },
       { name: "Titanium Violet / 512GB", priceDiff: 12000, stock: 6 },
@@ -77,7 +77,7 @@ const products: SeedProduct[] = [
     description:
       "Pixel's best camera with Magic Editor, 7 years of OS updates and the Tensor G3 chip.",
     basePrice: 109999,
-    images: ["https://picsum.photos/seed/pixel-8-pro/800/800"],
+    images: ["https://images.unsplash.com/photo-1598327105666-5b89351aff97?auto=format&fit=crop&w=800&q=80"],
     variants: [
       { name: "Obsidian / 128GB", priceDiff: 0, stock: 10 },
       { name: "Porcelain / 256GB", priceDiff: 9000, stock: 4 },
@@ -90,7 +90,7 @@ const products: SeedProduct[] = [
     description:
       "Snapdragon 8 Gen 3, 2K 120Hz LTPO display and 100W SUPERVOOC charging with a 5400mAh battery.",
     basePrice: 64999,
-    images: ["https://picsum.photos/seed/oneplus-12/800/800"],
+    images: ["https://images.unsplash.com/photo-1585060544812-6b45742d762f?auto=format&fit=crop&w=800&q=80"],
     variants: [
       { name: "Flowy Emerald / 12GB+256GB", priceDiff: 0, stock: 20 },
       { name: "Silky Black / 16GB+512GB", priceDiff: 8000, stock: 9 },
@@ -103,7 +103,7 @@ const products: SeedProduct[] = [
     description:
       "Compact flagship with a Leica-tuned camera system, Snapdragon 8 Gen 3 and a 1.5K LTPO display.",
     basePrice: 59999,
-    images: ["https://picsum.photos/seed/xiaomi-14/800/800"],
+    images: ["https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?auto=format&fit=crop&w=800&q=80"],
     variants: [
       { name: "Black / 12GB+256GB", priceDiff: 0, stock: 14 },
       { name: "White / 12GB+512GB", priceDiff: 6000, stock: 0 },
@@ -116,7 +116,7 @@ const products: SeedProduct[] = [
     description:
       "Budget-friendly Nothing with the signature Glyph interface and a clean, bloat-free OS.",
     basePrice: 27999,
-    images: ["https://picsum.photos/seed/nothing-phone-2a/800/800"],
+    images: ["https://images.unsplash.com/photo-1583394838336-acd977736f90?auto=format&fit=crop&w=800&q=80"],
     variants: [
       { name: "Black / 8GB+128GB", priceDiff: 0, stock: 25 },
       { name: "Milk / 12GB+256GB", priceDiff: 4000, stock: 11 },
@@ -130,7 +130,7 @@ const products: SeedProduct[] = [
       "Ultra-thin M3 laptop with an 18-hour battery, Liquid Retina display and silent fanless design.",
     basePrice: 114900,
     featured: true,
-    images: ["https://picsum.photos/seed/macbook-air-m3/800/800"],
+    images: ["https://images.unsplash.com/photo-1517336714731-489689fd1ca8?auto=format&fit=crop&w=800&q=80"],
     variants: [
       { name: "Midnight / 8GB+256GB", priceDiff: 0, stock: 7 },
       { name: "Starlight / 8GB+512GB", priceDiff: 15000, stock: 5 },
@@ -145,7 +145,7 @@ const products: SeedProduct[] = [
       "Pro-grade power in a 14-inch frame: M3 Pro, 120Hz Liquid Retina XDR and up to 18 hours of battery.",
     basePrice: 199900,
     featured: true,
-    images: ["https://picsum.photos/seed/macbook-pro-14/800/800"],
+    images: ["https://images.unsplash.com/photo-1541807084-5c52b6b3adef?auto=format&fit=crop&w=800&q=80"],
     variants: [
       { name: "Space Black / 18GB+512GB", priceDiff: 0, stock: 4 },
       { name: "Silver / 36GB+1TB", priceDiff: 50000, stock: 2 },
@@ -158,7 +158,7 @@ const products: SeedProduct[] = [
     description:
       "Premium ultrabook with an edge-to-edge display, Intel Core Ultra 7 and a CNC aluminium chassis.",
     basePrice: 149990,
-    images: ["https://picsum.photos/seed/dell-xps-13/800/800"],
+    images: ["https://images.unsplash.com/photo-1593642632823-8f785ba67e45?auto=format&fit=crop&w=800&q=80"],
     variants: [
       { name: "Platinum / 16GB+512GB", priceDiff: 0, stock: 6 },
       { name: "Graphite / 32GB+1TB", priceDiff: 25000, stock: 3 },
@@ -171,7 +171,7 @@ const products: SeedProduct[] = [
     description:
       "Business-class 1.08kg ultrabook with the legendary ThinkPad keyboard and MIL-SPEC durability.",
     basePrice: 169990,
-    images: ["https://picsum.photos/seed/thinkpad-x1-carbon/800/800"],
+    images: ["https://images.unsplash.com/photo-1588872657578-7efd1f1555ed?auto=format&fit=crop&w=800&q=80"],
     variants: [
       { name: "Black / 16GB+512GB", priceDiff: 0, stock: 5 },
       { name: "Black / 32GB+1TB", priceDiff: 28000, stock: 2 },
@@ -185,7 +185,7 @@ const products: SeedProduct[] = [
       "14-inch gaming powerhouse: Ryzen 9, RTX 4060 and a 165Hz ROG Nebula display in a 1.65kg body.",
     basePrice: 149990,
     featured: true,
-    images: ["https://picsum.photos/seed/rog-zephyrus-g14/800/800"],
+    images: ["https://images.unsplash.com/photo-1603302576837-37561b2e2302?auto=format&fit=crop&w=800&q=80"],
     variants: [
       { name: "Moonlight White / RTX 4060 / 1TB", priceDiff: 0, stock: 8 },
       { name: "Moonlight White / RTX 4070 / 1TB", priceDiff: 30000, stock: 3 },
@@ -198,7 +198,7 @@ const products: SeedProduct[] = [
     description:
       "2-in-1 convertible with an OLED touch display, Intel Core Ultra 7 and a 9MP IR webcam.",
     basePrice: 139990,
-    images: ["https://picsum.photos/seed/hp-spectre-x360/800/800"],
+    images: ["https://images.unsplash.com/photo-1496181133206-80ce9b88a853?auto=format&fit=crop&w=800&q=80"],
     variants: [
       { name: "Nocturne Blue / 16GB+1TB", priceDiff: 0, stock: 4 },
       { name: "Poseidon Blue / 32GB+1TB", priceDiff: 20000, stock: 1 },
@@ -212,7 +212,7 @@ const products: SeedProduct[] = [
       "Industry-leading noise cancelling, 30-hour battery and crystal-clear call quality with the V1 processor.",
     basePrice: 29990,
     featured: true,
-    images: ["https://picsum.photos/seed/sony-wh-1000xm5/800/800"],
+    images: ["https://images.unsplash.com/photo-1545127398-14699f92334b?auto=format&fit=crop&w=800&q=80"],
     variants: [
       { name: "Black", priceDiff: 0, stock: 18 },
       { name: "Silver", priceDiff: 0, stock: 7 },
@@ -225,7 +225,7 @@ const products: SeedProduct[] = [
     description:
       "Audiophile open-back reference headphones with a warm, natural sound signature.",
     basePrice: 38990,
-    images: ["https://picsum.photos/seed/sennheiser-hd-650/800/800"],
+    images: ["https://images.unsplash.com/photo-1487215078519-e21cc028cb29?auto=format&fit=crop&w=800&q=80"],
     variants: [{ name: "Matte Black", priceDiff: 0, stock: 9 }],
   },
   {
@@ -235,7 +235,7 @@ const products: SeedProduct[] = [
     description:
       "Bose Immersive Audio, world-class ANC and spatial sound in a premium over-ear package.",
     basePrice: 39900,
-    images: ["https://picsum.photos/seed/bose-qc-ultra/800/800"],
+    images: ["https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=800&q=80"],
     variants: [
       { name: "Black", priceDiff: 0, stock: 6 },
       { name: "White Smoke", priceDiff: 0, stock: 0 },
@@ -249,7 +249,7 @@ const products: SeedProduct[] = [
       "Twice the active noise cancellation, Adaptive Audio and a USB-C MagSafe charging case.",
     basePrice: 24900,
     featured: true,
-    images: ["https://picsum.photos/seed/airpods-pro-2/800/800"],
+    images: ["https://images.unsplash.com/photo-1600294037681-c80b4cb5b434?auto=format&fit=crop&w=800&q=80"],
     variants: [{ name: "White", priceDiff: 0, stock: 22 }],
   },
   {
@@ -259,7 +259,7 @@ const products: SeedProduct[] = [
     description:
       "Hi-Fi 24-bit audio with intelligent ANC and a comfortable, secure in-ear fit.",
     basePrice: 19999,
-    images: ["https://picsum.photos/seed/galaxy-buds-2-pro/800/800"],
+    images: ["https://images.unsplash.com/photo-1590658268037-6bf12165a8df?auto=format&fit=crop&w=800&q=80"],
     variants: [
       { name: "Graphite", priceDiff: 0, stock: 13 },
       { name: "Bora Purple", priceDiff: 0, stock: 5 },
@@ -272,7 +272,7 @@ const products: SeedProduct[] = [
     description:
       "Transparent-design earbuds with dual-chamber acoustics, active noise cancellation and LDAC support.",
     basePrice: 14999,
-    images: ["https://picsum.photos/seed/nothing-ear-2/800/800"],
+    images: ["https://images.unsplash.com/photo-1572569511254-d8f925fe2cbb?auto=format&fit=crop&w=800&q=80"],
     variants: [{ name: "White", priceDiff: 0, stock: 16 }],
   },
   {
@@ -282,7 +282,7 @@ const products: SeedProduct[] = [
     description:
       "Punchy portable Bluetooth speaker with deep bass, IP67 waterproofing and 12-hour playtime.",
     basePrice: 11999,
-    images: ["https://picsum.photos/seed/jbl-flip-6/800/800"],
+    images: ["https://images.unsplash.com/photo-1545454675-3531b543be5d?auto=format&fit=crop&w=800&q=80"],
     variants: [
       { name: "Black", priceDiff: 0, stock: 19 },
       { name: "Red", priceDiff: 0, stock: 4 },
@@ -296,7 +296,7 @@ const products: SeedProduct[] = [
     description:
       "Smart speaker with rich room-filling sound, Voice control and Apple AirPlay 2 support.",
     basePrice: 23999,
-    images: ["https://picsum.photos/seed/sonos-one-gen2/800/800"],
+    images: ["https://images.unsplash.com/photo-1526170375885-4d8ecf77b99f?auto=format&fit=crop&w=800&q=80"],
     variants: [
       { name: "Black", priceDiff: 0, stock: 8 },
       { name: "White", priceDiff: 0, stock: 6 },
@@ -309,7 +309,7 @@ const products: SeedProduct[] = [
     description:
       "Budget-friendly ANC headphones with 40-hour playtime and Hi-Res certified audio.",
     basePrice: 5999,
-    images: ["https://picsum.photos/seed/soundcore-q30/800/800"],
+    images: ["https://images.unsplash.com/photo-1484704849700-f032a568e944?auto=format&fit=crop&w=800&q=80"],
     variants: [{ name: "Black", priceDiff: 0, stock: 30 }],
   },
   {
@@ -320,7 +320,7 @@ const products: SeedProduct[] = [
       "Two-port USB-C GaN wall charger that powers a laptop and phone simultaneously in a pocketable size.",
     basePrice: 2999,
     featured: true,
-    images: ["https://picsum.photos/seed/anker-65w-gan/800/800"],
+    images: ["https://images.unsplash.com/photo-1622979135225-d2ba269cf1ac?auto=format&fit=crop&w=800&q=80"],
     variants: [{ name: "Black", priceDiff: 0, stock: 40 }],
   },
   {
@@ -330,7 +330,7 @@ const products: SeedProduct[] = [
     description:
       "Fast charging for iPhone and iPad with USB-C. Compact and travel friendly.",
     basePrice: 1999,
-    images: ["https://picsum.photos/seed/apple-20w-adapter/800/800"],
+    images: ["https://images.unsplash.com/photo-1583863788434-e58a36330cf0?auto=format&fit=crop&w=800&q=80"],
     variants: [{ name: "White", priceDiff: 0, stock: 35 }],
   },
   {
@@ -340,7 +340,7 @@ const products: SeedProduct[] = [
     description:
       "2m braided cable supporting 240W charging, USB 2.0 data and E-marker certification.",
     basePrice: 1499,
-    images: ["https://picsum.photos/seed/anker-usb-c-240w/800/800"],
+    images: ["https://images.unsplash.com/photo-1629131726692-1bdd1d04c55a?auto=format&fit=crop&w=800&q=80"],
     variants: [
       { name: "Black / 2m", priceDiff: 0, stock: 50 },
       { name: "Blue / 2m", priceDiff: 0, stock: 12 },
@@ -353,7 +353,7 @@ const products: SeedProduct[] = [
     description:
       "Crystal-clear back with a tough bumper frame, Mil-Grade drop protection and anti-yellowing coating.",
     basePrice: 1999,
-    images: ["https://picsum.photos/seed/spigen-ultra-hybrid/800/800"],
+    images: ["https://images.unsplash.com/photo-1605236453806-6ff36851218e?auto=format&fit=crop&w=800&q=80"],
     variants: [
       { name: "Clear / iPhone 15 Pro", priceDiff: 0, stock: 27 },
       { name: "Matte Black / iPhone 15 Pro", priceDiff: 0, stock: 9 },
@@ -367,7 +367,7 @@ const products: SeedProduct[] = [
     description:
       "Compact USB-C fast charger for Galaxy devices. Includes 1.2m Type-C cable.",
     basePrice: 2499,
-    images: ["https://picsum.photos/seed/samsung-25w-charger/800/800"],
+    images: ["https://images.unsplash.com/photo-1586816001966-79b736744398?auto=format&fit=crop&w=800&q=80"],
     variants: [{ name: "Black", priceDiff: 0, stock: 18 }],
   },
 ];

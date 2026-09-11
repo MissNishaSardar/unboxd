@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { Badge } from "@/components/shadcnui/badge";
 import { Button } from "@/components/shadcnui/button";
 import { formatPrice } from "@/lib/format";
+import { resolveProductImageUrl } from "@/lib/placeholder";
 import type { ProductCardData } from "@/components/Product/ProductCard";
 import {
   ArrowRightIcon,
@@ -71,7 +72,11 @@ const ProductsHero = ({ products }: { products: ProductCardData[] }) => {
 
   const active = slides[index];
   if (!active) return null;
-  const imageUrl = active.images[0]?.url ?? "/placeholder.svg";
+  const imageUrl = resolveProductImageUrl(
+    active.images[0]?.url ?? "",
+    active.slug,
+    0,
+  );
   const price =
     Number(active.basePrice) + Number(active.defaultVariant?.priceDiff ?? "0");
   const mrp = Math.ceil((price * 1.25) / 100) * 100;

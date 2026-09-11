@@ -9,6 +9,7 @@ import { getCategoriesWithCounts, getFeaturedProducts } from "@/server/catalog";
 import { ArrowRightIcon } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
+import { resolveProductImageUrl } from "@/lib/placeholder";
 
 export const metadata: Metadata = {
   title: {
@@ -32,7 +33,7 @@ const HomePage = async () => {
           navigateBasePath="/products"
         />
 
-        <div className="relative right-1/2 left-1/2 -mx-[50vw] w-screen">
+        <div className="relative right-1/2 left-1/2 -mx-[50vw] w-screen max-w-[100vw]">
           <HeroCarousel products={featured} />
         </div>
       </div>
@@ -100,7 +101,11 @@ const HomePage = async () => {
               }`}>
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
-                src={product.images[0]?.url ?? "/placeholder.svg"}
+                src={resolveProductImageUrl(
+                  product.images[0]?.url ?? "",
+                  product.slug,
+                  0,
+                )}
                 alt={product.name}
                 className="h-full w-full object-cover"
                 loading="lazy"

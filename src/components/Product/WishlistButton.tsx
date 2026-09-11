@@ -31,14 +31,16 @@ const WishlistButton = ({
 
   const isWishlisted = mounted && ids.includes(productId);
 
-  const handleToggle = async () => {
+  const handleToggle = async (e?: React.MouseEvent) => {
+    e?.preventDefault();
+    e?.stopPropagation();
     if (isPending) return;
     if (!session) {
       toast.add({
         title: "Sign in to save items to your wishlist",
         type: "error",
       });
-      router.push(`/auth/login?callbackUrl=${pathname}`);
+      router.push(`/auth/login?callbackUrl=${encodeURIComponent(pathname)}`);
       return;
     }
     try {
@@ -59,6 +61,7 @@ const WishlistButton = ({
 
   return (
     <Button
+      type="button"
       variant={variant}
       size={size}
       aria-label={isWishlisted ? "Remove from wishlist" : "Add to wishlist"}

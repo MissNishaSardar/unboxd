@@ -6,6 +6,7 @@ import type {
   SearchSuggestionBrand,
   SearchSuggestionProduct,
 } from "@/server/search";
+import { resolveProductImageUrl } from "@/lib/placeholder";
 import { cn } from "@/lib/utils";
 
 type Props = {
@@ -199,7 +200,11 @@ const SearchAutocompleteDropdown = ({
                   )}>
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
-                    src={product.images[0]?.url ?? "/placeholder.svg"}
+                    src={resolveProductImageUrl(
+                      product.images[0]?.url ?? "",
+                      product.slug,
+                      0,
+                    )}
                     alt=""
                     width={40}
                     height={40}

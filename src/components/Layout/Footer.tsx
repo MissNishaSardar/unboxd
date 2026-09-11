@@ -27,7 +27,7 @@ const Footer = ({ categories }: { categories?: FooterCategory[] }) => {
   return (
     <footer
       aria-label="Site footer"
-      className="border-t border-white/10 bg-[rgba(5,5,9,0.92)] text-white/90">
+      className="border-border bg-card text-card-foreground border-t">
       <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 md:py-12">
         <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-4">
           <div className="flex flex-col gap-4">
@@ -38,25 +38,25 @@ const Footer = ({ categories }: { categories?: FooterCategory[] }) => {
                 className="size-6 shrink-0"
                 aria-hidden="true"
               />
-              <span className="font-heading text-[16px] font-semibold tracking-tight text-white">
+              <span className="font-heading text-foreground text-[16px] font-semibold tracking-tight">
                 Unboxd
               </span>
             </Link>
-            <p className="max-w-[28ch] text-sm leading-relaxed text-white/60">
+            <p className="text-muted-foreground max-w-[28ch] text-sm leading-relaxed">
               Electronics, unboxed. Smartphones, laptops, audio and accessories
               with cash on delivery and tracked delivery across India.
             </p>
           </div>
 
           <nav aria-label="Shop categories">
-            <p className="text-xs font-semibold tracking-widest text-white/40 uppercase">
+            <p className="text-muted-foreground text-xs font-semibold tracking-widest uppercase">
               Shop
             </p>
             <ul className="mt-3 space-y-2.5">
               <li>
                 <Link
                   href="/products"
-                  className="text-sm text-white/70 transition-colors hover:text-white">
+                  className="text-muted-foreground hover:text-foreground text-sm transition-colors">
                   All products
                 </Link>
               </li>
@@ -67,7 +67,7 @@ const Footer = ({ categories }: { categories?: FooterCategory[] }) => {
                       pathname: "/products",
                       query: { category: cat.slug },
                     }}
-                    className="text-sm text-white/70 transition-colors hover:text-white">
+                    className="text-muted-foreground hover:text-foreground text-sm transition-colors">
                     {cat.name}
                   </Link>
                 </li>
@@ -76,49 +76,49 @@ const Footer = ({ categories }: { categories?: FooterCategory[] }) => {
           </nav>
 
           <nav aria-label="Support">
-            <p className="text-xs font-semibold tracking-widest text-white/40 uppercase">
+            <p className="text-muted-foreground text-xs font-semibold tracking-widest uppercase">
               Support
             </p>
             <ul className="mt-3 space-y-2.5">
               <li>
                 <Link
                   href="/about"
-                  className="text-sm text-white/70 transition-colors hover:text-white">
+                  className="text-muted-foreground hover:text-foreground text-sm transition-colors">
                   About
                 </Link>
               </li>
               <li>
                 <Link
                   href="/contact"
-                  className="text-sm text-white/70 transition-colors hover:text-white">
+                  className="text-muted-foreground hover:text-foreground text-sm transition-colors">
                   Contact
                 </Link>
               </li>
               <li>
                 <Link
                   href="/about"
-                  className="text-sm text-white/70 transition-colors hover:text-white">
+                  className="text-muted-foreground hover:text-foreground text-sm transition-colors">
                   Shipping and returns
                 </Link>
               </li>
               <li>
                 <Link
                   href="/about"
-                  className="text-sm text-white/70 transition-colors hover:text-white">
+                  className="text-muted-foreground hover:text-foreground text-sm transition-colors">
                   Warranty
                 </Link>
               </li>
               <li>
                 <Link
                   href="/about"
-                  className="text-sm text-white/70 transition-colors hover:text-white">
+                  className="text-muted-foreground hover:text-foreground text-sm transition-colors">
                   Privacy
                 </Link>
               </li>
               <li>
                 <Link
                   href="/about"
-                  className="text-sm text-white/70 transition-colors hover:text-white">
+                  className="text-muted-foreground hover:text-foreground text-sm transition-colors">
                   Terms
                 </Link>
               </li>
@@ -135,23 +135,23 @@ const Footer = ({ categories }: { categories?: FooterCategory[] }) => {
                 placeholder="Get 10% off - enter your email"
                 aria-label="Email address"
                 required
-                className="h-9 flex-1 rounded-full border-white/10 bg-white/10 text-white placeholder:text-white/50 focus-visible:border-white/20 focus-visible:ring-white/30"
+                className="h-9 flex-1 rounded-full"
               />
               <Button
                 type="submit"
                 size="sm"
-                className="h-9 shrink-0 rounded-full bg-white px-5 text-black hover:bg-white/90">
+                className="h-9 shrink-0 rounded-full px-5">
                 Subscribe
               </Button>
             </form>
           </div>
         </div>
 
-        <div className="mt-8 flex flex-col items-center justify-between gap-4 border-t border-white/10 pt-6 md:flex-row">
-          <p className="text-xs text-white/50">
+        <div className="border-border mt-8 flex flex-col items-center justify-between gap-4 border-t pt-6 md:flex-row">
+          <p className="text-muted-foreground text-xs">
             © {new Date().getFullYear()} Unboxd. All rights reserved.
           </p>
-          <div className="flex items-center gap-3 text-xs text-white/40">
+          <div className="text-muted-foreground flex items-center gap-3 text-xs">
             <span className="inline-flex items-center gap-1.5">
               <CreditCardIcon
                 aria-hidden="true"

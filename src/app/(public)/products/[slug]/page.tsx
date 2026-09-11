@@ -6,7 +6,7 @@ import ProductGallery from "@/components/Product/ProductGallery";
 import ProductGrid from "@/components/Product/ProductGrid";
 import ProductInfo from "@/components/Product/ProductInfo";
 import ProductReviews from "@/components/Product/ProductReviews";
-import { getPlaceholderPhotoUrl } from "@/lib/placeholder";
+import { resolveProductImageUrl } from "@/lib/placeholder";
 import {
   getProductBySlug,
   getProductSlugs,
@@ -95,7 +95,11 @@ const ProductPage = async ({ params }: Props) => {
           name={product.name}
           basePrice={product.basePrice}
           priceFrom={product.priceFrom}
-          image={product.images[0]?.url ?? getPlaceholderPhotoUrl(product.slug)}
+          image={resolveProductImageUrl(
+            product.images[0]?.url ?? "",
+            product.slug,
+            0,
+          )}
           variants={product.variants}
           description={product.description}
           initialReviews={initialReviews}

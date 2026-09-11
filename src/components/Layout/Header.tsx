@@ -43,7 +43,7 @@ import HeaderSearch from "@/components/Search/HeaderSearch";
 import SearchAutocompleteInput from "@/components/Search/SearchAutocompleteInput";
 
 const iconButtonClass =
-  "size-[38px] shrink-0 rounded-full border border-white/10 bg-white/5 text-white/70 hover:bg-white/10 hover:text-white hover:border-white/15 transition-colors";
+  "size-[38px] shrink-0 rounded-full border border-border bg-background text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors";
 
 const Header = ({ brands }: { brands?: BrandWithCount[] }) => {
   const { data: session, isPending } = authClient.useSession();
@@ -73,7 +73,7 @@ const Header = ({ brands }: { brands?: BrandWithCount[] }) => {
 
   return (
     <>
-      <header className="sticky top-0 z-40 w-full border-b border-white/10 bg-[rgba(5,5,9,0.85)] backdrop-blur-xl">
+      <header className="border-border bg-background/80 supports-[backdrop-filter]:bg-background/60 sticky top-0 z-40 w-full border-b backdrop-blur-xl">
         <div className="mx-auto flex h-[60px] max-w-7xl items-center gap-3 px-4 sm:px-6">
           <div className="flex shrink-0 items-center gap-2">
             <Sheet
@@ -174,7 +174,7 @@ const Header = ({ brands }: { brands?: BrandWithCount[] }) => {
                 className="size-7 shrink-0"
                 aria-hidden="true"
               />
-              <span className="font-heading text-[17px] font-semibold tracking-tight text-white">
+              <span className="font-heading text-foreground text-[17px] font-semibold tracking-tight">
                 Unboxd
               </span>
             </Link>
@@ -196,7 +196,7 @@ const Header = ({ brands }: { brands?: BrandWithCount[] }) => {
                     router.push("/search" as never);
                   }
                 }}
-                variant="dark"
+                variant="light"
               />
             </div>
           </div>
@@ -226,7 +226,7 @@ const Header = ({ brands }: { brands?: BrandWithCount[] }) => {
                 className="size-[18px]"
               />
               {mounted && cartCount > 0 && (
-                <span className="absolute -top-1 -right-1 flex h-[18px] min-w-[18px] items-center justify-center rounded-full border-2 border-[rgba(5,5,9,0.85)] bg-violet-600 px-1 text-[11px] leading-none font-semibold text-white tabular-nums shadow-sm">
+                <span className="border-background absolute -top-1 -right-1 flex h-[18px] min-w-[18px] items-center justify-center rounded-full border-2 bg-violet-600 px-1 text-[11px] leading-none font-semibold text-white tabular-nums shadow-sm">
                   {cartCount > 99 ? "99+" : cartCount}
                 </span>
               )}
@@ -237,7 +237,7 @@ const Header = ({ brands }: { brands?: BrandWithCount[] }) => {
             : session ?
               <DropdownMenu>
                 <DropdownMenuTrigger
-                  className="flex size-[38px] shrink-0 items-center justify-center overflow-hidden rounded-full border border-white/10 bg-white/5 transition-colors hover:bg-white/10 focus-visible:ring-2 focus-visible:ring-white/30 focus-visible:outline-none"
+                  className="border-border bg-muted hover:bg-accent focus-visible:ring-ring flex size-[38px] shrink-0 items-center justify-center overflow-hidden rounded-full border transition-colors focus-visible:ring-2 focus-visible:outline-none"
                   aria-label="User menu">
                   {session.user.image ?
                     // eslint-disable-next-line @next/next/no-img-element
@@ -249,7 +249,7 @@ const Header = ({ brands }: { brands?: BrandWithCount[] }) => {
                       height={38}
                       className="size-full object-cover"
                     />
-                  : <span className="flex size-full items-center justify-center bg-white/10 text-xs font-semibold text-white">
+                  : <span className="bg-muted text-foreground flex size-full items-center justify-center text-xs font-semibold">
                       {session.user.name
                         .trim()
                         .split(/\s+/)
@@ -310,7 +310,7 @@ const Header = ({ brands }: { brands?: BrandWithCount[] }) => {
             : <Link
                 href="/auth/login"
                 aria-label="Sign in"
-                className="flex size-[38px] items-center justify-center rounded-full border border-white/10 bg-white/5 text-white/70 transition-colors hover:bg-white/10 hover:text-white">
+                className="border-border bg-background text-muted-foreground hover:bg-accent hover:text-accent-foreground flex size-[38px] items-center justify-center rounded-full border transition-colors">
                 <UserIcon
                   aria-hidden="true"
                   className="size-[18px]"
@@ -323,7 +323,7 @@ const Header = ({ brands }: { brands?: BrandWithCount[] }) => {
         </div>
 
         {searchOpen && (
-          <div className="border-t border-white/10 bg-[rgba(5,5,9,0.85)] px-4 py-2 backdrop-blur-xl min-[640px]:hidden">
+          <div className="border-border bg-background/80 border-t px-4 py-2 backdrop-blur-xl min-[640px]:hidden">
             <Suspense>
               <HeaderSearch
                 autoFocus

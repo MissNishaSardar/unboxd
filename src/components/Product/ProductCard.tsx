@@ -7,11 +7,12 @@ import { useRouter } from "next/navigation";
 import { ShoppingBagIcon, StarIcon, ZapIcon } from "lucide-react";
 import { authClient } from "@/lib/auth-client";
 import { Button } from "@/components/shadcnui/button";
+import { Card, CardContent, CardFooter } from "@/components/shadcnui/card";
 import { toast } from "@/components/shadcnui/toast";
 import WishlistButton from "@/components/Product/WishlistButton";
 import { addToCart } from "@/lib/cart/atoms";
 import { formatPrice } from "@/lib/format";
-import { getPlaceholderPhotoUrl } from "@/lib/placeholder";
+import { resolveProductImageUrl } from "@/lib/placeholder";
 import { getRatingSummary, getReviewsForProduct } from "@/lib/reviews";
 import { cn } from "@/lib/utils";
 
@@ -34,7 +35,11 @@ export type ProductCardData = {
 
 const ProductCard = ({ product }: { product: ProductCardData }) => {
   const image = product.images[0];
-  const thumbnailUrl = image?.url ?? getPlaceholderPhotoUrl(product.slug);
+  const thumbnailUrl = resolveProductImageUrl(
+    image?.url ?? "",
+    product.slug,
+    0,
+  );
   const thumbnailAlt = image?.alt ?? product.name;
   const [imgFailed, setImgFailed] = useState(false);
   const variant = product.defaultVariant;
@@ -96,23 +101,25 @@ const ProductCard = ({ product }: { product: ProductCardData }) => {
   };
 
   return (
-    <div className="group flex flex-col gap-2">
-      <Link
-        href={`/products/${product.slug}`}
-        className="bg-muted relative aspect-square w-full overflow-hidden rounded-2xl">
-        <Image
-          src={imgFailed ? "/placeholder.svg" : thumbnailUrl}
-          alt={thumbnailAlt}
-          fill
-          unoptimized
-          sizes="(max-width: 768px) 50vw, 25vw"
-          className="object-cover transition-transform duration-300 ease-out group-hover:scale-[1.04]"
-          onError={() => setImgFailed(true)}
-        />
-        <span className="pointer-events-none absolute top-2 left-2 rounded-full bg-black/55 px-2 py-1 text-[10px] font-medium tracking-wide text-white uppercase backdrop-blur md:hidden">
+    <Card className="group flex flex-col gap-0 overflow-hidden p-0 py-0 [--card-spacing:0px]">
+      <div className="bg-muted relative aspect-square w-full overflow-hidden">
+        <Link
+          href={`/products/${product.slug}`}
+          className="absolute inset-0">
+          <Image
+            src={imgFailed ? "/placeholder.svg" : thumbnailUrl}
+            alt={thumbnailAlt}
+            fill
+            unoptimized
+            sizes="(max-width: 768px) 50vw, 25vw"
+            className="object-cover transition-transform duration-300 ease-out group-hover:scale-[1.04]"
+            onError={() => setImgFailed(true)}
+          />
+        </Link>
+        <span className="pointer-events-none absolute top-2 left-2 rounded-full bg-black/55 px-2 py-1 text-[10px] font-medium tracking-wide text-white uppercase backdrop-blur">
           {product.category.name}
         </span>
-        <div className="absolute top-2 right-2 z-10 hidden md:block">
+        <div className="absolute top-2 right-2 z-10">
           <WishlistButton
             productId={product.id}
             variant="secondary"
@@ -120,20 +127,9 @@ const ProductCard = ({ product }: { product: ProductCardData }) => {
             className="size-7 rounded-full border border-black/10 bg-white shadow-sm hover:bg-white dark:border-white/15 dark:bg-zinc-900"
           />
         </div>
-        <div className="absolute top-2 right-2 z-10 md:hidden">
-          <WishlistButton
-            productId={product.id}
-            variant="secondary"
-            size="icon-sm"
-            className="size-7 rounded-full border border-black/10 bg-white shadow-sm dark:border-white/15 dark:bg-zinc-900"
-          />
-        </div>
-      </Link>
+      </div>
 
-      <div className="flex flex-col gap-0.5 px-1">
-        <p className="text-muted-foreground hidden text-[11px] tracking-wide uppercase md:block">
-          {product.category.name}
-        </p>
+      <CardContent className="flex flex-col gap-0.5 px-3 pt-3 pb-0">
         <Link
           href={`/products/${product.slug}`}
           className="line-clamp-2 text-sm leading-tight font-medium hover:underline">
@@ -179,7 +175,10 @@ const ProductCard = ({ product }: { product: ProductCardData }) => {
             {rating.average.toFixed(1)} ({rating.count})
           </span>
         </div>
-        <div className="hidden gap-2 pt-1.5 md:flex">
+      </CardContent>
+
+      <CardFooter className="flex flex-col gap-0 px-3 pt-2 pb-3">
+        <div className="hidden w-full gap-2 md:flex">
           <Button
             size="sm"
             variant="outline"
@@ -198,7 +197,7 @@ const ProductCard = ({ product }: { product: ProductCardData }) => {
             Buy Now
           </Button>
         </div>
-        <div className="grid grid-cols-2 gap-2 pt-1.5 md:hidden">
+        <div className="grid w-full grid-cols-2 gap-2 md:hidden">
           <Button
             size="sm"
             variant="outline"
@@ -215,8 +214,8 @@ const ProductCard = ({ product }: { product: ProductCardData }) => {
             Buy Now
           </Button>
         </div>
-      </div>
-    </div>
+      </CardFooter>
+    </Card>
   );
 };
 
