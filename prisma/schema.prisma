@@ -32,6 +32,7 @@ model User {
   wishlist      WishlistItem[]
   reviews       Review[]
   reviewHelpful ReviewHelpful[]
+  addresses     UserAddress[]
 
   @@unique([email])
   @@index([deletedAt])
@@ -60,6 +61,7 @@ model Product {
   name          String
   description   String
   basePrice     Decimal
+  discountPercent Int @default(0)
   brand         String          @default("Unknown")
   brandSlug     String          @default("unknown")
   isActive      Boolean         @default(true)
@@ -104,6 +106,7 @@ model ProductImage {
 
 model Order {
   id            String      @id @default(cuid())
+  orderNumber   Int         @unique
   userId        String
   user          User        @relation(fields: [userId], references: [id])
   status        String      @default("PENDING")
@@ -116,6 +119,10 @@ model Order {
   createdAt     DateTime    @default(now())
   updatedAt     DateTime    @updatedAt
   statusUpdatedAt DateTime? @default(now())
+  cancelReason  String?
+  cancelNote    String?
+  cancelledAt   DateTime?
+  cancelledBy   String?
 
   @@index([userId])
   @@index([status])
@@ -142,8 +149,27 @@ model Address {
   phone       String
   addressLine String
   city        String
+  state       String @default("")
   pincode     String
   createdAt   DateTime @default(now())
+}
+
+model UserAddress {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  label       String?
+  name        String
+  phone       String
+  addressLine String
+  city        String
+  state       String   @default("")
+  pincode     String
+  isDefault   Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([userId])
 }
 
 model WishlistItem {
@@ -187,6 +213,31 @@ model ReviewHelpful {
 
   @@unique([reviewId, userId])
   @@index([reviewId])
+}
+
+// Single-row counter for friendly sequential order numbers. Checkout
+// atomically increments nextValue inside the place-order transaction.
+model OrderCounter {
+  id        String @id @default("orders")
+  nextValue Int    @default(1001)
+}
+
+// Single-row store configuration edited from /admin/settings.
+model StoreSettings {
+  id                    String @id @default("store")
+  storeName             String @default("Unboxd")
+  supportEmail          String @default("support@unboxd.com")
+  supportPhone          String @default("")
+  codEnabled            Boolean @default(true)
+  deliveryDays          Int    @default(5)
+  lowStockThreshold     Int    @default(5)
+  returnWindowDays      Int    @default(7)
+  announcementEnabled   Boolean @default(false)
+  announcementText      String @default("")
+  freeShippingThreshold Decimal @default(999)
+  shippingFlatRate      Decimal @default(99)
+  maxDiscountPercent    Int     @default(50)
+  updatedAt             DateTime @updatedAt
 }
 
 model Session {

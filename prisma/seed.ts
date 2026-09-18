@@ -16,6 +16,7 @@ type SeedProduct = {
   category: string;
   description: string;
   basePrice: number;
+  discountPercent?: number;
   featured?: boolean;
   images: string[];
   variants: SeedVariant[];
@@ -81,6 +82,7 @@ const products: SeedProduct[] = [
     description:
       "Pixel's best camera with Magic Editor, 7 years of OS updates and the Tensor G3 chip.",
     basePrice: 109999,
+    discountPercent: 10,
     images: [
       "https://images.unsplash.com/photo-1598327105666-5b89351aff97?auto=format&fit=crop&w=800&q=80",
     ],
@@ -127,7 +129,7 @@ const products: SeedProduct[] = [
       "Budget-friendly Nothing with the signature Glyph interface and a clean, bloat-free OS.",
     basePrice: 27999,
     images: [
-      "https://images.unsplash.com/photo-1583394838336-acd977736f90?auto=format&fit=crop&w=800&q=80",
+      "https://images.unsplash.com/photo-1592899677977-9c10ca588bbd?auto=format&fit=crop&w=800&q=80",
     ],
     variants: [
       { name: "Black / 8GB+128GB", priceDiff: 0, stock: 25 },
@@ -235,6 +237,7 @@ const products: SeedProduct[] = [
     description:
       "Industry-leading noise cancelling, 30-hour battery and crystal-clear call quality with the V1 processor.",
     basePrice: 29990,
+    discountPercent: 20,
     featured: true,
     images: [
       "https://images.unsplash.com/photo-1545127398-14699f92334b?auto=format&fit=crop&w=800&q=80",
@@ -318,6 +321,7 @@ const products: SeedProduct[] = [
     description:
       "Punchy portable Bluetooth speaker with deep bass, IP67 waterproofing and 12-hour playtime.",
     basePrice: 11999,
+    discountPercent: 15,
     images: [
       "https://images.unsplash.com/photo-1545454675-3531b543be5d?auto=format&fit=crop&w=800&q=80",
     ],
@@ -349,6 +353,7 @@ const products: SeedProduct[] = [
     description:
       "Budget-friendly ANC headphones with 40-hour playtime and Hi-Res certified audio.",
     basePrice: 5999,
+    discountPercent: 25,
     images: [
       "https://images.unsplash.com/photo-1484704849700-f032a568e944?auto=format&fit=crop&w=800&q=80",
     ],
@@ -486,6 +491,7 @@ async function seedCatalog() {
         slug: p.slug,
         description: p.description,
         basePrice: p.basePrice,
+        discountPercent: p.discountPercent ?? 0,
         brand: brandInfo.brand,
         brandSlug: brandInfo.brandSlug,
         featured: p.featured ?? false,
