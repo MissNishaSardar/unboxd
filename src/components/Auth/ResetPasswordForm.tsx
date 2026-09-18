@@ -1,8 +1,9 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Loader2Icon } from "lucide-react";
+import { EyeIcon, EyeOffIcon, Loader2Icon } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { authClient } from "@/lib/auth-client";
 import { resetPasswordSchema, resetPasswordType } from "@/lib/zodSchema";
@@ -13,7 +14,12 @@ import {
   FieldGroup,
   FieldLabel,
 } from "@/components/shadcnui/field";
-import { Input } from "@/components/shadcnui/input";
+import {
+  InputGroup,
+  InputGroupAddon,
+  InputGroupButton,
+  InputGroupInput,
+} from "@/components/shadcnui/input-group";
 import { toast } from "@/components/shadcnui/toast";
 
 type ResetPasswordFormProps = {
@@ -22,10 +28,13 @@ type ResetPasswordFormProps = {
 
 const ResetPasswordForm = ({ token }: ResetPasswordFormProps) => {
   const router = useRouter();
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const {
     handleSubmit,
     control,
+    reset,
     formState: { isSubmitting, isDirty },
   } = useForm<resetPasswordType>({
     resolver: zodResolver(resetPasswordSchema),
@@ -53,6 +62,7 @@ const ResetPasswordForm = ({ token }: ResetPasswordFormProps) => {
       description: "You can now sign in with your new password.",
       type: "success",
     });
+    reset();
     router.push("/auth/login");
   };
 
@@ -67,13 +77,28 @@ const ResetPasswordForm = ({ token }: ResetPasswordFormProps) => {
           render={({ field, fieldState }) => (
             <Field data-invalid={fieldState.invalid}>
               <FieldLabel htmlFor={field.name}>New password</FieldLabel>
-              <Input
-                {...field}
-                id={field.name}
-                type="password"
-                autoComplete="new-password"
-                aria-invalid={fieldState.invalid}
-              />
+              <InputGroup data-invalid={fieldState.invalid}>
+                <InputGroupInput
+                  {...field}
+                  id={field.name}
+                  type={showNewPassword ? "text" : "password"}
+                  autoComplete="new-password"
+                  aria-invalid={fieldState.invalid}
+                />
+                <InputGroupAddon align="inline-end">
+                  <InputGroupButton
+                    aria-label={
+                      showNewPassword ? "Hide password" : "Show password"
+                    }
+                    aria-pressed={showNewPassword}
+                    onClick={() => setShowNewPassword((v) => !v)}
+                    size="icon-xs">
+                    {showNewPassword ?
+                      <EyeOffIcon aria-hidden="true" />
+                    : <EyeIcon aria-hidden="true" />}
+                  </InputGroupButton>
+                </InputGroupAddon>
+              </InputGroup>
               {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
             </Field>
           )}
@@ -84,13 +109,28 @@ const ResetPasswordForm = ({ token }: ResetPasswordFormProps) => {
           render={({ field, fieldState }) => (
             <Field data-invalid={fieldState.invalid}>
               <FieldLabel htmlFor={field.name}>Confirm password</FieldLabel>
-              <Input
-                {...field}
-                id={field.name}
-                type="password"
-                autoComplete="new-password"
-                aria-invalid={fieldState.invalid}
-              />
+              <InputGroup data-invalid={fieldState.invalid}>
+                <InputGroupInput
+                  {...field}
+                  id={field.name}
+                  type={showConfirmPassword ? "text" : "password"}
+                  autoComplete="new-password"
+                  aria-invalid={fieldState.invalid}
+                />
+                <InputGroupAddon align="inline-end">
+                  <InputGroupButton
+                    aria-label={
+                      showConfirmPassword ? "Hide password" : "Show password"
+                    }
+                    aria-pressed={showConfirmPassword}
+                    onClick={() => setShowConfirmPassword((v) => !v)}
+                    size="icon-xs">
+                    {showConfirmPassword ?
+                      <EyeOffIcon aria-hidden="true" />
+                    : <EyeIcon aria-hidden="true" />}
+                  </InputGroupButton>
+                </InputGroupAddon>
+              </InputGroup>
               {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
             </Field>
           )}

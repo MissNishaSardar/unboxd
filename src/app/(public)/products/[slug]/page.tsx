@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ChevronRightIcon } from "lucide-react";
 import ProductGallery from "@/components/Product/ProductGallery";
+import RecordProductView from "@/components/Dashboard/RecordProductView";
 import ProductGrid from "@/components/Product/ProductGrid";
 import ProductInfo from "@/components/Product/ProductInfo";
 import ProductReviews from "@/components/Product/ProductReviews";
@@ -47,6 +48,7 @@ const ProductPage = async ({ params }: Props) => {
 
   return (
     <div className="flex flex-col gap-10">
+      <RecordProductView productId={product.id} />
       <nav
         aria-label="Breadcrumb"
         className="text-muted-foreground flex items-center gap-1 text-sm">
@@ -93,8 +95,12 @@ const ProductPage = async ({ params }: Props) => {
           productId={product.id}
           slug={product.slug}
           name={product.name}
+          brand={product.brand}
+          brandSlug={product.brandSlug}
           basePrice={product.basePrice}
+          discountPercent={product.discountPercent}
           priceFrom={product.priceFrom}
+          mrpFrom={product.mrpFrom}
           image={resolveProductImageUrl(
             product.images[0]?.url ?? "",
             product.slug,

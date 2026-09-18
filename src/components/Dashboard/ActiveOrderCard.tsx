@@ -17,11 +17,12 @@ type ActiveOrderCardProps = {
   order: NonNullable<
     Awaited<ReturnType<typeof getDashboardData>>["activeOrder"]
   >;
+  deliveryDays?: number;
 };
 
-const ActiveOrderCard = ({ order }: ActiveOrderCardProps) => {
+const ActiveOrderCard = ({ order, deliveryDays }: ActiveOrderCardProps) => {
   const showEta = order.status === "CONFIRMED" || order.status === "SHIPPED";
-  const eta = getEstimatedDelivery(order.createdAt);
+  const eta = getEstimatedDelivery(order.createdAt, deliveryDays);
 
   return (
     <Card className="border-border bg-card">
@@ -32,7 +33,9 @@ const ActiveOrderCard = ({ order }: ActiveOrderCardProps) => {
               aria-hidden="true"
               className="text-muted-foreground size-4"
             />
-            Order in progress
+            <span title={order.id}>
+              Order in progress · #{order.orderNumber}
+            </span>
           </span>
           <OrderStatusBadge status={order.status} />
         </CardTitle>

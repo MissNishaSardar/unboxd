@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { SearchIcon, TagIcon } from "lucide-react";
+import { SearchIcon, TagIcon, BadgeCheckIcon } from "lucide-react";
 import type {
   SearchSuggestionBrand,
   SearchSuggestionProduct,
@@ -220,14 +220,7 @@ const SearchAutocompleteDropdown = ({
             {products.map((product, i) => {
               const idx = brands.length + i;
               const active = idx === activeIndex;
-              const price = (() => {
-                const base = Number(product.basePrice);
-                const diff =
-                  product.defaultVariant ?
-                    Number(product.defaultVariant.priceDiff)
-                  : 0;
-                return base + diff;
-              })();
+              const price = product.price;
               return (
                 <Link
                   key={product.slug}
@@ -264,10 +257,17 @@ const SearchAutocompleteDropdown = ({
                     </span>
                     <span
                       className={cn(
-                        "truncate text-xs",
+                        "flex items-center gap-1 truncate text-xs",
                         isDark ? "text-white/50" : "text-muted-foreground",
                       )}>
-                      {product.brand} • Rs. {price.toLocaleString("en-IN")}
+                      {product.brand}
+                      <BadgeCheckIcon
+                        aria-label="Verified brand"
+                        className="size-3 shrink-0 fill-sky-500 text-white"
+                      />
+                      <span className="truncate">
+                        • Rs. {price.toLocaleString("en-IN")}
+                      </span>
                     </span>
                   </span>
                 </Link>

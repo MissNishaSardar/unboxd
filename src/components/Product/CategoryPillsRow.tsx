@@ -51,7 +51,6 @@ const CategoryPillsRow = ({
       ...(singleCategory ? [singleCategory] : []),
     ]),
   );
-  const activeBrands = filters.brands;
 
   const isAll = activeCategories.length === 0;
 

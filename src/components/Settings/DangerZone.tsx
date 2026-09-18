@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Loader2Icon, TriangleAlertIcon } from "lucide-react";
 import { authClient } from "@/lib/auth-client";
+import { withMinDelay } from "@/lib/minDelay";
 import { deleteAccount } from "@/server/user/deleteAccount";
 import {
   AlertDialog,
@@ -31,7 +32,7 @@ const DangerZone = () => {
   const handleDelete = async () => {
     setLoading(true);
     try {
-      const result = await deleteAccount();
+      const result = await withMinDelay(deleteAccount());
       if (!result.ok) {
         const message =
           result.error === "ADMIN_PROTECTED" ?

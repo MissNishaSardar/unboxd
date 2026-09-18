@@ -4,7 +4,12 @@ import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ShoppingBagIcon, StarIcon, ZapIcon } from "lucide-react";
+import {
+  ShoppingBagIcon,
+  StarIcon,
+  ZapIcon,
+  BadgeCheckIcon,
+} from "lucide-react";
 import { authClient } from "@/lib/auth-client";
 import { Button } from "@/components/shadcnui/button";
 import { Card, CardContent, CardFooter } from "@/components/shadcnui/card";
@@ -12,6 +17,7 @@ import { toast } from "@/components/shadcnui/toast";
 import WishlistButton from "@/components/Product/WishlistButton";
 import { addToCart } from "@/lib/cart/atoms";
 import { formatPrice } from "@/lib/format";
+import { discountBadge, hasDiscount } from "@/lib/pricing";
 import { resolveProductImageUrl } from "@/lib/placeholder";
 import { getRatingSummary, getReviewsForProduct } from "@/lib/reviews";
 import { cn } from "@/lib/utils";
@@ -21,6 +27,9 @@ export type ProductCardData = {
   slug: string;
   name: string;
   basePrice: string;
+  discountPercent: number;
+  price: number;
+  mrp: number;
   brand: string;
   brandSlug: string;
   category: { name: string; slug: string };
@@ -33,7 +42,13 @@ export type ProductCardData = {
   } | null;
 };
 
-const ProductCard = ({ product }: { product: ProductCardData }) => {
+const ProductCard = ({
+  product,
+  compact,
+}: {
+  product: ProductCardData;
+  compact?: boolean;
+}) => {
   const image = product.images[0];
   const thumbnailUrl = resolveProductImageUrl(
     image?.url ?? "",
@@ -43,8 +58,8 @@ const ProductCard = ({ product }: { product: ProductCardData }) => {
   const thumbnailAlt = image?.alt ?? product.name;
   const [imgFailed, setImgFailed] = useState(false);
   const variant = product.defaultVariant;
-  const price =
-    Number(product.basePrice) + (variant ? Number(variant.priceDiff) : 0);
+  const price = product.price;
+  const discounted = hasDiscount(product.discountPercent);
   const outOfStock = !variant || variant.stock === 0;
   const lowStock = variant && variant.stock > 0 && variant.stock < 5;
   const { data: session, isPending } = authClient.useSession();
@@ -69,6 +84,7 @@ const ProductCard = ({ product }: { product: ProductCardData }) => {
       name: product.name,
       variantName: variant.name,
       price,
+      mrp: product.mrp,
       image: thumbnailUrl,
       maxStock: variant.stock,
     });
@@ -94,6 +110,7 @@ const ProductCard = ({ product }: { product: ProductCardData }) => {
       name: product.name,
       variantName: variant.name,
       price,
+      mrp: product.mrp,
       image: thumbnailUrl,
       maxStock: variant.stock,
     });
@@ -102,7 +119,11 @@ const ProductCard = ({ product }: { product: ProductCardData }) => {
 
   return (
     <Card className="group flex flex-col gap-0 overflow-hidden p-0 py-0 [--card-spacing:0px]">
-      <div className="bg-muted relative aspect-square w-full overflow-hidden">
+      <div
+        className={cn(
+          "bg-muted relative w-full overflow-hidden",
+          compact ? "aspect-[4/3]" : "aspect-square",
+        )}>
         <Link
           href={`/products/${product.slug}`}
           className="absolute inset-0">
@@ -129,16 +150,44 @@ const ProductCard = ({ product }: { product: ProductCardData }) => {
         </div>
       </div>
 
-      <CardContent className="flex flex-col gap-0.5 px-3 pt-3 pb-0">
+      <CardContent
+        className={cn(
+          "flex flex-col gap-0.5 px-3 pt-3 pb-0",
+          compact && "gap-0 px-2.5 pt-2",
+        )}>
+        <span className="flex items-center justify-end gap-1">
+          <Link
+            href={`/products?brand=${product.brandSlug}`}
+            className={cn(
+              "text-muted-foreground font-medium tracking-wide uppercase hover:underline",
+              compact ? "text-[10px]" : "text-[11px]",
+            )}>
+            {product.brand}
+          </Link>
+          <BadgeCheckIcon
+            aria-label="Verified brand"
+            className={cn(
+              "fill-sky-500 text-white",
+              compact ? "size-3" : "size-3.5",
+            )}
+          />
+        </span>
         <Link
           href={`/products/${product.slug}`}
-          className="line-clamp-2 text-sm leading-tight font-medium hover:underline">
+          className={cn(
+            "leading-tight font-medium hover:underline",
+            compact ? "line-clamp-1 text-xs" : "line-clamp-2 text-sm",
+          )}>
           {product.name}
         </Link>
         <div className="flex items-center justify-between pt-1">
-          <p className="text-base font-semibold tabular-nums">
+          <span
+            className={cn(
+              "font-semibold tabular-nums",
+              compact ? "text-sm" : "text-base",
+            )}>
             {formatPrice(price)}
-          </p>
+          </span>
           {lowStock && (
             <span className="text-[11px] font-medium text-amber-600 dark:text-amber-400">
               Low stock
@@ -150,7 +199,21 @@ const ProductCard = ({ product }: { product: ProductCardData }) => {
             </span>
           )}
         </div>
-        {variant && (
+        {/* Fixed-height discount slot. Empty on full-price cards so every
+            card in a row measures the same with or without a discount. */}
+        <div className="flex h-5 items-center gap-1.5">
+          {discounted && (
+            <>
+              <span className="text-muted-foreground text-[11px] tabular-nums line-through">
+                {formatPrice(product.mrp)}
+              </span>
+              <span className="rounded-full bg-green-600/10 px-1.5 py-0.5 text-[11px] font-semibold text-green-700 dark:text-green-400">
+                {discountBadge(product.discountPercent)}
+              </span>
+            </>
+          )}
+        </div>
+        {variant && !compact && (
           <p className="text-muted-foreground line-clamp-1 text-xs">
             {variant.name}
           </p>
@@ -163,57 +226,78 @@ const ProductCard = ({ product }: { product: ProductCardData }) => {
               <StarIcon
                 key={i}
                 className={cn(
-                  "size-3",
                   i + 1 <= Math.round(rating.average) ?
                     "fill-amber-400 text-amber-400"
                   : "fill-muted text-muted-foreground/30",
+                  compact ? "size-2.5" : "size-3",
                 )}
               />
             ))}
           </span>
-          <span className="text-muted-foreground text-xs tabular-nums">
+          <span
+            className={cn(
+              "text-muted-foreground tabular-nums",
+              compact ? "text-[11px]" : "text-xs",
+            )}>
             {rating.average.toFixed(1)} ({rating.count})
           </span>
         </div>
       </CardContent>
 
-      <CardFooter className="flex flex-col gap-0 px-3 pt-2 pb-3">
-        <div className="hidden w-full gap-2 md:flex">
+      <CardFooter
+        className={cn(
+          "flex flex-col gap-0 px-3 pt-2 pb-3",
+          compact && "px-2.5 pt-1.5 pb-2.5",
+        )}>
+        {compact ?
           <Button
             size="sm"
             variant="outline"
             disabled={outOfStock}
             onClick={handleAddToCart}
-            className="flex-1">
+            className="w-full">
             <ShoppingBagIcon className="size-3.5" />
             Add
           </Button>
-          <Button
-            size="sm"
-            disabled={outOfStock}
-            onClick={handleBuyNow}
-            className="flex-1">
-            <ZapIcon className="size-3.5" />
-            Buy Now
-          </Button>
-        </div>
-        <div className="grid w-full grid-cols-2 gap-2 md:hidden">
-          <Button
-            size="sm"
-            variant="outline"
-            disabled={outOfStock}
-            onClick={handleAddToCart}>
-            <ShoppingBagIcon className="size-4" />
-            Add
-          </Button>
-          <Button
-            size="sm"
-            disabled={outOfStock}
-            onClick={handleBuyNow}>
-            <ZapIcon className="size-4" />
-            Buy Now
-          </Button>
-        </div>
+        : <>
+            <div className="hidden w-full gap-2 md:flex">
+              <Button
+                size="sm"
+                variant="outline"
+                disabled={outOfStock}
+                onClick={handleAddToCart}
+                className="flex-1">
+                <ShoppingBagIcon className="size-3.5" />
+                Add
+              </Button>
+              <Button
+                size="sm"
+                disabled={outOfStock}
+                onClick={handleBuyNow}
+                className="flex-1">
+                <ZapIcon className="size-3.5" />
+                Buy Now
+              </Button>
+            </div>
+            <div className="grid w-full grid-cols-2 gap-2 md:hidden">
+              <Button
+                size="sm"
+                variant="outline"
+                disabled={outOfStock}
+                onClick={handleAddToCart}>
+                <ShoppingBagIcon className="size-4" />
+                Add
+              </Button>
+              <Button
+                size="sm"
+                disabled={outOfStock}
+                onClick={handleBuyNow}>
+                <ZapIcon className="size-4" />
+                Buy Now
+              </Button>
+            </div>
+          </>
+        }
       </CardFooter>
     </Card>
   );

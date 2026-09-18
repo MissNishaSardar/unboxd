@@ -4,8 +4,10 @@ import { useEffect, useMemo, useState } from "react";
 import { useAtom } from "jotai";
 import { parseAsString, useQueryState } from "nuqs";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import {
   AwardIcon,
+  BadgeCheckIcon,
   CheckIcon,
   ChevronDownIcon,
   RotateCcwIcon,
@@ -23,6 +25,7 @@ import { toast } from "@/components/shadcnui/toast";
 import WishlistButton from "@/components/Product/WishlistButton";
 import { addToCart } from "@/lib/cart/atoms";
 import { formatPrice } from "@/lib/format";
+import { discountBadge, effectivePrice, hasDiscount } from "@/lib/pricing";
 import { getReviewsAtom } from "@/lib/reviews/atoms";
 import type { ReviewDTO } from "@/server/reviews";
 
@@ -128,8 +131,12 @@ const ProductInfo = ({
   productId,
   slug,
   name,
+  brand,
+  brandSlug,
   basePrice,
+  discountPercent,
   priceFrom,
+  mrpFrom,
   image,
   variants,
   description,
@@ -138,8 +145,12 @@ const ProductInfo = ({
   productId: string;
   slug: string;
   name: string;
+  brand: string;
+  brandSlug: string;
   basePrice: string;
+  discountPercent: number;
   priceFrom: string;
+  mrpFrom: string;
   image: string;
   variants: ProductInfoVariant[];
   description: string;
@@ -222,14 +233,29 @@ const ProductInfo = ({
         : variant.stock <= 5 ? `Only ${variant.stock} left`
         : "In stock",
       ],
-      ["Price", formatPrice(Number(basePrice) + Number(variant.priceDiff))],
+      [
+        "Price",
+        formatPrice(
+          effectivePrice(
+            Number(basePrice),
+            Number(variant.priceDiff),
+            discountPercent,
+          ),
+        ),
+      ],
       ["Warranty", "1 year manufacturer warranty"],
     ] as [string, string][];
-  }, [hasModels, variant, basePrice]);
+  }, [hasModels, variant, basePrice, discountPercent]);
 
   if (!variant) return null;
 
-  const price = Number(basePrice) + Number(variant.priceDiff);
+  const price = effectivePrice(
+    Number(basePrice),
+    Number(variant.priceDiff),
+    discountPercent,
+  );
+  const mrpValue = Number(basePrice) + Number(variant.priceDiff);
+  const discounted = hasDiscount(discountPercent);
   const outOfStock = variant.stock === 0;
   const lowStock = !outOfStock && variant.stock <= 5;
   const showsFrom = Number(priceFrom) < price;
@@ -269,6 +295,7 @@ const ProductInfo = ({
       name,
       variantName: variant.name,
       price,
+      mrp: mrpValue,
       image,
       maxStock: variant.stock,
     });
@@ -283,20 +310,12 @@ const ProductInfo = ({
     if (isPending) return;
     if (!session) {
       toast.add({ title: "Sign in to buy now", type: "error" });
-      router.push(`/auth/login?callbackUrl=/checkout`);
+      router.push(
+        `/auth/login?callbackUrl=/checkout?buyNow=${variant.sku}` as never,
+      );
       return;
     }
-    addToCart({
-      productId,
-      sku: variant.sku,
-      slug,
-      name,
-      variantName: variant.name,
-      price,
-      image,
-      maxStock: variant.stock,
-    });
-    router.push("/checkout");
+    router.push(`/checkout?buyNow=${variant.sku}` as never);
   };
 
   return (
@@ -304,6 +323,17 @@ const ProductInfo = ({
       <Card className="overflow-hidden">
         <CardContent className="flex flex-col gap-5 p-6">
           <div className="flex flex-col gap-2">
+            <span className="flex items-center justify-end gap-1">
+              <Link
+                href={`/products?brand=${brandSlug}`}
+                className="text-muted-foreground text-xs font-medium tracking-wide uppercase hover:underline">
+                {brand}
+              </Link>
+              <BadgeCheckIcon
+                aria-label="Verified brand"
+                className="size-4 fill-sky-500 text-white"
+              />
+            </span>
             <h1 className="font-heading text-2xl font-semibold tracking-tight md:text-3xl">
               {name}
             </h1>
@@ -311,9 +341,25 @@ const ProductInfo = ({
               <p className="text-2xl font-semibold tabular-nums">
                 {formatPrice(price)}
               </p>
+              {discounted && (
+                <p className="text-muted-foreground text-lg tabular-nums line-through">
+                  {formatPrice(mrpValue)}
+                </p>
+              )}
+              {discounted && (
+                <Badge className="bg-green-600 text-white hover:bg-green-600">
+                  {discountBadge(discountPercent)}
+                </Badge>
+              )}
               {showsFrom && (
-                <p className="text-muted-foreground text-sm">
+                <p className="text-muted-foreground w-full text-sm">
                   from {formatPrice(priceFrom)}
+                  {discounted && (
+                    <span className="line-through">
+                      {" "}
+                      (MRP from {formatPrice(mrpFrom)})
+                    </span>
+                  )}
                 </p>
               )}
               <button
@@ -377,7 +423,11 @@ const ProductInfo = ({
                       const sub =
                         priceForModel ?
                           formatPrice(
-                            Number(basePrice) + Number(priceForModel.priceDiff),
+                            effectivePrice(
+                              Number(basePrice),
+                              Number(priceForModel.priceDiff),
+                              discountPercent,
+                            ),
                           )
                         : undefined;
                       return (

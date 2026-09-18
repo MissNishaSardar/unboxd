@@ -2,18 +2,18 @@
 
 /* eslint-disable react-hooks/set-state-in-effect -- syncing URL query state to list after filter change is intentional */
 import { useEffect, useState } from "react";
-import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { Button } from "@/components/shadcnui/button";
-import { formatDate, formatPrice } from "@/lib/format";
-import OrderStatusBadge from "@/components/Orders/OrderStatusBadge";
+import OrderRowCard from "@/components/Orders/OrderRowCard";
 
 type OrderRow = {
   id: string;
+  orderNumber: number;
   status: string;
   total: string;
   createdAt: string;
-  items: { quantity: number }[];
+  items: { quantity: number; productId: string }[];
+  previews: string[];
 };
 
 const OrdersLoadMore = ({
@@ -53,32 +53,12 @@ const OrdersLoadMore = ({
   return (
     <>
       <ul className="flex flex-col gap-3">
-        {orders.map((order) => {
-          const itemCount = order.items.reduce((s, i) => s + i.quantity, 0);
-          return (
-            <li key={order.id}>
-              <Link
-                href={`/orders/${order.id}`}
-                className="border-border bg-card hover:bg-muted flex items-center justify-between gap-4 rounded-2xl border p-4 transition-colors">
-                <div className="min-w-0">
-                  <p className="truncate text-sm font-medium">
-                    Order {order.id}
-                  </p>
-                  <p className="text-muted-foreground text-xs">
-                    {formatDate(order.createdAt)} · {itemCount} item
-                    {itemCount === 1 ? "" : "s"}
-                  </p>
-                </div>
-                <div className="flex shrink-0 items-center gap-3">
-                  <OrderStatusBadge status={order.status} />
-                  <span className="text-sm font-semibold tabular-nums">
-                    {formatPrice(order.total)}
-                  </span>
-                </div>
-              </Link>
-            </li>
-          );
-        })}
+        {orders.map((order) => (
+          <OrderRowCard
+            key={order.id}
+            order={order}
+          />
+        ))}
       </ul>
       {canLoadMore && (
         <div className="flex flex-col items-center gap-2 pt-2">

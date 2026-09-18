@@ -6,11 +6,12 @@ import { auth } from "@/lib/auth";
 
 export const metadata: Metadata = {
   title: "Dashboard",
-  description: "Your Unboxd overview. Orders, activity, and quick actions.",
+  description: "Your Unboxd overview. Orders, activity, and recommendations.",
 };
 import { headers } from "next/headers";
 import { formatDate } from "@/lib/format";
 import { getDashboardData } from "@/server/dashboard";
+import { getStoreSettings } from "@/server/admin/settings";
 import { Button } from "@/components/shadcnui/button";
 import {
   Empty,
@@ -22,7 +23,8 @@ import {
 } from "@/components/shadcnui/empty";
 import ActiveOrderCard from "@/components/Dashboard/ActiveOrderCard";
 import DashboardStats from "@/components/Dashboard/DashboardStats";
-import QuickActions from "@/components/Dashboard/QuickActions";
+import ProductRail from "@/components/Dashboard/ProductRail";
+import RecentlyViewedRail from "@/components/Dashboard/RecentlyViewedRail";
 import RecentOrders from "@/components/Dashboard/RecentOrders";
 
 const DashboardPage = async () => {
@@ -31,7 +33,10 @@ const DashboardPage = async () => {
   });
   if (!session) redirect("/auth/login");
 
-  const data = await getDashboardData(session.user.id);
+  const [data, settings] = await Promise.all([
+    getDashboardData(session.user.id),
+    getStoreSettings(),
+  ]);
 
   return (
     <div className="mx-auto flex max-w-3xl flex-col gap-6">
@@ -71,7 +76,12 @@ const DashboardPage = async () => {
             totalSpent={data.totalSpent}
           />
 
-          {data.activeOrder && <ActiveOrderCard order={data.activeOrder} />}
+          {data.activeOrder && (
+            <ActiveOrderCard
+              order={data.activeOrder}
+              deliveryDays={settings.deliveryDays}
+            />
+          )}
 
           <section className="flex flex-col gap-3">
             <div className="flex items-center justify-between">
@@ -91,15 +101,24 @@ const DashboardPage = async () => {
         </>
       }
 
-      <section className="flex flex-col gap-3">
-        <h2 className="font-heading text-lg font-semibold tracking-tight">
-          Quick actions
-        </h2>
-        <QuickActions
-          isAdmin={session.user.role === "admin"}
-          hideBrowse={data.orderCount === 0}
+      <RecentlyViewedRail />
+
+      {data.wishlistProducts.length > 0 && (
+        <ProductRail
+          title="From your wishlist"
+          href="/wishlist"
+          products={data.wishlistProducts}
         />
-      </section>
+      )}
+
+      {data.topRated.length > 0 && (
+        <ProductRail
+          title="Recommended for you"
+          products={data.topRated}
+          cardClass="w-44"
+          compact
+        />
+      )}
     </div>
   );
 };

@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { authClient } from "@/lib/auth-client";
+import { withMinDelay } from "@/lib/minDelay";
 import { signupSchema, signupType } from "@/lib/zodSchema";
 import { Button } from "@/components/shadcnui/button";
 import {
@@ -32,6 +33,7 @@ const SignUpForm = () => {
   const {
     handleSubmit,
     control,
+    reset,
     formState: { isSubmitting, isDirty },
   } = useForm<signupType>({
     resolver: zodResolver(signupSchema),
@@ -45,11 +47,13 @@ const SignUpForm = () => {
   });
 
   const onSubmit = async (values: signupType) => {
-    const { error } = await authClient.signUp.email({
-      name: values.name,
-      email: values.email,
-      password: values.password,
-    });
+    const { error } = await withMinDelay(
+      authClient.signUp.email({
+        name: values.name,
+        email: values.email,
+        password: values.password,
+      }),
+    );
 
     if (error) {
       if (error.status === 422) {
@@ -68,6 +72,7 @@ const SignUpForm = () => {
       return;
     }
 
+    reset();
     router.push("/dashboard");
   };
 

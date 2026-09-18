@@ -14,10 +14,6 @@ import {
 import { authClient } from "@/lib/auth-client";
 import { useMounted } from "@/hooks/use-mounted";
 import { cartAtom, cartTotalAtom, clearCart } from "@/lib/cart/atoms";
-import {
-  FREE_SHIPPING_THRESHOLD,
-  SHIPPING_FLAT_RATE,
-} from "@/lib/cart/shipping";
 import { formatPrice } from "@/lib/format";
 import { Button } from "@/components/shadcnui/button";
 import CartItemRow from "@/components/Cart/CartItemRow";
@@ -30,7 +26,15 @@ import {
 } from "@/components/shadcnui/empty";
 import { Separator } from "@/components/shadcnui/separator";
 
-const CartClient = () => {
+const CartClient = ({
+  freeShippingThreshold,
+  shippingFlatRate,
+  returnWindowDays,
+}: {
+  freeShippingThreshold: number;
+  shippingFlatRate: number;
+  returnWindowDays: number;
+}) => {
   const items = useAtomValue(cartAtom);
   const total = useAtomValue(cartTotalAtom);
   const { data: session } = authClient.useSession();
@@ -41,9 +45,9 @@ const CartClient = () => {
     router.push(session ? "/checkout" : "/auth/login?callbackUrl=/checkout");
   };
 
-  const remaining = Math.max(0, FREE_SHIPPING_THRESHOLD - total);
-  const progress = Math.min(1, total / FREE_SHIPPING_THRESHOLD);
-  const shipping = total >= FREE_SHIPPING_THRESHOLD ? 0 : SHIPPING_FLAT_RATE;
+  const remaining = Math.max(0, freeShippingThreshold - total);
+  const progress = Math.min(1, total / freeShippingThreshold);
+  const shipping = total >= freeShippingThreshold ? 0 : shippingFlatRate;
 
   return (
     <div className="mx-auto flex max-w-5xl flex-col gap-8">
@@ -69,19 +73,11 @@ const CartClient = () => {
               Browse the catalog and add something you like.
             </EmptyDescription>
           </EmptyHeader>
-          <div className="flex flex-wrap justify-center gap-3">
-            <Button
-              render={<Link href="/products" />}
-              nativeButton={false}>
-              Browse products
-            </Button>
-            <Button
-              variant="outline"
-              render={<Link href="/products" />}
-              nativeButton={false}>
-              Continue shopping
-            </Button>
-          </div>
+          <Button
+            render={<Link href="/products" />}
+            nativeButton={false}>
+            Browse products
+          </Button>
         </Empty>
       : <div className="flex flex-col gap-8 lg:flex-row lg:items-start">
           <div className="border-border bg-card flex min-w-0 flex-1 flex-col rounded-2xl border">
@@ -194,13 +190,13 @@ const CartClient = () => {
                   aria-hidden="true"
                   className="text-primary size-4"
                 />
-                Free returns within 14 days
+                Free returns within {returnWindowDays} days
               </div>
             </div>
 
             <p className="text-muted-foreground text-center text-xs">
               {session ?
-                `Free shipping on orders over ${formatPrice(FREE_SHIPPING_THRESHOLD)}.`
+                `Free shipping on orders over ${formatPrice(freeShippingThreshold)}.`
               : "Sign in at checkout to place your order."}
             </p>
           </aside>

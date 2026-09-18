@@ -29,7 +29,7 @@ type StatusConfig = {
 
 export const orderStatusConfig: Record<OrderStatus, StatusConfig> = {
   PENDING: {
-    label: "Pending",
+    label: "Placed",
     badgeVariant: "secondary",
     badgeClass: "bg-amber-500/15 text-amber-600 dark:text-amber-400",
     icon: ClockIcon,
@@ -66,8 +66,8 @@ export const orderStatusConfig: Record<OrderStatus, StatusConfig> = {
 
 export const ORDER_STATUS_TRANSITIONS: Record<OrderStatus, OrderStatus[]> = {
   PENDING: ["CONFIRMED", "CANCELLED"],
-  CONFIRMED: ["SHIPPED", "CANCELLED", "RETURNED"],
-  SHIPPED: ["DELIVERED", "CANCELLED", "RETURNED"],
+  CONFIRMED: ["SHIPPED", "CANCELLED"],
+  SHIPPED: ["DELIVERED", "CANCELLED"],
   DELIVERED: ["RETURNED"],
   CANCELLED: [],
   RETURNED: [],
@@ -103,8 +103,19 @@ export function getOrderStatusConfig(status: string): StatusConfig {
     : { label: status, badgeVariant: "secondary", icon: PackageIcon };
 }
 
-export function getEstimatedDelivery(createdAt: Date): Date {
+export function getEstimatedDelivery(
+  createdAt: Date,
+  deliveryDays: number = COD_DELIVERY_DAYS,
+): Date {
   const eta = new Date(createdAt);
-  eta.setDate(eta.getDate() + COD_DELIVERY_DAYS);
+  eta.setDate(eta.getDate() + deliveryDays);
   return eta;
+}
+
+export function isWithinReturnWindow(
+  deliveredAt: Date,
+  returnWindowDays: number,
+  now: Date = new Date(),
+): boolean {
+  return now.getTime() - deliveredAt.getTime() <= returnWindowDays * 86400000;
 }

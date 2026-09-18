@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { headers } from "next/headers";
+import Link from "next/link";
+import { MapPinIcon } from "lucide-react";
 import { auth } from "@/lib/auth";
 
 export const metadata: Metadata = {
@@ -33,7 +35,6 @@ const SettingsPage = async () => {
       name: true,
       email: true,
       image: true,
-      bio: true,
       role: true,
       banned: true,
       emailVerified: true,
@@ -63,12 +64,11 @@ const SettingsPage = async () => {
         </p>
       </div>
 
-      {/* 1. Hero Profile Section, avatar and name and bio */}
+      {/* 1. Hero Profile Section, avatar and name */}
       <ProfileHero
         name={user.name}
         image={user.image ?? null}
         initials={initials}
-        bio={user.bio ?? null}
       />
 
       {/* 2. Account Details, read-only grid with email full-width and role and memberSince */}
@@ -90,6 +90,23 @@ const SettingsPage = async () => {
           <ChangePasswordForm />
         </CardContent>
       </Card>
+
+      <Link href="/settings/addresses">
+        <Card className="border-border bg-card hover:border-foreground/30 transition-colors">
+          <CardHeader className="flex-row items-center gap-3">
+            <MapPinIcon
+              aria-hidden="true"
+              className="text-primary size-5"
+            />
+            <div>
+              <CardTitle>Saved addresses</CardTitle>
+              <CardDescription>
+                Manage delivery addresses for faster checkout
+              </CardDescription>
+            </div>
+          </CardHeader>
+        </Card>
+      </Link>
 
       {/* 3. Danger Zone, hidden for admins, red for regular users */}
       {!isAdmin && <DangerZone />}

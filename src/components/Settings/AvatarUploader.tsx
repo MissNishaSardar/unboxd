@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { Loader2Icon, Trash2Icon, UploadIcon } from "lucide-react";
+import { Loader2Icon, Trash2Icon } from "lucide-react";
 import { useState } from "react";
 import { useFilePicker } from "use-file-picker";
 import { FileSizeValidator } from "use-file-picker/validators";
@@ -64,48 +64,51 @@ const AvatarUploader = ({ value, onChange, disabled }: AvatarUploaderProps) => {
   const preview = value ?? filesContent[0]?.content ?? null;
 
   return (
-    <div className="flex items-center gap-4">
-      {preview ?
-        <div className="relative size-24 shrink-0 overflow-hidden rounded-full border">
-          <Image
-            src={preview}
-            alt="Avatar preview"
-            fill
-            unoptimized
-            sizes="6rem"
-            className="object-cover"
-          />
-        </div>
-      : <div className="bg-muted text-muted-foreground flex size-24 shrink-0 items-center justify-center rounded-full border text-lg font-semibold">
-          ?
-        </div>
-      }
-      <div className="flex flex-col gap-2">
+    <div className="flex flex-col items-center gap-3 text-center">
+      <div className="flex shrink-0 flex-col items-center gap-2">
+        <button
+          type="button"
+          onClick={openFilePicker}
+          disabled={disabled || uploading}
+          aria-label={value ? "Change avatar" : "Upload avatar"}
+          className="relative flex size-40 items-center justify-center overflow-hidden rounded-full border shadow-sm transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60">
+          {preview ?
+            <Image
+              src={preview}
+              alt="Avatar preview"
+              fill
+              unoptimized
+              sizes="10rem"
+              className="object-cover"
+            />
+          : <span className="bg-muted text-muted-foreground flex size-full items-center justify-center text-3xl font-semibold">
+              ?
+            </span>
+          }
+          {uploading && (
+            <span className="bg-background/60 absolute inset-0 flex items-center justify-center">
+              <Loader2Icon
+                aria-hidden="true"
+                className="size-6 animate-spin"
+              />
+            </span>
+          )}
+        </button>
+        <span className="text-muted-foreground text-sm font-medium">
+          {value ? "Change avatar" : "Upload avatar"}
+        </span>
+      </div>
+      {value && (
         <Button
           type="button"
-          variant="outline"
-          onClick={openFilePicker}
+          variant="ghost"
+          size="sm"
+          onClick={() => onChange(null)}
           disabled={disabled || uploading}>
-          {uploading ?
-            <Loader2Icon
-              className="animate-spin"
-              aria-hidden="true"
-            />
-          : <UploadIcon aria-hidden="true" />}
-          {value ? "Change avatar" : "Upload avatar"}
+          <Trash2Icon aria-hidden="true" />
+          Remove
         </Button>
-        {value && (
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            onClick={() => onChange(null)}
-            disabled={disabled || uploading}>
-            <Trash2Icon aria-hidden="true" />
-            Remove
-          </Button>
-        )}
-      </div>
+      )}
     </div>
   );
 };

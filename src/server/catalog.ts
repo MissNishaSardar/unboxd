@@ -2,6 +2,7 @@ import { cacheLife, cacheTag } from "next/cache";
 import { z } from "zod";
 import prisma from "@/lib/dbClient/prisma";
 import { resolveProductImageUrl } from "@/lib/placeholder";
+import { effectivePrice, mrp } from "@/lib/pricing";
 import { getRatingSummary, getReviewsForProduct } from "@/lib/reviews";
 import { productSortSchema } from "@/lib/zodSchema";
 
@@ -12,6 +13,7 @@ type ProductRow = {
   slug: string;
   name: string;
   basePrice: { toString(): string };
+  discountPercent: number;
   brand: string;
   brandSlug: string;
   category: { name: string; slug: string };
@@ -28,11 +30,17 @@ export function toProductCardData(product: ProductRow) {
   const defaultVariant =
     product.variants.find((variant) => variant.stock > 0) ??
     product.variants[0];
+  const discountPercent = product.discountPercent ?? 0;
+  const base = Number(product.basePrice);
+  const diff = defaultVariant ? Number(defaultVariant.priceDiff) : 0;
   return {
     id: product.id,
     slug: product.slug,
     name: product.name,
     basePrice: String(product.basePrice),
+    discountPercent,
+    price: effectivePrice(base, diff, discountPercent),
+    mrp: mrp(base, diff),
     brand: product.brand,
     brandSlug: product.brandSlug,
     category: { name: product.category.name, slug: product.category.slug },
@@ -69,6 +77,51 @@ export async function getFeaturedProducts() {
     include: productCardInclude,
   });
   return products.map(toProductCardData);
+}
+
+const TOP_RATED_MIN_REVIEWS = 2;
+
+export async function getTopRatedProducts(limit = 10) {
+  "use cache";
+  cacheLife("hours");
+  cacheTag("products");
+  const groups = await prisma.review.groupBy({
+    by: ["productId"],
+    where: { product: { isActive: true } },
+    _avg: { rating: true },
+    _count: { rating: true },
+  });
+  const ranked = groups
+    .filter(
+      (group) =>
+        (group._count.rating ?? 0) >= TOP_RATED_MIN_REVIEWS &&
+        (group._avg.rating ?? 0) > 0,
+    )
+    .sort(
+      (a, b) =>
+        (b._avg.rating ?? 0) - (a._avg.rating ?? 0) ||
+        (b._count.rating ?? 0) - (a._count.rating ?? 0),
+    )
+    .slice(0, limit);
+  const ids = ranked.map((group) => group.productId);
+  const products =
+    ids.length > 0 ?
+      await prisma.product.findMany({
+        where: { id: { in: ids }, isActive: true },
+        include: productCardInclude,
+      })
+    : [];
+  const byId = new Map(products.map((product) => [product.id, product]));
+  const top = ids
+    .map((id) => byId.get(id))
+    .filter((product): product is (typeof products)[number] => Boolean(product))
+    .map(toProductCardData);
+  if (top.length >= limit) return top;
+  const seen = new Set(top.map((product) => product.id));
+  const fallback = (await getFeaturedProducts()).filter(
+    (product) => !seen.has(product.id),
+  );
+  return [...top, ...fallback].slice(0, limit);
 }
 
 export async function getCategoriesWithCounts(params?: {
@@ -301,9 +354,11 @@ export type ProductDetailData = {
   name: string;
   description: string;
   basePrice: string;
+  discountPercent: number;
   brand: string;
   brandSlug: string;
   priceFrom: string;
+  mrpFrom: string;
   category: { name: string; slug: string };
   images: { url: string; alt: string | null }[];
   variants: ProductDetailVariant[];
@@ -344,6 +399,7 @@ function toProductDetailData(product: {
   name: string;
   description: string;
   basePrice: { toString(): string };
+  discountPercent: number;
   brand: string;
   brandSlug: string;
   category: { name: string; slug: string };
@@ -361,25 +417,31 @@ function toProductDetailData(product: {
     priceDiff: String(variant.priceDiff),
     stock: variant.stock,
   }));
+  const discountPercent = product.discountPercent ?? 0;
+  const base = Number(product.basePrice);
+  const mrps = variants.map((variant) => base + Number(variant.priceDiff));
+  const mrpFromValue = variants.length > 0 ? Math.min(...mrps) : base;
   const priceFrom =
     variants.length > 0 ?
       String(
         Math.min(
-          ...variants.map(
-            (variant) => Number(product.basePrice) + Number(variant.priceDiff),
+          ...variants.map((variant) =>
+            effectivePrice(base, Number(variant.priceDiff), discountPercent),
           ),
         ),
       )
-    : String(product.basePrice);
+    : String(effectivePrice(base, 0, discountPercent));
   return {
     id: product.id,
     slug: product.slug,
     name: product.name,
     description: product.description,
     basePrice: String(product.basePrice),
+    discountPercent,
     brand: product.brand,
     brandSlug: product.brandSlug,
     priceFrom,
+    mrpFrom: String(mrpFromValue),
     category: { name: product.category.name, slug: product.category.slug },
     images: product.images.map((image, index) => ({
       url: resolveProductImageUrl(image.url, product.slug, index),

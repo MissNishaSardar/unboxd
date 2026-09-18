@@ -8,6 +8,7 @@ export type CartItem = {
   name: string;
   variantName: string;
   price: number;
+  mrp: number;
   image: string;
   quantity: number;
   maxStock: number;
@@ -23,7 +24,7 @@ const storage = createJSONStorage<CartItem[]>(() =>
     },
 );
 
-export const cartAtom = atomWithStorage<CartItem[]>("cart-v2", [], storage, {
+export const cartAtom = atomWithStorage<CartItem[]>("cart-v4", [], storage, {
   getOnInit: true,
 });
 
@@ -33,6 +34,14 @@ export const cartCountAtom = atom((get) =>
 
 export const cartTotalAtom = atom((get) =>
   get(cartAtom).reduce((sum, item) => sum + item.price * item.quantity, 0),
+);
+
+export const cartSavingsAtom = atom((get) =>
+  get(cartAtom).reduce(
+    (sum, item) =>
+      sum + Math.max(0, (item.mrp ?? item.price) - item.price) * item.quantity,
+    0,
+  ),
 );
 
 export const cartDrawerOpenAtom = atom(false);
@@ -74,6 +83,7 @@ export type AddToCartInput = {
   name: string;
   variantName: string;
   price: number;
+  mrp: number;
   image: string;
   maxStock: number;
 };
@@ -93,4 +103,87 @@ export function addToCart(input: AddToCartInput) {
     return [...items, { ...input, quantity: 1 }];
   });
   openCart();
+}
+
+export function addManyToCart(
+  inputs: (AddToCartInput & { quantity?: number })[],
+) {
+  if (inputs.length === 0) return;
+  store.set(cartAtom, (items) => {
+    const next = [...items];
+    for (const input of inputs) {
+      const quantity = Math.min(
+        Math.max(1, input.quantity ?? 1),
+        input.maxStock,
+      );
+      const index = next.findIndex(
+        (item) => item.productId === input.productId && item.sku === input.sku,
+      );
+      if (index >= 0) {
+        const existing = next[index];
+        next[index] = {
+          ...existing,
+          quantity: Math.min(existing.quantity + quantity, existing.maxStock),
+        };
+      } else {
+        next.push({
+          productId: input.productId,
+          sku: input.sku,
+          slug: input.slug,
+          name: input.name,
+          variantName: input.variantName,
+          price: input.price,
+          mrp: input.mrp,
+          image: input.image,
+          maxStock: input.maxStock,
+          quantity,
+        });
+      }
+    }
+    return next;
+  });
+  openCart();
+}
+
+export function setManyToCart(
+  inputs: (AddToCartInput & { quantity?: number })[],
+) {
+  if (inputs.length === 0) return;
+  store.set(cartAtom, (items) => {
+    const next = [...items];
+    for (const input of inputs) {
+      const quantity = Math.min(
+        Math.max(1, input.quantity ?? 1),
+        input.maxStock,
+      );
+      const index = next.findIndex(
+        (item) => item.productId === input.productId && item.sku === input.sku,
+      );
+      if (index >= 0) {
+        const existing = next[index];
+        next[index] = {
+          ...existing,
+          price: input.price,
+          mrp: input.mrp,
+          image: input.image,
+          maxStock: input.maxStock,
+          quantity: Math.min(quantity, input.maxStock),
+        };
+      } else {
+        next.push({
+          productId: input.productId,
+          sku: input.sku,
+          slug: input.slug,
+          name: input.name,
+          variantName: input.variantName,
+          price: input.price,
+          mrp: input.mrp,
+          image: input.image,
+          maxStock: input.maxStock,
+          quantity,
+        });
+      }
+    }
+    return next;
+  });
 }

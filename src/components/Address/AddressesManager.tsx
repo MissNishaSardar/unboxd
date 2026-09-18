@@ -1,0 +1,224 @@
+"use client";
+
+import { useState } from "react";
+import { PencilIcon, PlusIcon, StarIcon, Trash2Icon } from "lucide-react";
+import AddressCard from "@/components/Address/AddressCard";
+import AddressForm from "@/components/Address/AddressForm";
+import { Button } from "@/components/shadcnui/button";
+import { toast } from "@/components/shadcnui/toast";
+import {
+  createUserAddress,
+  deleteUserAddress,
+  setDefaultUserAddress,
+  updateUserAddress,
+  type UserAddressData,
+} from "@/server/user/addresses";
+
+type AddressValues = {
+  label?: string;
+  name: string;
+  phone: string;
+  addressLine: string;
+  city: string;
+  state: string;
+  pincode: string;
+};
+
+const AddressesManager = ({
+  initialAddresses,
+}: {
+  initialAddresses: UserAddressData[];
+}) => {
+  const [addresses, setAddresses] =
+    useState<UserAddressData[]>(initialAddresses);
+  const [mode, setMode] = useState<"list" | "add" | "edit">("list");
+  const [editingId, setEditingId] = useState<string | null>(null);
+
+  const handleAdd = async (values: AddressValues) => {
+    const result = await createUserAddress(values);
+    if (!result.ok) {
+      toast.add({
+        title: "Couldn't save the address",
+        description: "Please check the fields and try again.",
+        type: "error",
+      });
+      return;
+    }
+    setAddresses((prev) => [
+      {
+        id: result.id,
+        label: values.label?.trim() ? values.label.trim() : null,
+        name: values.name,
+        phone: values.phone,
+        addressLine: values.addressLine,
+        city: values.city,
+        state: values.state,
+        pincode: values.pincode,
+        isDefault: prev.length === 0,
+      },
+      ...prev,
+    ]);
+    setMode("list");
+    toast.add({ title: "Address saved", type: "success" });
+  };
+
+  const handleEdit = async (values: AddressValues) => {
+    if (!editingId) return;
+    const result = await updateUserAddress(editingId, values);
+    if (!result.ok) {
+      toast.add({
+        title: "Couldn't update the address",
+        description: "Please check the fields and try again.",
+        type: "error",
+      });
+      return;
+    }
+    setAddresses((prev) =>
+      prev.map((address) =>
+        address.id === editingId ?
+          {
+            ...address,
+            label: values.label?.trim() ? values.label.trim() : null,
+            name: values.name,
+            phone: values.phone,
+            addressLine: values.addressLine,
+            city: values.city,
+            state: values.state,
+            pincode: values.pincode,
+          }
+        : address,
+      ),
+    );
+    setEditingId(null);
+    setMode("list");
+    toast.add({ title: "Address updated", type: "success" });
+  };
+
+  const handleDelete = async (id: string) => {
+    const snapshot = addresses;
+    setAddresses((prev) => {
+      const remaining = prev.filter((address) => address.id !== id);
+      const removed = prev.find((address) => address.id === id);
+      if (removed?.isDefault && remaining.length > 0) {
+        remaining[0] = { ...remaining[0], isDefault: true };
+      }
+      return remaining;
+    });
+    const result = await deleteUserAddress(id);
+    if (!result.ok) {
+      setAddresses(snapshot);
+      toast.add({
+        title: "Couldn't delete the address",
+        description: "Please try again.",
+        type: "error",
+      });
+    }
+  };
+
+  const handleSetDefault = async (id: string) => {
+    const snapshot = addresses;
+    setAddresses((prev) =>
+      prev.map((address) => ({ ...address, isDefault: address.id === id })),
+    );
+    const result = await setDefaultUserAddress(id);
+    if (!result.ok) {
+      setAddresses(snapshot);
+      toast.add({
+        title: "Couldn't set the default address",
+        description: "Please try again.",
+        type: "error",
+      });
+    }
+  };
+
+  if (mode === "add") {
+    return (
+      <AddressForm
+        submitLabel="Save address"
+        onSubmit={handleAdd}
+        onCancel={() => setMode("list")}
+      />
+    );
+  }
+
+  if (mode === "edit" && editingId) {
+    const target = addresses.find((a) => a.id === editingId);
+    return (
+      <AddressForm
+        defaultValues={
+          target ? { ...target, label: target.label ?? undefined } : undefined
+        }
+        submitLabel="Save address"
+        onSubmit={handleEdit}
+        onCancel={() => {
+          setEditingId(null);
+          setMode("list");
+        }}
+      />
+    );
+  }
+
+  return (
+    <div className="flex flex-col gap-3">
+      {addresses.length === 0 ?
+        <p className="text-muted-foreground text-sm">
+          No saved addresses yet. Add one to speed up checkout.
+        </p>
+      : addresses.map((address) => (
+          <AddressCard
+            key={address.id}
+            address={address}
+            actions={
+              <>
+                {!address.isDefault && (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    data-icon="inline-start"
+                    onClick={() => void handleSetDefault(address.id)}>
+                    <StarIcon aria-hidden="true" />
+                    Set default
+                  </Button>
+                )}
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  data-icon="inline-start"
+                  onClick={() => {
+                    setEditingId(address.id);
+                    setMode("edit");
+                  }}>
+                  <PencilIcon aria-hidden="true" />
+                  Edit
+                </Button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  data-icon="inline-start"
+                  className="hover:text-destructive"
+                  onClick={() => void handleDelete(address.id)}>
+                  <Trash2Icon aria-hidden="true" />
+                  Delete
+                </Button>
+              </>
+            }
+          />
+        ))
+      }
+      <Button
+        type="button"
+        variant="outline"
+        data-icon="inline-start"
+        onClick={() => setMode("add")}
+        className="w-fit">
+        <PlusIcon aria-hidden="true" />
+        Add new address
+      </Button>
+    </div>
+  );
+};
+
+export default AddressesManager;

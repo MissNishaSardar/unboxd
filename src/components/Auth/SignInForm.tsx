@@ -8,6 +8,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { authClient } from "@/lib/auth-client";
+import { withMinDelay } from "@/lib/minDelay";
 import { signinSchema, signinType } from "@/lib/zodSchema";
 import { Button } from "@/components/shadcnui/button";
 import { Checkbox } from "@/components/shadcnui/checkbox";
@@ -39,6 +40,7 @@ const SignInForm = () => {
   const {
     handleSubmit,
     control,
+    reset,
     formState: { isSubmitting, isDirty },
   } = useForm<signinType>({
     resolver: zodResolver(signinSchema),
@@ -51,11 +53,13 @@ const SignInForm = () => {
   });
 
   const onSubmit = async (values: signinType) => {
-    const { data, error } = await authClient.signIn.email({
-      email: values.email,
-      password: values.password,
-      rememberMe: values.rememberMe ?? true,
-    });
+    const { data, error } = await withMinDelay(
+      authClient.signIn.email({
+        email: values.email,
+        password: values.password,
+        rememberMe: values.rememberMe ?? true,
+      }),
+    );
 
     if (error) {
       if (error.status === 403) {
@@ -76,6 +80,7 @@ const SignInForm = () => {
     const fallback = data?.user.role === "admin" ? "/admin" : "/dashboard";
     const target =
       callbackUrl && callbackUrl !== "/dashboard" ? callbackUrl : fallback;
+    reset();
     router.push(target as Route);
   };
 

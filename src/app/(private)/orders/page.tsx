@@ -11,6 +11,10 @@ export const metadata: Metadata = {
 import prisma from "@/lib/dbClient/prisma";
 import { headers } from "next/headers";
 import { orderListSearchParamsSchema } from "@/lib/zodSchema";
+import {
+  getPlaceholderPhotoUrl,
+  resolveProductImageUrl,
+} from "@/lib/placeholder";
 import { Button } from "@/components/shadcnui/button";
 import {
   Empty,
@@ -42,17 +46,47 @@ const OrdersPage = async ({
       orderBy: { createdAt: "desc" },
       skip: (page - 1) * ORDERS_PER_PAGE,
       take: ORDERS_PER_PAGE,
-      include: { items: { select: { quantity: true } } },
+      include: {
+        items: { select: { quantity: true, productId: true } },
+      },
     }),
     prisma.order.count({ where: { userId: session.user.id } }),
   ]);
 
+  const productIds = [
+    ...new Set(orders.flatMap((order) => order.items.map((i) => i.productId))),
+  ];
+  const products =
+    productIds.length > 0 ?
+      await prisma.product.findMany({
+        where: { id: { in: productIds } },
+        select: {
+          id: true,
+          slug: true,
+          images: { orderBy: { sortOrder: "asc" }, take: 1 },
+        },
+      })
+    : [];
+  const imageByProductId = new Map(
+    products.map((product) => [
+      product.id,
+      product.images[0] ?
+        resolveProductImageUrl(product.images[0].url, product.slug, 0)
+      : getPlaceholderPhotoUrl(product.slug),
+    ]),
+  );
+
   const serializedOrders = orders.map((order) => ({
     id: order.id,
+    orderNumber: order.orderNumber,
     status: order.status,
     total: String(order.total),
     createdAt: order.createdAt.toISOString(),
     items: order.items,
+    previews: [...new Set(order.items.map((i) => i.productId))]
+      .slice(0, 3)
+      .map((productId) => imageByProductId.get(productId) ?? null)
+      .filter((src): src is string => src !== null),
   }));
 
   return (

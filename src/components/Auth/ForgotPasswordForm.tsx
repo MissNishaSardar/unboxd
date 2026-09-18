@@ -20,6 +20,7 @@ const ForgotPasswordForm = () => {
   const {
     handleSubmit,
     control,
+    reset,
     formState: { isSubmitting, isDirty },
   } = useForm<forgotPasswordType>({
     resolver: zodResolver(forgotPasswordSchema),
@@ -48,6 +49,7 @@ const ForgotPasswordForm = () => {
         "If an account exists for that email, you will receive a reset link. In development, check the server console for the URL.",
       type: "success",
     });
+    reset();
   };
 
   return (

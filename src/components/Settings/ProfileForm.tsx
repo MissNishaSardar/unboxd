@@ -16,36 +16,30 @@ import {
   FieldLabel,
 } from "@/components/shadcnui/field";
 import { Input } from "@/components/shadcnui/input";
-import { Textarea } from "@/components/shadcnui/textarea";
 import { toast } from "@/components/shadcnui/toast";
 
 type ProfileFormProps = {
   defaultName: string;
   defaultImage: string | null;
-  defaultBio?: string | null;
   redirectTo?: string;
 };
 
 const ProfileForm = ({
   defaultName,
   defaultImage,
-  defaultBio,
   redirectTo = "/settings",
 }: ProfileFormProps) => {
   const router = useRouter();
 
-  const { handleSubmit, control, formState, reset, watch } =
+  const { handleSubmit, control, formState, reset } =
     useForm<profileUpdateType>({
       resolver: zodResolver(profileUpdateSchema),
       defaultValues: {
         name: defaultName,
         image: defaultImage ?? null,
-        bio: defaultBio ?? "",
       },
       mode: "all",
     });
-
-  const bio = watch("bio");
 
   const onSubmit = async (values: profileUpdateType) => {
     const prevImage = defaultImage;
@@ -53,7 +47,6 @@ const ProfileForm = ({
     const { error } = await authClient.updateUser({
       name: values.name,
       image: (nextImage ?? null) as string | null,
-      bio: (values.bio?.trim() || null) as string | null,
     } as unknown as Parameters<typeof authClient.updateUser>[0]);
 
     if (error) {
@@ -90,15 +83,17 @@ const ProfileForm = ({
           name="image"
           control={control}
           render={({ field }) => (
-            <Field>
-              <FieldLabel>Avatar</FieldLabel>
+            <Field className="items-center">
+              <FieldLabel className="w-full text-center text-base">
+                Avatar
+              </FieldLabel>
               <AvatarUploader
                 value={field.value ?? null}
                 onChange={field.onChange}
                 disabled={formState.isSubmitting}
               />
               {field.value !== defaultImage && (
-                <p className="text-muted-foreground text-xs">
+                <p className="text-muted-foreground text-center text-xs">
                   Save changes to apply new avatar. Old file will be removed.
                 </p>
               )}
@@ -119,33 +114,6 @@ const ProfileForm = ({
                 aria-invalid={fieldState.invalid}
               />
               {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
-            </Field>
-          )}
-        />
-        <Controller
-          name="bio"
-          control={control}
-          render={({ field, fieldState }) => (
-            <Field data-invalid={fieldState.invalid}>
-              <div className="flex items-center justify-between gap-2">
-                <FieldLabel htmlFor={field.name}>Bio</FieldLabel>
-                <span className="text-muted-foreground text-xs tabular-nums">
-                  {(bio ?? "").length}/160
-                </span>
-              </div>
-              <Textarea
-                {...field}
-                id={field.name}
-                value={field.value ?? ""}
-                placeholder="Tell us a bit about yourself"
-                rows={3}
-                maxLength={160}
-                aria-invalid={fieldState.invalid}
-              />
-              {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
-              <p className="text-muted-foreground text-xs">
-                Short intro shown on your profile hero. Max 160 characters.
-              </p>
             </Field>
           )}
         />
