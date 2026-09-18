@@ -14,7 +14,7 @@
   --secondary: oklch(0.967 0.001 286.375);
   --secondary-foreground: oklch(0.21 0.006 285.885);
   --muted: oklch(0.967 0.001 286.375);
-  --muted-foreground: oklch(0.552 0.016 285.938);
+  --muted-foreground: oklch(0.47 0.014 286.067);
   --accent: oklch(0.967 0.001 286.375);
   --accent-foreground: oklch(0.21 0.006 285.885);
   --destructive: oklch(0.577 0.245 27.325);
@@ -153,4 +153,60 @@
   display: none;
   width: 0;
   height: 0;
+}
+
+.success-tick {
+  animation: success-tick-pop 0.4s ease-out both;
+  transform-origin: center;
+}
+.success-tick-circle {
+  stroke-dasharray: 157;
+  stroke-dashoffset: 157;
+  animation: success-tick-draw 0.6s ease-out forwards;
+}
+.success-tick-check {
+  stroke-dasharray: 40;
+  stroke-dashoffset: 40;
+  animation: success-tick-draw 0.35s ease-out 0.5s forwards;
+}
+@keyframes success-tick-pop {
+  0% {
+    transform: scale(0.6);
+    opacity: 0;
+  }
+  60% {
+    transform: scale(1.08);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+@keyframes success-tick-draw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .success-tick,
+  .success-tick-circle,
+  .success-tick-check {
+    animation: none;
+  }
+  .success-tick-circle,
+  .success-tick-check {
+    stroke-dashoffset: 0;
+  }
+}
+
+@media print {
+  aside,
+  header,
+  [data-print-hidden] {
+    display: none !important;
+  }
+  main {
+    padding: 0 !important;
+  }
 }

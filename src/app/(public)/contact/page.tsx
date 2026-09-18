@@ -24,6 +24,7 @@ import {
 import type { Metadata } from "next";
 import Link from "next/link";
 import ContactForm from "@/components/Contact/ContactForm";
+import { getStoreSettings } from "@/server/admin/settings";
 
 export const metadata: Metadata = {
   title: "Contact",
@@ -31,28 +32,28 @@ export const metadata: Metadata = {
     "Reach the Unboxd team. COD questions, order help, or product picks. We reply within 24 hours.",
 };
 
-const infoCards = [
-  {
-    icon: MailIcon,
-    title: "Email us",
-    detail: "support@unboxd.com",
-    hint: "We reply within 24 hours, Mon through Sat.",
-  },
-  {
-    icon: PhoneIcon,
-    title: "Call us",
-    detail: "+91 90000 00000",
-    hint: "Mon through Sat, 10am to 7pm IST.",
-  },
-  {
-    icon: MapPinIcon,
-    title: "Find us",
-    detail: "Bengaluru, Karnataka",
-    hint: "Online only. Quick dispatch from our partner hubs.",
-  },
-] as const;
-
-const ContactPage = () => {
+const ContactPage = async () => {
+  const settings = await getStoreSettings();
+  const infoCards = [
+    {
+      icon: MailIcon,
+      title: "Email us",
+      detail: settings.supportEmail || "support@unboxd.com",
+      hint: "We reply within 24 hours, Mon through Sat.",
+    },
+    {
+      icon: PhoneIcon,
+      title: "Call us",
+      detail: settings.supportPhone || "+91 90000 00000",
+      hint: "Mon through Sat, 10am to 7pm IST.",
+    },
+    {
+      icon: MapPinIcon,
+      title: "Find us",
+      detail: "Bengaluru, Karnataka",
+      hint: "Online only. Quick dispatch from our partner hubs.",
+    },
+  ] as const;
   return (
     <div className="flex flex-col gap-20">
       <section className="relative overflow-hidden rounded-3xl border border-white/10">

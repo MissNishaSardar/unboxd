@@ -14,7 +14,7 @@ const REAL_PRODUCT_IMAGES: Record<string, string> = {
   "xiaomi-14":
     "https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?auto=format&fit=crop&w=800&q=80",
   "nothing-phone-2a":
-    "https://images.unsplash.com/photo-1583394838336-acd977736f90?auto=format&fit=crop&w=800&q=80",
+    "https://images.unsplash.com/photo-1592899677977-9c10ca588bbd?auto=format&fit=crop&w=800&q=80",
   "macbook-air-m3":
     "https://images.unsplash.com/photo-1517336714731-489689fd1ca8?auto=format&fit=crop&w=800&q=80",
   "macbook-pro-14":

@@ -1,8 +1,8 @@
 # unboxd
 
-An electronics e-commerce storefront built with the Next.js App Router — product catalog with variants, Better Auth email/password login with admin RBAC, Jotai cart, COD checkout with atomic stock control, customer orders, and an admin dashboard. Built from a 14-day execution plan in [`app-execution.md`](app-execution.md).
+An electronics e-commerce storefront built with the Next.js App Router. It includes a product catalog with variants, Better Auth email and password login with admin RBAC, Jotai cart, COD checkout with atomic stock control, customer orders, and an admin dashboard.
 
-> **Status**: in active development (~Day 10 of 14). Storefront (catalog, search, categories, product pages), auth (email/password + admin RBAC), cart, COD checkout, orders, and an admin dashboard (products, orders, inventory) are implemented and passing lint/typecheck/build. The image-upload pipeline and the Postgres migration remain.
+> **Status.** In active development. Storefront (catalog, search, categories, product pages), auth (email and password plus admin RBAC), cart, COD checkout, orders, and admin dashboard (products, orders) pass lint, typecheck, and build. Image upload pipeline and Postgres migration remain.
 
 ## Tech stack
 
@@ -56,12 +56,12 @@ Server-side vars are validated in `src/lib/env/serverEnv.ts`; add new vars there
 
 ## Schema overview
 
-- **Auth**: `User`, `Session`, `Account`, `Verification` (Better Auth, email/password)
-- **Catalog**: `Category` (self-referencing tree), `Product`, `ProductVariant` (SKU, `priceDiff`, `stock`), `ProductImage`
-- **Commerce**: `Order` (COD-only, status `PENDING → CONFIRMED → SHIPPED → DELIVERED`, plus `CANCELLED`/`RETURNED`), `OrderItem` (freezes `nameSnapshot`/`priceSnapshot`), `Address`
+- **Auth.** `User`, `Session`, `Account`, `Verification` (Better Auth, email and password)
+- **Catalog.** `Category` (self-referencing tree), `Product`, `ProductVariant` (SKU, `priceDiff`, `stock`), `ProductImage`
+- **Commerce.** `Order` (COD-only, status `PENDING`, `CONFIRMED`, `SHIPPED`, `DELIVERED`, plus `CANCELLED` and `RETURNED`), `OrderItem` (freezes `nameSnapshot` and `priceSnapshot`), `Address`
 
-SQLite notes: no native enums, no `@db.*` annotations (re-added during the planned Postgres migration). See the **DB conventions** section in `AGENTS.md`.
+SQLite rejects native enums and `@db.*` annotations. Re-add them during the planned Postgres migration. See the **DB conventions** section in `AGENTS.md`.
 
 ## License
 
-MIT — see [`LICENSE`](LICENSE).
+MIT. See [`LICENSE`](LICENSE).

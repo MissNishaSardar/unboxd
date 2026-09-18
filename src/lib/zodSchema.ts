@@ -141,10 +141,26 @@ export const checkoutSchema = z.object({
     .trim()
     .min(2, { error: "Name must be at least 2 characters" })
     .max(80),
-  phone: z
-    .string()
-    .trim()
-    .regex(/^[0-9+\-\s]{10,15}$/, { error: "Enter a valid phone number" }),
+  phone: z.preprocess(
+    (value) => {
+      if (typeof value !== "string") return value;
+      const digits = value.replace(/\D/g, "");
+      // Tolerate a pasted +91 country code or leading trunk 0.
+      if (digits.length === 12 && digits.startsWith("91")) {
+        return digits.slice(2);
+      }
+      if (digits.length === 11 && digits.startsWith("0")) {
+        return digits.slice(1);
+      }
+      return digits;
+    },
+    z
+      .string()
+      .trim()
+      .regex(/^[6-9][0-9]{9}$/, {
+        error: "Enter a valid 10-digit mobile number",
+      }),
+  ),
   addressLine: z
     .string()
     .trim()
@@ -155,6 +171,7 @@ export const checkoutSchema = z.object({
     .trim()
     .min(2, { error: "City must be at least 2 characters" })
     .max(80),
+  state: z.string().trim().min(1, { error: "Select a state" }).max(80),
   pincode: z
     .string()
     .trim()
@@ -162,6 +179,19 @@ export const checkoutSchema = z.object({
 });
 
 export type checkoutType = z.infer<typeof checkoutSchema>;
+
+export const userAddressSchema = checkoutSchema.extend({
+  label: z
+    .string()
+    .trim()
+    .max(20, { error: "Label must be at most 20 characters" })
+    .optional()
+    .or(z.literal("")),
+});
+
+export type userAddressType = z.infer<typeof userAddressSchema>;
+
+export type userAddressInputType = z.input<typeof userAddressSchema>;
 
 const money = (label: string) =>
   z.preprocess(
@@ -204,6 +234,12 @@ export const productFormSchema = z
       .min(10, { error: "Description must be at least 10 characters" })
       .max(2000, { error: "Description must be at most 2000 characters" }),
     basePrice: money("Base price"),
+    discountPercent: z.coerce
+      .number()
+      .int({ error: "Discount must be a whole percent" })
+      .min(0, { error: "Discount must be 0 or more" })
+      .max(100, { error: "Discount must be at most 100" })
+      .default(0),
     brand: z
       .string()
       .trim()
@@ -248,6 +284,7 @@ export const adminProductListSearchParamsSchema = z.object({
   search: queryString(z.string().min(1).max(100)).optional(),
   sort: adminProductSortSchema.catch("newest"),
   status: z.enum(["all", "active", "inactive"]).catch("all"),
+  stock: z.enum(["all", "low", "out"]).catch("all"),
   page: z.coerce.number().int().min(1).optional().catch(1),
 });
 
@@ -279,24 +316,93 @@ export type adminOrderListSearchParamsType = z.infer<
   typeof adminOrderListSearchParamsSchema
 >;
 
-export const updateOrderStatusSchema = z.object({
-  status: orderStatusSchema,
-});
+export const cancelReasonSchema = z.enum([
+  "changed_mind",
+  "found_cheaper",
+  "delivery_too_slow",
+  "ordered_by_mistake",
+  "payment_issue",
+  "other",
+]);
+
+export type cancelReasonType = z.infer<typeof cancelReasonSchema>;
+
+export const CANCEL_REASON_LABELS: Record<cancelReasonType, string> = {
+  changed_mind: "Changed my mind",
+  found_cheaper: "Found it cheaper elsewhere",
+  delivery_too_slow: "Delivery is too slow",
+  ordered_by_mistake: "Ordered by mistake",
+  payment_issue: "Payment issue",
+  other: "Other",
+};
+
+export const updateOrderStatusSchema = z
+  .object({
+    status: orderStatusSchema,
+    reason: cancelReasonSchema.optional(),
+    note: z
+      .string()
+      .trim()
+      .max(500, { error: "Note must be at most 500 characters" })
+      .optional(),
+  })
+  .superRefine((data, ctx) => {
+    if (data.status === "CANCELLED" && !data.reason) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["reason"],
+        message: "Choose a cancellation reason",
+      });
+    }
+    if (data.reason === "other" && !data.note) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["note"],
+        message: "Please add a note when reason is Other",
+      });
+    }
+  });
 
 export type updateOrderStatusType = z.infer<typeof updateOrderStatusSchema>;
 
-export const bulkOrderStatusSchema = z.object({
-  orderIds: z.array(z.string().min(1)).min(1),
-  status: z.enum(["SHIPPED", "CANCELLED"]),
-});
+export const cancelOrderSchema = z
+  .object({
+    reason: cancelReasonSchema,
+    note: z
+      .string()
+      .trim()
+      .max(500, { error: "Note must be at most 500 characters" })
+      .optional(),
+  })
+  .superRefine((data, ctx) => {
+    if (data.reason === "other" && !data.note) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["note"],
+        message: "Please add a note when reason is Other",
+      });
+    }
+  });
+
+export type cancelOrderType = z.infer<typeof cancelOrderSchema>;
+
+export const bulkOrderStatusSchema = z
+  .object({
+    orderIds: z.array(z.string().min(1)).min(1),
+    status: z.enum(["SHIPPED", "DELIVERED", "CANCELLED"]),
+    reason: cancelReasonSchema.optional(),
+  })
+  .superRefine((data, ctx) => {
+    if (data.status === "CANCELLED" && !data.reason) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["reason"],
+        message: "Choose a cancellation reason",
+      });
+    }
+  });
 
 export type bulkOrderStatusType = z.infer<typeof bulkOrderStatusSchema>;
-
-export const updateVariantStockSchema = z.object({
-  stock: z.coerce.number().int().min(0),
-});
-
-export type updateVariantStockType = z.infer<typeof updateVariantStockSchema>;
 
 export const categoryFormSchema = z.object({
   name: z
@@ -342,12 +448,6 @@ export const profileUpdateSchema = z.object({
     .min(2, { error: "Name must be at least 2 characters" })
     .max(80, { error: "Name must be at most 80 characters" }),
   image: z.string().trim().nullable().optional(),
-  bio: z
-    .string()
-    .trim()
-    .max(160, { error: "Bio must be at most 160 characters" })
-    .optional()
-    .or(z.literal("")),
 });
 
 export type profileUpdateType = z.infer<typeof profileUpdateSchema>;
@@ -419,3 +519,52 @@ export const contactSchema = z.object({
 });
 
 export type contactType = z.infer<typeof contactSchema>;
+
+export const storeSettingsSchema = z.object({
+  storeName: z
+    .string()
+    .trim()
+    .min(2, { error: "Store name must be at least 2 characters" })
+    .max(60, { error: "Store name must be at most 60 characters" }),
+  supportEmail: z.email({ error: "Enter a valid email" }),
+  supportPhone: z
+    .string()
+    .trim()
+    .max(20, { error: "Phone must be at most 20 characters" }),
+  codEnabled: z.boolean(),
+  deliveryDays: z.coerce
+    .number()
+    .int()
+    .min(1, { error: "Must be at least 1 day" })
+    .max(30, { error: "Must be at most 30 days" }),
+  lowStockThreshold: z.coerce
+    .number()
+    .int()
+    .min(2, { error: "Must be at least 2 units" })
+    .max(50, { error: "Must be at most 50 units" }),
+  returnWindowDays: z.coerce
+    .number()
+    .int()
+    .min(1, { error: "Must be at least 1 day" })
+    .max(90, { error: "Must be at most 90 days" }),
+  announcementEnabled: z.boolean(),
+  announcementText: z
+    .string()
+    .trim()
+    .max(140, { error: "Must be at most 140 characters" }),
+  freeShippingThreshold: z.coerce
+    .number()
+    .min(0, { error: "Must be at least 0" })
+    .max(1000000, { error: "Too large" }),
+  shippingFlatRate: z.coerce
+    .number()
+    .min(0, { error: "Must be at least 0" })
+    .max(100000, { error: "Too large" }),
+  maxDiscountPercent: z.coerce
+    .number()
+    .int({ error: "Must be a whole percent" })
+    .min(0, { error: "Must be at least 0" })
+    .max(90, { error: "Must be at most 90" }),
+});
+
+export type storeSettingsType = z.infer<typeof storeSettingsSchema>;
