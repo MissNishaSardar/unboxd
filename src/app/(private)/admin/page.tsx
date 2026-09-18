@@ -6,18 +6,20 @@ import { requireAdminPage } from "@/lib/guard";
 
 export const metadata: Metadata = {
   title: "Admin Dashboard",
-  description:
-    "Unboxd admin overview. Manage products, orders, inventory, and users.",
+  description: "Unboxd admin overview. Manage products, orders, and users.",
 };
 import SalesSummaryCard from "@/components/Admin/SalesSummaryCard";
+import AttentionQueue from "@/components/Admin/AttentionQueue";
 import { Button } from "@/components/shadcnui/button";
 import {
   Card,
   CardAction,
+  CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
 } from "@/components/shadcnui/card";
+import { getAdminAttention, getAdminTotals } from "@/server/admin/queries";
 
 const SECTIONS = [
   {
@@ -29,11 +31,6 @@ const SECTIONS = [
     title: "Orders",
     description: "Fulfill orders and update statuses",
     href: "/admin/orders" as const,
-  },
-  {
-    title: "Inventory",
-    description: "Low-stock dashboard and quick edits",
-    href: "/admin/inventory" as const,
   },
   {
     title: "Categories",
@@ -49,7 +46,18 @@ const SECTIONS = [
 
 const AdminPage = async () => {
   await requireAdminPage();
-  const session = await auth.api.getSession({ headers: await headers() });
+  const [session, attention, totals] = await Promise.all([
+    auth.api.getSession({ headers: await headers() }),
+    getAdminAttention(),
+    getAdminTotals(),
+  ]);
+
+  const countBySection: Record<string, string> = {
+    Orders: `${totals.totalOrders} order${totals.totalOrders === 1 ? "" : "s"}`,
+    Products: `${totals.totalProducts} product${totals.totalProducts === 1 ? "" : "s"}`,
+    Categories: `${totals.totalCategories} categor${totals.totalCategories === 1 ? "y" : "ies"}`,
+    Users: `${totals.totalUsers} user${totals.totalUsers === 1 ? "" : "s"}`,
+  };
 
   return (
     <div className="flex flex-col gap-6">
@@ -59,6 +67,7 @@ const AdminPage = async () => {
           Signed in as {session?.user.email} ({session?.user.role})
         </p>
       </div>
+      <AttentionQueue attention={attention} />
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {SECTIONS.map((section) => (
           <Card key={section.title}>
@@ -77,6 +86,13 @@ const AdminPage = async () => {
                 </CardAction>
               )}
             </CardHeader>
+            {countBySection[section.title] && (
+              <CardContent>
+                <p className="text-sm font-medium tabular-nums">
+                  {countBySection[section.title]}
+                </p>
+              </CardContent>
+            )}
           </Card>
         ))}
       </div>

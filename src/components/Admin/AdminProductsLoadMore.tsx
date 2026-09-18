@@ -11,6 +11,7 @@ import ProductActions from "@/components/Admin/ProductActions";
 import { Badge } from "@/components/shadcnui/badge";
 import { Button } from "@/components/shadcnui/button";
 import { Card, CardContent } from "@/components/shadcnui/card";
+import { toast } from "@/components/shadcnui/toast";
 import {
   Table,
   TableBody,
@@ -20,18 +21,28 @@ import {
   TableRow,
 } from "@/components/shadcnui/table";
 import { formatPrice } from "@/lib/format";
+import { discountBadge, effectivePrice, hasDiscount } from "@/lib/pricing";
+
+type AdminProductFlaggedVariant = {
+  id: string;
+  name: string;
+  sku: string;
+  stock: number;
+};
 
 type AdminProduct = {
   id: string;
   slug: string;
   name: string;
   basePrice: string;
+  discountPercent: number;
   isActive: boolean;
   featured?: boolean;
   categoryName: string;
   imageUrl: string;
   totalStock: number;
   variantCount: number;
+  flaggedVariants: AdminProductFlaggedVariant[];
 };
 
 const AdminProductsLoadMore = ({
@@ -45,10 +56,12 @@ const AdminProductsLoadMore = ({
   const [products, setProducts] = useState(initialProducts);
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     setProducts(initialProducts);
     setPage(1);
+    setError(null);
   }, [initialProducts]);
 
   const canLoadMore = products.length < total;
@@ -56,13 +69,22 @@ const AdminProductsLoadMore = ({
   const handleLoadMore = async () => {
     const nextPage = page + 1;
     setLoading(true);
+    setError(null);
     try {
       const params = new URLSearchParams(searchParams.toString());
       params.set("page", String(nextPage));
       const res = await fetch(`/api/admin/products?${params.toString()}`);
+      if (!res.ok) {
+        toast.add({ title: "Could not load more products", type: "error" });
+        setError("Could not load more products. Try again.");
+        return;
+      }
       const data = (await res.json()) as { products: AdminProduct[] };
       setProducts((prev) => [...prev, ...data.products]);
       setPage(nextPage);
+    } catch {
+      toast.add({ title: "Could not load more products", type: "error" });
+      setError("Could not load more products. Try again.");
     } finally {
       setLoading(false);
     }
@@ -110,10 +132,46 @@ const AdminProductsLoadMore = ({
                     </TableCell>
                     <TableCell>{product.categoryName}</TableCell>
                     <TableCell className="tabular-nums">
-                      {formatPrice(Number(product.basePrice))}
+                      <span className="flex items-center gap-1.5">
+                        {formatPrice(
+                          effectivePrice(
+                            Number(product.basePrice),
+                            0,
+                            product.discountPercent,
+                          ),
+                        )}
+                        {hasDiscount(product.discountPercent) && (
+                          <Badge variant="secondary">
+                            {discountBadge(product.discountPercent)}
+                          </Badge>
+                        )}
+                      </span>
                     </TableCell>
                     <TableCell className="tabular-nums">
-                      {product.totalStock}
+                      {product.flaggedVariants.length > 0 ?
+                        <span className="flex flex-col gap-1">
+                          {product.flaggedVariants.map((variant) => (
+                            <span
+                              key={variant.id}
+                              className="flex items-baseline gap-1.5 text-sm">
+                              <span className="min-w-0 truncate font-medium">
+                                {variant.name}
+                              </span>
+                              <span className="text-muted-foreground truncate text-xs">
+                                {variant.sku}
+                              </span>
+                              <span
+                                className={
+                                  variant.stock === 0 ?
+                                    "text-destructive font-semibold"
+                                  : "font-semibold text-amber-600 dark:text-amber-400"
+                                }>
+                                {variant.stock}
+                              </span>
+                            </span>
+                          ))}
+                        </span>
+                      : product.totalStock}
                     </TableCell>
                     <TableCell>
                       <Badge
@@ -166,6 +224,13 @@ const AdminProductsLoadMore = ({
             className="w-full rounded-full px-8 sm:w-auto">
             {loading ? "Loading..." : "Load more"}
           </Button>
+          {error && (
+            <p
+              role="alert"
+              className="text-destructive text-xs">
+              {error}
+            </p>
+          )}
         </div>
       )}
     </>

@@ -16,6 +16,7 @@ import {
 } from "@/components/shadcnui/card";
 import {
   Field,
+  FieldDescription,
   FieldError,
   FieldGroup,
   FieldLabel,
@@ -56,6 +57,7 @@ const CategoryForm = ({
   const {
     handleSubmit,
     control,
+    reset,
     formState: { errors, isDirty },
   } = useForm<categoryFormType>({
     resolver: zodResolver(categoryFormSchema),
@@ -83,6 +85,11 @@ const CategoryForm = ({
         title: mode === "create" ? "Category created" : "Category updated",
         type: "success",
       });
+      if (mode === "create") {
+        reset();
+      } else {
+        reset(data);
+      }
       if (onCreated && mode === "create") {
         onCreated({ id: result.id, name: data.name.trim() });
       } else {
@@ -140,6 +147,9 @@ const CategoryForm = ({
                 ))}
               </SelectContent>
             </Select>
+            <FieldDescription>
+              Leave as No parent to create a top-level category.
+            </FieldDescription>
           </Field>
         )}
       />
@@ -187,7 +197,8 @@ const CategoryForm = ({
             {mode === "create" ? "New category" : "Edit category"}
           </CardTitle>
           <CardDescription>
-            Categories can be nested under a parent category.
+            Leave the parent empty to create a top-level category, or nest it
+            under an existing one.
           </CardDescription>
         </CardHeader>
         <CardContent>{formContent}</CardContent>

@@ -38,6 +38,8 @@ import {
   type productFormInputType,
   type productFormType,
 } from "@/lib/zodSchema";
+import { effectivePrice } from "@/lib/pricing";
+import { formatPrice } from "@/lib/format";
 
 const ProductDetailsFields = ({
   categories,
@@ -47,11 +49,13 @@ const ProductDetailsFields = ({
   onCategoryCreated?: (cat: { id: string; name: string }) => void;
 }) => {
   const [createOpen, setCreateOpen] = useState(false);
-  const { control } = useFormContext<
+  const { control, watch } = useFormContext<
     productFormInputType,
     undefined,
     productFormType
   >();
+  const basePriceValue = watch("basePrice");
+  const discountValue = watch("discountPercent");
 
   return (
     <>
@@ -115,6 +119,42 @@ const ProductDetailsFields = ({
                     value={field.value as number}
                     aria-invalid={fieldState.invalid}
                   />
+                  {fieldState.invalid && (
+                    <FieldError errors={[fieldState.error]} />
+                  )}
+                </Field>
+              )}
+            />
+
+            <Controller
+              name="discountPercent"
+              control={control}
+              render={({ field, fieldState }) => (
+                <Field data-invalid={fieldState.invalid}>
+                  <FieldLabel htmlFor={field.name}>
+                    Discount (%, applies to all variants)
+                  </FieldLabel>
+                  <Input
+                    {...field}
+                    id={field.name}
+                    type="number"
+                    step="1"
+                    min="0"
+                    max="100"
+                    value={field.value as number}
+                    aria-invalid={fieldState.invalid}
+                  />
+                  <p className="text-muted-foreground text-xs">
+                    Base configuration sells for{" "}
+                    {formatPrice(
+                      effectivePrice(
+                        Number(basePriceValue) || 0,
+                        0,
+                        Number(discountValue) || 0,
+                      ),
+                    )}
+                    . Store cap applies on save.
+                  </p>
                   {fieldState.invalid && (
                     <FieldError errors={[fieldState.error]} />
                   )}

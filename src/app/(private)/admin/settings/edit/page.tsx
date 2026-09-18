@@ -17,7 +17,7 @@ import ProfileForm from "@/components/Settings/ProfileForm";
 
 export const metadata: Metadata = {
   title: "Edit Profile",
-  description: "Update your Unboxd profile name, avatar, and bio.",
+  description: "Update your Unboxd profile name and avatar.",
 };
 
 const AdminEditProfilePage = async () => {
@@ -28,7 +28,7 @@ const AdminEditProfilePage = async () => {
 
   const user = await prisma.user.findUnique({
     where: { id: session!.user.id },
-    select: { name: true, image: true, bio: true },
+    select: { name: true, image: true },
   });
   if (!user) {
     const { redirect } = await import("next/navigation");
@@ -54,7 +54,7 @@ const AdminEditProfilePage = async () => {
           Edit Profile
         </h1>
         <p className="text-muted-foreground text-sm">
-          Update your display name, avatar, and bio
+          Update your display name and avatar
         </p>
       </div>
 
@@ -69,7 +69,6 @@ const AdminEditProfilePage = async () => {
           <ProfileForm
             defaultName={user!.name}
             defaultImage={user!.image ?? null}
-            defaultBio={user!.bio ?? null}
             redirectTo="/admin/settings"
           />
         </CardContent>

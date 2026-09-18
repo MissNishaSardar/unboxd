@@ -11,6 +11,25 @@ import { getSalesSummary } from "@/server/admin/queries";
 
 const SalesSummaryCard = async () => {
   const summary = await getSalesSummary();
+  const hasSales = summary.totalOrders > 0;
+
+  if (!hasSales) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Sales this week</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex flex-col items-start gap-1">
+            <p className="text-sm font-medium">No sales yet</p>
+            <p className="text-muted-foreground text-sm">
+              Share your store to get the first order in.
+            </p>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <Card>

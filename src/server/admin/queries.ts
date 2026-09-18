@@ -5,10 +5,10 @@ import {
 } from "@/lib/placeholder";
 import { adminProductListSearchParamsType } from "@/lib/zodSchema";
 import { startOfWeek } from "date-fns";
+import { getStoreSettings } from "@/server/admin/settings";
 
 export const ADMIN_PRODUCTS_PER_PAGE = 10;
 export const ADMIN_USERS_PER_PAGE = 10;
-export const LOW_STOCK_THRESHOLD = 5;
 
 const productOrderByMap: Record<
   adminProductListSearchParamsType["sort"],
@@ -24,14 +24,26 @@ const productOrderByMap: Record<
 export async function getAdminProducts(
   params: Pick<
     adminProductListSearchParamsType,
-    "search" | "sort" | "status" | "page"
+    "search" | "sort" | "status" | "stock" | "page"
   >,
 ) {
-  const { search, sort = "newest", status = "all", page = 1 } = params;
+  const {
+    search,
+    sort = "newest",
+    status = "all",
+    stock = "all",
+    page = 1,
+  } = params;
+
+  const { lowStockThreshold } = await getStoreSettings();
 
   const where = {
     ...(status === "active" && { isActive: true }),
     ...(status === "inactive" && { isActive: false }),
+    ...(stock === "low" && {
+      variants: { some: { stock: { gt: 0, lt: lowStockThreshold } } },
+    }),
+    ...(stock === "out" && { variants: { some: { stock: 0 } } }),
     ...(search && {
       OR: [
         { name: { contains: search } },
@@ -50,7 +62,7 @@ export async function getAdminProducts(
       include: {
         images: { orderBy: { sortOrder: "asc" }, take: 1 },
         category: { select: { name: true } },
-        variants: { select: { stock: true } },
+        variants: { select: { id: true, name: true, sku: true, stock: true } },
       },
     }),
     prisma.product.count({ where }),
@@ -62,6 +74,7 @@ export async function getAdminProducts(
       slug: product.slug,
       name: product.name,
       basePrice: String(product.basePrice),
+      discountPercent: product.discountPercent,
       isActive: product.isActive,
       featured: product.featured,
       categoryName: product.category.name,
@@ -74,6 +87,29 @@ export async function getAdminProducts(
         0,
       ),
       variantCount: product.variants.length,
+      flaggedVariants:
+        stock === "out" ?
+          product.variants
+            .filter((variant) => variant.stock === 0)
+            .map((variant) => ({
+              id: variant.id,
+              name: variant.name,
+              sku: variant.sku,
+              stock: variant.stock,
+            }))
+        : stock === "low" ?
+          product.variants
+            .filter(
+              (variant) =>
+                variant.stock > 0 && variant.stock < lowStockThreshold,
+            )
+            .map((variant) => ({
+              id: variant.id,
+              name: variant.name,
+              sku: variant.sku,
+              stock: variant.stock,
+            }))
+        : [],
     })),
     total,
     page,
@@ -97,6 +133,7 @@ export async function getAdminProductForEdit(id: string) {
     name: product.name,
     description: product.description,
     basePrice: String(product.basePrice),
+    discountPercent: product.discountPercent,
     brand: product.brand,
     categoryId: product.categoryId,
     isActive: product.isActive,
@@ -177,29 +214,6 @@ export async function getAdminCategoryOptions() {
   return categories;
 }
 
-export async function getInventoryLowStock() {
-  const variants = await prisma.productVariant.findMany({
-    where: { stock: { lt: LOW_STOCK_THRESHOLD } },
-    include: {
-      product: {
-        select: { id: true, name: true, slug: true, isActive: true },
-      },
-    },
-    orderBy: [{ stock: "asc" }, { product: { name: "asc" } }],
-  });
-
-  return variants.map((variant) => ({
-    id: variant.id,
-    sku: variant.sku,
-    name: variant.name,
-    stock: variant.stock,
-    productId: variant.product.id,
-    productName: variant.product.name,
-    productSlug: variant.product.slug,
-    isActive: variant.product.isActive,
-  }));
-}
-
 export async function getSalesSummary() {
   const weekStart = startOfWeek(new Date(), { weekStartsOn: 1 });
 
@@ -216,6 +230,50 @@ export async function getSalesSummary() {
     totalOrders,
     weekOrders,
     weekRevenue: String(weekAggregate._sum.total ?? 0),
+  };
+}
+
+export async function getAdminAttention() {
+  const { lowStockThreshold, returnWindowDays } = await getStoreSettings();
+  const returnCutoff = new Date(Date.now() - returnWindowDays * 86400000);
+  const [awaitingShipment, inTransit, returned, deliveredEligible, lowStock] =
+    await Promise.all([
+      prisma.order.count({ where: { status: "CONFIRMED" } }),
+      prisma.order.count({ where: { status: "SHIPPED" } }),
+      prisma.order.count({ where: { status: "RETURNED" } }),
+      prisma.order.count({
+        where: { status: "DELIVERED", statusUpdatedAt: { gte: returnCutoff } },
+      }),
+      prisma.product.count({
+        where: {
+          variants: { some: { stock: { gt: 0, lt: lowStockThreshold } } },
+        },
+      }),
+    ]);
+
+  return {
+    awaitingShipment,
+    inTransit,
+    returned,
+    deliveredEligible,
+    lowStock,
+  };
+}
+
+export async function getAdminTotals() {
+  const [totalProducts, totalOrders, totalCategories, totalUsers] =
+    await Promise.all([
+      prisma.product.count(),
+      prisma.order.count(),
+      prisma.category.count({ where: { deletedAt: null } }),
+      prisma.user.count({ where: { deletedAt: null } }),
+    ]);
+
+  return {
+    totalProducts,
+    totalOrders,
+    totalCategories,
+    totalUsers,
   };
 }
 

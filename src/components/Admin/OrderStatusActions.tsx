@@ -1,9 +1,18 @@
 "use client";
 
+import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { Controller, useForm } from "react-hook-form";
 import { ArrowRightIcon, RotateCcwIcon, XCircleIcon } from "lucide-react";
+import { withMinDelay } from "@/lib/minDelay";
 import { updateOrderStatus } from "@/server/admin/order-actions";
+import {
+  CANCEL_REASON_LABELS,
+  cancelOrderSchema,
+  cancelOrderType,
+  cancelReasonSchema,
+} from "@/lib/zodSchema";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -15,7 +24,10 @@ import {
   AlertDialogTrigger,
 } from "@/components/shadcnui/alert-dialog";
 import { Button } from "@/components/shadcnui/button";
+import { Field, FieldError, FieldLabel } from "@/components/shadcnui/field";
+import { Textarea } from "@/components/shadcnui/textarea";
 import { toast } from "@/components/shadcnui/toast";
+import { cn } from "@/lib/utils";
 import {
   canTransition,
   getNextStatus,
@@ -31,10 +43,19 @@ const OrderStatusActions = ({
 }) => {
   const router = useRouter();
   const [isPending, setIsPending] = useState(false);
+  const [cancelOpen, setCancelOpen] = useState(false);
+
+  const cancelForm = useForm<cancelOrderType>({
+    resolver: zodResolver(cancelOrderSchema),
+    defaultValues: { reason: undefined, note: "" },
+    mode: "onSubmit",
+  });
 
   const handleUpdate = async (nextStatus: string) => {
     setIsPending(true);
-    const result = await updateOrderStatus(orderId, { status: nextStatus });
+    const result = await withMinDelay(
+      updateOrderStatus(orderId, { status: nextStatus }),
+    );
     setIsPending(false);
     if (result.ok) {
       toast.add({
@@ -52,6 +73,30 @@ const OrderStatusActions = ({
   const nextStatus = getNextStatus(status);
   const canCancel = canTransition(status, "CANCELLED");
   const canReturn = canTransition(status, "RETURNED");
+
+  const handleCancel = async (values: cancelOrderType) => {
+    setIsPending(true);
+    const result = await withMinDelay(
+      updateOrderStatus(orderId, {
+        status: "CANCELLED",
+        ...values,
+      }),
+    );
+    setIsPending(false);
+    if (result.ok) {
+      toast.add({ title: "Order cancelled", type: "success" });
+      setCancelOpen(false);
+      cancelForm.reset();
+      router.push("/admin/orders");
+      router.refresh();
+    } else if (result.error === "INVALID_INPUT") {
+      toast.add({ title: "Please choose a reason", type: "error" });
+    } else if (result.error === "INVALID_TRANSITION") {
+      toast.add({ title: "Invalid status transition", type: "error" });
+    } else {
+      toast.add({ title: "Something went wrong", type: "error" });
+    }
+  };
 
   if (!nextStatus && !canCancel && !canReturn) return null;
 
@@ -100,7 +145,12 @@ const OrderStatusActions = ({
         </AlertDialog>
       )}
       {canCancel && (
-        <AlertDialog>
+        <AlertDialog
+          open={cancelOpen}
+          onOpenChange={(next) => {
+            setCancelOpen(next);
+            if (!next) cancelForm.reset();
+          }}>
           <AlertDialogTrigger
             render={
               <Button
@@ -117,16 +167,91 @@ const OrderStatusActions = ({
           <AlertDialogContent>
             <AlertDialogTitle>Cancel this order?</AlertDialogTitle>
             <AlertDialogDescription>
-              Stock will be restored for the cancelled items.
+              Stock will be restored for the cancelled items. Choose a reason
+              for the records.
             </AlertDialogDescription>
-            <AlertDialogFooter>
-              <AlertDialogCancel>Keep order</AlertDialogCancel>
-              <AlertDialogAction
-                variant="destructive"
-                onClick={() => handleUpdate("CANCELLED")}>
-                Cancel order
-              </AlertDialogAction>
-            </AlertDialogFooter>
+            <form
+              onSubmit={cancelForm.handleSubmit(handleCancel)}
+              noValidate
+              className="flex flex-col gap-4">
+              <Controller
+                name="reason"
+                control={cancelForm.control}
+                render={({ field, fieldState }) => (
+                  <Field data-invalid={fieldState.invalid}>
+                    <FieldLabel>Reason</FieldLabel>
+                    <div
+                      role="radiogroup"
+                      aria-label="Cancellation reason"
+                      className="flex flex-col gap-1.5">
+                      {cancelReasonSchema.options.map((value) => (
+                        <label
+                          key={value}
+                          className={cn(
+                            "flex cursor-pointer items-center gap-2.5 rounded-md border px-3 py-2 text-sm transition-colors",
+                            field.value === value ?
+                              "border-primary bg-primary/5"
+                            : "border-border hover:bg-muted/50",
+                          )}>
+                          <input
+                            type="radio"
+                            name={field.name}
+                            value={value}
+                            checked={field.value === value}
+                            onChange={() => field.onChange(value)}
+                            onBlur={field.onBlur}
+                            disabled={isPending}
+                            className="size-4 accent-current"
+                          />
+                          {CANCEL_REASON_LABELS[value]}
+                        </label>
+                      ))}
+                    </div>
+                    {fieldState.invalid && (
+                      <FieldError errors={[fieldState.error]} />
+                    )}
+                  </Field>
+                )}
+              />
+              <Controller
+                name="note"
+                control={cancelForm.control}
+                render={({ field, fieldState }) => (
+                  <Field data-invalid={fieldState.invalid}>
+                    <FieldLabel htmlFor={`${orderId}-admin-cancel-note`}>
+                      Note (optional, required for Other)
+                    </FieldLabel>
+                    <Textarea
+                      {...field}
+                      id={`${orderId}-admin-cancel-note`}
+                      value={field.value ?? ""}
+                      placeholder="Anything else for the records?"
+                      rows={3}
+                      maxLength={500}
+                      aria-invalid={fieldState.invalid}
+                    />
+                    {fieldState.invalid && (
+                      <FieldError errors={[fieldState.error]} />
+                    )}
+                  </Field>
+                )}
+              />
+              <AlertDialogFooter>
+                <AlertDialogCancel
+                  onClick={() => {
+                    setCancelOpen(false);
+                    cancelForm.reset();
+                  }}>
+                  Keep order
+                </AlertDialogCancel>
+                <Button
+                  type="submit"
+                  variant="destructive"
+                  disabled={isPending}>
+                  {isPending ? "Cancelling..." : "Cancel order"}
+                </Button>
+              </AlertDialogFooter>
+            </form>
           </AlertDialogContent>
         </AlertDialog>
       )}

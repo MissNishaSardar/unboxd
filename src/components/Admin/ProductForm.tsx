@@ -42,6 +42,7 @@ type ProductFormProps = {
     name: string;
     description: string;
     basePrice: string;
+    discountPercent: number;
     brand: string;
     categoryId: string;
     isActive: boolean;
@@ -74,6 +75,7 @@ const ProductForm = ({
           name: initialData.name,
           description: initialData.description,
           basePrice: Number(initialData.basePrice),
+          discountPercent: initialData.discountPercent ?? 0,
           brand: initialData.brand,
           categoryId: initialData.categoryId,
           isActive: initialData.isActive,
@@ -91,6 +93,7 @@ const ProductForm = ({
           name: "",
           description: "",
           basePrice: 0,
+          discountPercent: 0,
           brand: "",
           categoryId: "",
           isActive: true,
@@ -111,6 +114,7 @@ const ProductForm = ({
     "name",
     "description",
     "basePrice",
+    "discountPercent",
     "brand",
     "categoryId",
   ].filter((key) => errors[key as keyof typeof errors]).length;

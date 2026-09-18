@@ -65,20 +65,6 @@ const ProductImagesFields = () => {
                   )}
                 />
                 <div className="flex flex-1 gap-2">
-                  {/* <Controller
-                    name={`images.${index}.alt`}
-                    control={control}
-                    render={({ field }) => (
-                      <Field className="flex-2">
-                        <FieldLabel htmlFor={field.name}>Alt text</FieldLabel>
-                        <Input
-                          {...field}
-                          id={field.name}
-                          placeholder="Describe the image"
-                        />
-                      </Field>
-                    )}
-                  /> */}
                   <div className="flex gap-1">
                     <Button
                       type="button"

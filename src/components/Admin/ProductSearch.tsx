@@ -1,5 +1,7 @@
 "use client";
 
+/* eslint-disable react-hooks/set-state-in-effect -- syncing the input with the URL after Clear filters or back/forward navigation is intentional */
+
 import { SearchIcon } from "lucide-react";
 import type { Route } from "next";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -13,22 +15,34 @@ import {
 const ProductSearch = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [value, setValue] = useState(searchParams.get("search") ?? "");
+  const urlSearch = searchParams.get("search") ?? "";
+  const [value, setValue] = useState(urlSearch);
+
+  // Keep the input in sync when the URL changes elsewhere, such as the
+  // Clear filters button or browser back and forward navigation.
+  useEffect(() => {
+    setValue(urlSearch);
+  }, [urlSearch]);
 
   useEffect(() => {
+    // Skip navigation while the input already matches the URL. Without
+    // this guard every filter change retriggers the timer and pushes a
+    // duplicate navigation.
+    if (value.trim() === urlSearch) return;
     const timeout = setTimeout(() => {
       const params = new URLSearchParams(searchParams.toString());
-      if (value) {
-        params.set("search", value);
-        params.delete("page");
+      if (value.trim()) {
+        params.set("search", value.trim());
       } else {
         params.delete("search");
-        params.delete("page");
       }
-      router.replace(`/admin/products?${params.toString()}` as Route);
+      params.delete("page");
+      const next = params.toString();
+      if (next === searchParams.toString()) return;
+      router.replace(`/admin/products${next ? `?${next}` : ""}` as Route);
     }, 300);
     return () => clearTimeout(timeout);
-  }, [value, router, searchParams]);
+  }, [value, urlSearch, searchParams, router]);
 
   return (
     <InputGroup>
@@ -39,6 +53,7 @@ const ProductSearch = () => {
         value={value}
         onChange={(event) => setValue(event.target.value)}
         placeholder="Search products..."
+        aria-label="Search products"
       />
     </InputGroup>
   );

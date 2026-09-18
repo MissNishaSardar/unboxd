@@ -33,8 +33,9 @@ export async function updateOrderStatus(
   orderId: string,
   input: unknown,
 ): Promise<AdminOrderResult> {
+  let session;
   try {
-    await requireAdmin();
+    session = await requireAdmin();
   } catch {
     return { ok: false, error: "FORBIDDEN" };
   }
@@ -43,7 +44,7 @@ export async function updateOrderStatus(
   if (!parsed.success) {
     return { ok: false, error: "INVALID_INPUT" };
   }
-  const { status: nextStatus } = parsed.data;
+  const { status: nextStatus, reason, note } = parsed.data;
 
   try {
     const order = await prisma.$transaction(
@@ -63,7 +64,18 @@ export async function updateOrderStatus(
 
         return tx.order.update({
           where: { id: orderId },
-          data: { status: nextStatus, statusUpdatedAt: new Date() },
+          data: {
+            status: nextStatus,
+            statusUpdatedAt: new Date(),
+            ...(nextStatus === "CANCELLED" ?
+              {
+                cancelReason: reason ?? null,
+                cancelNote: note?.trim() ? note.trim() : null,
+                cancelledAt: new Date(),
+                cancelledBy: session.user.id,
+              }
+            : {}),
+          },
         });
       },
       { maxWait: 5000, timeout: 10000 },
@@ -88,8 +100,9 @@ export async function updateOrderStatus(
 export async function bulkUpdateOrderStatus(
   input: unknown,
 ): Promise<AdminBulkOrderResult> {
+  let session;
   try {
-    await requireAdmin();
+    session = await requireAdmin();
   } catch {
     return { ok: false, error: "FORBIDDEN" };
   }
@@ -98,7 +111,7 @@ export async function bulkUpdateOrderStatus(
   if (!parsed.success) {
     return { ok: false, error: "INVALID_INPUT" };
   }
-  const { orderIds, status: nextStatus } = parsed.data;
+  const { orderIds, status: nextStatus, reason } = parsed.data;
 
   try {
     const result = await prisma.$transaction(
@@ -121,7 +134,16 @@ export async function bulkUpdateOrderStatus(
 
           await tx.order.update({
             where: { id: orderId },
-            data: { status: nextStatus, statusUpdatedAt: new Date() },
+            data:
+              nextStatus === "CANCELLED" ?
+                {
+                  status: nextStatus,
+                  statusUpdatedAt: new Date(),
+                  cancelReason: reason ?? null,
+                  cancelledAt: new Date(),
+                  cancelledBy: session.user.id,
+                }
+              : { status: nextStatus, statusUpdatedAt: new Date() },
           });
           updated += 1;
         }
