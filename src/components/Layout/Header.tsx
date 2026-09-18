@@ -48,7 +48,7 @@ import { Suspense, useEffect, useState } from "react";
 import HeaderSearch from "@/components/Search/HeaderSearch";
 import SearchAutocompleteInput from "@/components/Search/SearchAutocompleteInput";
 
-const iconButtonClass =
+export const iconButtonClass =
   "size-[38px] shrink-0 rounded-full border border-border bg-background text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors";
 
 const Header = ({ brands }: { brands?: BrandWithCount[] }) => {
@@ -168,7 +168,7 @@ const Header = ({ brands }: { brands?: BrandWithCount[] }) => {
                         onClick={() => setMobileOpen(false)}
                         aria-current={isActive ? "page" : undefined}
                         className={cn(
-                          "rounded-full px-3.5 py-2 text-sm font-medium transition-colors",
+                          "rounded-md px-3.5 py-2 text-sm font-medium transition-colors",
                           isActive ?
                             "bg-foreground text-background shadow-sm"
                           : "text-muted-foreground hover:bg-muted hover:text-foreground",
@@ -193,7 +193,7 @@ const Header = ({ brands }: { brands?: BrandWithCount[] }) => {
                             aria-pressed={isActive}
                             onClick={() => toggleMobileBrand(brand.slug)}
                             className={cn(
-                              "rounded-full px-3.5 py-2 text-left text-sm font-medium transition-colors",
+                              "rounded-md px-3.5 py-2 text-left text-sm font-medium transition-colors",
                               isActive ?
                                 "bg-primary text-primary-foreground"
                               : "text-muted-foreground hover:bg-muted hover:text-foreground",
@@ -372,7 +372,7 @@ const Header = ({ brands }: { brands?: BrandWithCount[] }) => {
               </Link>
             }
 
-            <ThemeToggleButton className={cn(iconButtonClass, "ml-1")} />
+            <ThemeToggleButton className={iconButtonClass} />
           </div>
         </div>
 

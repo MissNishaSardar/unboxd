@@ -3,7 +3,7 @@ import UnboxdLogo from "@/components/Brand/UnboxdLogo";
 
 type SidebarBrandProps = {
   href: "/admin" | "/";
-  subtitle: string;
+  subtitle?: string;
 };
 
 const SidebarBrand = ({ href, subtitle }: SidebarBrandProps) => {
@@ -19,9 +19,11 @@ const SidebarBrand = ({ href, subtitle }: SidebarBrandProps) => {
         <span className="truncate text-sm leading-none font-medium">
           Unboxd
         </span>
-        <span className="text-muted-foreground truncate text-xs">
-          {subtitle}
-        </span>
+        {subtitle && (
+          <span className="text-muted-foreground truncate text-xs">
+            {subtitle}
+          </span>
+        )}
       </div>
     </Link>
   );

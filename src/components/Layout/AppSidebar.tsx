@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Heart, LayoutDashboard, Package, Settings } from "lucide-react";
+import { Heart, LayoutDashboard, Package, Settings, Store } from "lucide-react";
 
 import SidebarBrand from "@/components/Brand/SidebarBrand";
 import {
@@ -19,6 +19,7 @@ import {
 } from "@/components/shadcnui/sidebar";
 
 const NAV_ITEMS = [
+  { href: "/products" as const, label: "Shop", icon: Store },
   { href: "/dashboard" as const, label: "Dashboard", icon: LayoutDashboard },
   { href: "/orders" as const, label: "Orders", icon: Package },
   { href: "/wishlist" as const, label: "Wishlist", icon: Heart },
@@ -31,10 +32,7 @@ const AppSidebar = () => {
   return (
     <Sidebar collapsible="icon">
       <SidebarHeader>
-        <SidebarBrand
-          href="/"
-          subtitle="Dashboard"
-        />
+        <SidebarBrand href="/" />
       </SidebarHeader>
       <SidebarContent>
         <SidebarGroup>

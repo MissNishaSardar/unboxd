@@ -21,7 +21,13 @@ const shopLinksFallback: FooterCategory[] = [
   { slug: "cases-protection", name: "Cases and Protection" },
 ];
 
-const Footer = ({ categories }: { categories?: FooterCategory[] }) => {
+const Footer = ({
+  categories,
+  storeName = "Unboxd",
+}: {
+  categories?: FooterCategory[];
+  storeName?: string;
+}) => {
   const shopCategories =
     categories && categories.length > 0 ? categories : shopLinksFallback;
   return (
@@ -39,7 +45,7 @@ const Footer = ({ categories }: { categories?: FooterCategory[] }) => {
                 aria-hidden="true"
               />
               <span className="font-heading text-foreground text-[16px] font-semibold tracking-tight">
-                Unboxd
+                {storeName}
               </span>
             </Link>
             <p className="text-muted-foreground max-w-[28ch] text-sm leading-relaxed">
@@ -149,7 +155,7 @@ const Footer = ({ categories }: { categories?: FooterCategory[] }) => {
 
         <div className="border-border mt-8 flex flex-col items-center justify-between gap-4 border-t pt-6 md:flex-row">
           <p className="text-muted-foreground text-xs">
-            © {new Date().getFullYear()} Unboxd. All rights reserved.
+            © {new Date().getFullYear()} {storeName}. All rights reserved.
           </p>
           <div className="text-muted-foreground flex items-center gap-3 text-xs">
             <span className="inline-flex items-center gap-1.5">

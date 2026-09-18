@@ -1,6 +1,7 @@
 "use client";
 
 import ThemeToggleButton from "@/components/Layout/ThemeToggleButton";
+import { Button } from "@/components/shadcnui/button";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -20,9 +21,13 @@ import {
 } from "@/components/shadcnui/dropdown-menu";
 import { Separator } from "@/components/shadcnui/separator";
 import { SidebarTrigger } from "@/components/shadcnui/sidebar";
+import { useAtomValue, useSetAtom } from "jotai";
+import { useMounted } from "@/hooks/use-mounted";
 import { authClient } from "@/lib/auth-client";
-import { clearCart } from "@/lib/cart/atoms";
-import { LogOutIcon } from "lucide-react";
+import { cartCountAtom, cartDrawerOpenAtom, clearCart } from "@/lib/cart/atoms";
+import { cn } from "@/lib/utils";
+import { iconButtonClass } from "@/components/Layout/Header";
+import { LogOutIcon, ShoppingBagIcon } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 
@@ -49,6 +54,9 @@ const PrivateHeader = () => {
   const pathname = usePathname();
   const router = useRouter();
   const { data: session } = authClient.useSession();
+  const mounted = useMounted();
+  const cartCount = useAtomValue(cartCountAtom);
+  const setCartOpen = useSetAtom(cartDrawerOpenAtom);
   const segments = pathname.split("/").filter(Boolean);
 
   // Build cumulative hrefs for linked crumbs
@@ -94,12 +102,28 @@ const PrivateHeader = () => {
           })}
         </BreadcrumbList>
       </Breadcrumb>
-      <div className="ml-auto flex items-center gap-4">
-        <ThemeToggleButton />
+      <div className="ml-auto flex items-center gap-1">
+        <Button
+          variant="ghost"
+          size="icon"
+          aria-label="Open cart"
+          className={cn(iconButtonClass, "relative")}
+          onClick={() => setCartOpen(true)}>
+          <ShoppingBagIcon
+            aria-hidden="true"
+            className="size-[18px]"
+          />
+          {mounted && cartCount > 0 && (
+            <span className="border-background absolute -top-1 -right-1 flex h-[18px] min-w-[18px] items-center justify-center rounded-full border-2 bg-violet-600 px-1 text-[11px] leading-none font-semibold text-white tabular-nums shadow-sm">
+              {cartCount > 99 ? "99+" : cartCount}
+            </span>
+          )}
+        </Button>
+        <ThemeToggleButton className={iconButtonClass} />
         {session && (
           <DropdownMenu>
             <DropdownMenuTrigger
-              className="focus-visible:ring-ring flex size-8 shrink-0 items-center justify-center overflow-hidden rounded-full border focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
+              className="border-border bg-muted hover:bg-accent focus-visible:ring-ring flex size-[38px] shrink-0 items-center justify-center overflow-hidden rounded-full border transition-colors focus-visible:ring-2 focus-visible:outline-none"
               aria-label="User menu">
               {session.user.image ?
                 // eslint-disable-next-line @next/next/no-img-element
@@ -107,11 +131,11 @@ const PrivateHeader = () => {
                   src={session.user.image}
                   alt=""
                   aria-hidden="true"
-                  width={32}
-                  height={32}
+                  width={38}
+                  height={38}
                   className="size-full object-cover"
                 />
-              : <span className="bg-muted text-muted-foreground flex size-full items-center justify-center text-xs font-semibold">
+              : <span className="bg-muted text-foreground flex size-full items-center justify-center text-xs font-semibold">
                   {session.user.name
                     .trim()
                     .split(/\s+/)

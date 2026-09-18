@@ -22,6 +22,7 @@ import { Separator } from "@/components/shadcnui/separator";
 import { SidebarTrigger } from "@/components/shadcnui/sidebar";
 import { authClient } from "@/lib/auth-client";
 import { clearCart } from "@/lib/cart/atoms";
+import { iconButtonClass } from "@/components/Layout/Header";
 import { LogOutIcon, StoreIcon, UserRoundIcon } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
@@ -102,12 +103,12 @@ const AdminHeader = () => {
           })}
         </BreadcrumbList>
       </Breadcrumb>
-      <div className="ml-auto flex items-center gap-4">
-        <ThemeToggleButton />
+      <div className="ml-auto flex items-center gap-1">
+        <ThemeToggleButton className={iconButtonClass} />
         {session && (
           <DropdownMenu>
             <DropdownMenuTrigger
-              className="focus-visible:ring-ring flex size-8 shrink-0 items-center justify-center overflow-hidden rounded-full border focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
+              className="border-border bg-muted hover:bg-accent focus-visible:ring-ring flex size-[38px] shrink-0 items-center justify-center overflow-hidden rounded-full border transition-colors focus-visible:ring-2 focus-visible:outline-none"
               aria-label="User menu">
               {session.user.image ?
                 // eslint-disable-next-line @next/next/no-img-element
@@ -115,11 +116,11 @@ const AdminHeader = () => {
                   src={session.user.image}
                   alt=""
                   aria-hidden="true"
-                  width={32}
-                  height={32}
+                  width={38}
+                  height={38}
                   className="size-full object-cover"
                 />
-              : <span className="bg-muted text-muted-foreground flex size-full items-center justify-center text-xs font-semibold">
+              : <span className="bg-muted text-foreground flex size-full items-center justify-center text-xs font-semibold">
                   {session.user.name
                     .trim()
                     .split(/\s+/)
