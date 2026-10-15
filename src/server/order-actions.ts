@@ -4,13 +4,19 @@ import { headers } from "next/headers";
 import { revalidatePath, revalidateTag } from "next/cache";
 import { auth } from "@/lib/auth";
 import prisma from "@/lib/dbClient/prisma";
+import { getActiveSalePercent } from "@/server/deals";
 import { canTransition, isWithinReturnWindow } from "@/lib/orders/status";
 import { restockItems } from "@/lib/orders/restock";
 import {
   getPlaceholderPhotoUrl,
   resolveProductImageUrl,
 } from "@/lib/placeholder";
-import { effectivePrice, mrp } from "@/lib/pricing";
+import {
+  activeDiscountPercent,
+  combineDiscountPercent,
+  effectivePrice,
+  mrp,
+} from "@/lib/pricing";
 import { cancelOrderSchema } from "@/lib/zodSchema";
 import { getStoreSettings } from "@/server/admin/settings";
 import type { AddToCartInput } from "@/lib/cart/atoms";
@@ -261,6 +267,7 @@ export async function getBuyAgainItems(
     const variantIds = order.items
       .map((item) => item.variantId)
       .filter((id): id is string => id !== null);
+    const salePercent = await getActiveSalePercent();
     const variants =
       variantIds.length > 0 ?
         await prisma.productVariant.findMany({
@@ -310,7 +317,21 @@ export async function getBuyAgainItems(
         slug: product.slug,
         name: product.name,
         variantName: variant.name,
-        price: effectivePrice(basePrice, priceDiff, product.discountPercent),
+        price: effectivePrice(
+          basePrice,
+          priceDiff,
+          combineDiscountPercent(
+            activeDiscountPercent(
+              {
+                discountPercent: product.discountPercent ?? 0,
+                discountStartsAt: product.discountStartsAt,
+                discountEndsAt: product.discountEndsAt,
+              },
+              Date.now(),
+            ),
+            salePercent,
+          ),
+        ),
         mrp: mrp(basePrice, priceDiff),
         image:
           product.images[0] ?

@@ -4,6 +4,7 @@ import { headers } from "next/headers";
 import { auth } from "@/lib/auth";
 import prisma from "@/lib/dbClient/prisma";
 import { productCardInclude, toProductCardData } from "@/server/catalog";
+import { getActiveSalePercent } from "@/server/deals";
 
 async function requireUser() {
   const session = await auth.api.getSession({ headers: await headers() });
@@ -41,10 +42,11 @@ export async function getProductsByIds(ids: string[]) {
     include: productCardInclude,
   });
   const byId = new Map(products.map((product) => [product.id, product]));
+  const salePercent = await getActiveSalePercent();
   return uniqueIds
     .map((id) => byId.get(id))
     .filter((product): product is NonNullable<typeof product> =>
       Boolean(product),
     )
-    .map(toProductCardData);
+    .map((product) => toProductCardData(product, salePercent));
 }

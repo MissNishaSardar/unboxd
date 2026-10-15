@@ -26,6 +26,7 @@ export async function getAdminOrders(params: {
   status?: string;
   date?: string;
   search?: string;
+  sort?: string;
   page?: number;
 }): Promise<{
   orders: AdminOrderRow[];
@@ -35,7 +36,7 @@ export async function getAdminOrders(params: {
   codOutstanding: { count: number; total: string };
   statusCounts: Record<string, number>;
 }> {
-  const { status, date, search, page = 1 } = params;
+  const { status, date, search, sort = "date_desc", page = 1 } = params;
 
   const baseWhere: Prisma.OrderWhereInput = {
     ...(date && {
@@ -76,7 +77,10 @@ export async function getAdminOrders(params: {
   const [orders, total, codAggregate, grouped] = await Promise.all([
     prisma.order.findMany({
       where,
-      orderBy: { createdAt: "desc" },
+      orderBy:
+        sort === "date_asc" ?
+          [{ createdAt: "asc" }, { id: "asc" }]
+        : [{ createdAt: "desc" }, { id: "asc" }],
       skip: (page - 1) * ADMIN_ORDERS_PER_PAGE,
       take: ADMIN_ORDERS_PER_PAGE,
       include: {

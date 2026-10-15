@@ -2,7 +2,13 @@ import { cacheLife, cacheTag } from "next/cache";
 import { z } from "zod";
 import prisma from "@/lib/dbClient/prisma";
 import { resolveProductImageUrl } from "@/lib/placeholder";
-import { effectivePrice, mrp } from "@/lib/pricing";
+import {
+  activeDiscountPercent,
+  combineDiscountPercent,
+  effectivePrice,
+  mrp,
+} from "@/lib/pricing";
+import { getActiveSalePercent } from "@/server/deals";
 import { getRatingSummary, getReviewsForProduct } from "@/lib/reviews";
 import { productSortSchema } from "@/lib/zodSchema";
 
@@ -14,6 +20,8 @@ type ProductRow = {
   name: string;
   basePrice: { toString(): string };
   discountPercent: number;
+  discountStartsAt: Date | string | null;
+  discountEndsAt: Date | string | null;
   brand: string;
   brandSlug: string;
   category: { name: string; slug: string };
@@ -26,11 +34,19 @@ type ProductRow = {
   }[];
 };
 
-export function toProductCardData(product: ProductRow) {
+export function toProductCardData(product: ProductRow, globalPercent = 0) {
   const defaultVariant =
     product.variants.find((variant) => variant.stock > 0) ??
     product.variants[0];
-  const discountPercent = product.discountPercent ?? 0;
+  const own = activeDiscountPercent(
+    {
+      discountPercent: product.discountPercent ?? 0,
+      discountStartsAt: product.discountStartsAt,
+      discountEndsAt: product.discountEndsAt,
+    },
+    Date.now(),
+  );
+  const discountPercent = combineDiscountPercent(own, globalPercent);
   const base = Number(product.basePrice);
   const diff = defaultVariant ? Number(defaultVariant.priceDiff) : 0;
   return {
@@ -66,7 +82,46 @@ export const productCardInclude = {
   variants: { orderBy: { priceDiff: "asc" } },
 } as const;
 
+function toPlainProductRow(row: ProductRow & { description?: string }) {
+  return {
+    id: row.id,
+    slug: row.slug,
+    name: row.name,
+    description: row.description ?? "",
+    basePrice: String(row.basePrice),
+    discountPercent: row.discountPercent ?? 0,
+    discountStartsAt:
+      row.discountStartsAt instanceof Date ?
+        row.discountStartsAt.toISOString()
+      : (row.discountStartsAt ?? null),
+    discountEndsAt:
+      row.discountEndsAt instanceof Date ?
+        row.discountEndsAt.toISOString()
+      : (row.discountEndsAt ?? null),
+    brand: row.brand,
+    brandSlug: row.brandSlug,
+    category: { name: row.category.name, slug: row.category.slug },
+    images: row.images.map((image) => ({ url: image.url, alt: image.alt })),
+    variants: row.variants.map((variant) => ({
+      sku: variant.sku,
+      name: variant.name,
+      priceDiff: String(variant.priceDiff),
+      stock: variant.stock,
+    })),
+  };
+}
+
+async function mapWithSale<T extends ProductRow>(rows: T[]) {
+  const salePercent = await getActiveSalePercent();
+  return rows.map((row) => toProductCardData(row, salePercent));
+}
+
 export async function getFeaturedProducts() {
+  const rows = await getFeaturedProductRows();
+  return mapWithSale(rows);
+}
+
+async function getFeaturedProductRows() {
   "use cache";
   cacheLife("hours");
   cacheTag("products");
@@ -76,15 +131,28 @@ export async function getFeaturedProducts() {
     take: 8,
     include: productCardInclude,
   });
-  return products.map(toProductCardData);
+  return products.map(toPlainProductRow);
 }
 
 const TOP_RATED_MIN_REVIEWS = 2;
 
 export async function getTopRatedProducts(limit = 10) {
+  const ordered = await getTopRatedProductRows(limit);
+  const top = await mapWithSale(ordered);
+  if (top.length >= limit) return top;
+  const seen = new Set(top.map((product) => product.id));
+  const fallbackRows = (await getFeaturedProductRows()).filter(
+    (product) => !seen.has(product.id),
+  );
+  const fallback = await mapWithSale(fallbackRows);
+  return [...top, ...fallback].slice(0, limit);
+}
+
+async function getTopRatedProductRows(limit: number) {
   "use cache";
   cacheLife("hours");
   cacheTag("products");
+  cacheTag("reviews");
   const groups = await prisma.review.groupBy({
     by: ["productId"],
     where: { product: { isActive: true } },
@@ -112,16 +180,22 @@ export async function getTopRatedProducts(limit = 10) {
       })
     : [];
   const byId = new Map(products.map((product) => [product.id, product]));
-  const top = ids
+  const ordered = ids
     .map((id) => byId.get(id))
     .filter((product): product is (typeof products)[number] => Boolean(product))
-    .map(toProductCardData);
-  if (top.length >= limit) return top;
-  const seen = new Set(top.map((product) => product.id));
-  const fallback = (await getFeaturedProducts()).filter(
-    (product) => !seen.has(product.id),
-  );
-  return [...top, ...fallback].slice(0, limit);
+    .map(toPlainProductRow);
+  if (ordered.length >= limit) return ordered;
+  const seen = new Set(ordered.map((product) => product.id));
+  const fallbackRows = await prisma.product.findMany({
+    where: { isActive: true, featured: true },
+    orderBy: { createdAt: "desc" },
+    take: 8,
+    include: productCardInclude,
+  });
+  return [
+    ...ordered,
+    ...fallbackRows.map(toPlainProductRow).filter((p) => !seen.has(p.id)),
+  ].slice(0, limit);
 }
 
 export async function getCategoriesWithCounts(params?: {
@@ -190,6 +264,16 @@ export type ProductListParams = {
 };
 
 export async function getProducts(params: ProductListParams) {
+  const rows = await getProductRows(params);
+  return {
+    products: await mapWithSale(rows.products),
+    total: rows.total,
+    page: rows.page,
+    totalPages: rows.totalPages,
+  };
+}
+
+async function getProductRows(params: ProductListParams) {
   "use cache";
   cacheLife("hours");
   cacheTag("products");
@@ -299,9 +383,10 @@ export async function getProducts(params: ProductListParams) {
     const productsById = new Map(products.map((p) => [p.id, p] as const));
     const ordered = pagedIds
       .map((id) => productsById.get(id))
-      .filter((p): p is NonNullable<typeof p> => Boolean(p));
+      .filter((p): p is NonNullable<typeof p> => Boolean(p))
+      .map(toPlainProductRow);
     return {
-      products: ordered.map(toProductCardData),
+      products: ordered,
       total,
       page,
       totalPages: Math.max(1, Math.ceil(total / PRODUCTS_PER_PAGE)),
@@ -326,7 +411,7 @@ export async function getProducts(params: ProductListParams) {
   ]);
 
   return {
-    products: products.map(toProductCardData),
+    products: products.map(toPlainProductRow),
     total,
     page,
     totalPages: Math.max(1, Math.ceil(total / PRODUCTS_PER_PAGE)),
@@ -365,6 +450,13 @@ export type ProductDetailData = {
 };
 
 export async function getProductBySlug(slug: string) {
+  const product = await getProductRowBySlug(slug);
+  if (!product) return null;
+  const salePercent = await getActiveSalePercent();
+  return toProductDetailData(product, salePercent);
+}
+
+async function getProductRowBySlug(slug: string) {
   "use cache";
   cacheLife("hours");
   cacheTag("products");
@@ -372,11 +464,15 @@ export async function getProductBySlug(slug: string) {
     where: { slug, isActive: true },
     include: productCardInclude,
   });
-  if (!product) return null;
-  return toProductDetailData(product);
+  return product ? toPlainProductRow(product) : null;
 }
 
 export async function getRelatedProducts(slug: string, categorySlug: string) {
+  const rows = await getRelatedProductRows(slug, categorySlug);
+  return mapWithSale(rows);
+}
+
+async function getRelatedProductRows(slug: string, categorySlug: string) {
   "use cache";
   cacheLife("hours");
   cacheTag("products");
@@ -390,34 +486,49 @@ export async function getRelatedProducts(slug: string, categorySlug: string) {
     take: 4,
     include: productCardInclude,
   });
-  return products.map(toProductCardData);
+  return products.map(toPlainProductRow);
 }
 
-function toProductDetailData(product: {
-  id: string;
-  slug: string;
-  name: string;
-  description: string;
-  basePrice: { toString(): string };
-  discountPercent: number;
-  brand: string;
-  brandSlug: string;
-  category: { name: string; slug: string };
-  images: { url: string; alt: string | null }[];
-  variants: {
-    sku: string;
+function toProductDetailData(
+  product: {
+    id: string;
+    slug: string;
     name: string;
-    priceDiff: { toString(): string };
-    stock: number;
-  }[];
-}): ProductDetailData {
+    description: string;
+    basePrice: { toString(): string };
+    discountPercent: number;
+    discountStartsAt: Date | string | null;
+    discountEndsAt: Date | string | null;
+    brand: string;
+    brandSlug: string;
+    category: { name: string; slug: string };
+    images: { url: string; alt: string | null }[];
+    variants: {
+      sku: string;
+      name: string;
+      priceDiff: { toString(): string };
+      stock: number;
+    }[];
+  },
+  globalPercent = 0,
+): ProductDetailData {
   const variants = product.variants.map((variant) => ({
     sku: variant.sku,
     name: variant.name,
     priceDiff: String(variant.priceDiff),
     stock: variant.stock,
   }));
-  const discountPercent = product.discountPercent ?? 0;
+  const discountPercent = combineDiscountPercent(
+    activeDiscountPercent(
+      {
+        discountPercent: product.discountPercent ?? 0,
+        discountStartsAt: product.discountStartsAt,
+        discountEndsAt: product.discountEndsAt,
+      },
+      Date.now(),
+    ),
+    globalPercent,
+  );
   const base = Number(product.basePrice);
   const mrps = variants.map((variant) => base + Number(variant.priceDiff));
   const mrpFromValue = variants.length > 0 ? Math.min(...mrps) : base;

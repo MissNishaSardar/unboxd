@@ -7,8 +7,12 @@ import { requireAdmin } from "@/lib/guard";
 import { storage } from "@/lib/storage/adapter";
 import { brandToSlug } from "@/lib/brand";
 import { slugify } from "@/lib/utils";
-import { productFormSchema } from "@/lib/zodSchema";
+import { productFormSchema, bulkProductIdsSchema } from "@/lib/zodSchema";
 import { getStoreSettings } from "@/server/admin/settings";
+
+export type BulkProductResult =
+  | { ok: true; updated: number; skipped: number }
+  | { ok: false; error: "FORBIDDEN" | "INVALID_INPUT" | "SERVER_ERROR" };
 
 export type AdminProductResult =
   | { ok: true; id: string; slug: string }
@@ -82,6 +86,8 @@ export async function createProduct(
     description,
     basePrice,
     discountPercent,
+    discountStartsAt,
+    discountEndsAt,
     brand,
     categoryId,
     isActive,
@@ -91,6 +97,13 @@ export async function createProduct(
 
   const { maxDiscountPercent } = await getStoreSettings();
   if (discountPercent > maxDiscountPercent) {
+    return { ok: false, error: "INVALID_INPUT" };
+  }
+  if (
+    discountStartsAt &&
+    discountEndsAt &&
+    discountEndsAt <= discountStartsAt
+  ) {
     return { ok: false, error: "INVALID_INPUT" };
   }
 
@@ -110,6 +123,8 @@ export async function createProduct(
             description,
             basePrice: new Prisma.Decimal(basePrice),
             discountPercent,
+            discountStartsAt,
+            discountEndsAt,
             brand,
             brandSlug: brandToSlug(brand),
             categoryId,
@@ -163,6 +178,8 @@ export async function updateProduct(
     description,
     basePrice,
     discountPercent,
+    discountStartsAt,
+    discountEndsAt,
     brand,
     categoryId,
     isActive,
@@ -172,6 +189,13 @@ export async function updateProduct(
 
   const { maxDiscountPercent } = await getStoreSettings();
   if (discountPercent > maxDiscountPercent) {
+    return { ok: false, error: "INVALID_INPUT" };
+  }
+  if (
+    discountStartsAt &&
+    discountEndsAt &&
+    discountEndsAt <= discountStartsAt
+  ) {
     return { ok: false, error: "INVALID_INPUT" };
   }
 
@@ -266,6 +290,8 @@ export async function updateProduct(
           description,
           basePrice: new Prisma.Decimal(basePrice),
           discountPercent,
+          discountStartsAt: discountStartsAt ?? null,
+          discountEndsAt: discountEndsAt ?? null,
           brand,
           brandSlug: brandToSlug(brand),
           categoryId,
@@ -348,6 +374,66 @@ export async function restoreProduct(id: string): Promise<AdminProductResult> {
     return { ok: true, id: product.id, slug: product.slug };
   } catch (e) {
     console.error("restoreProduct failed", e);
+    return { ok: false, error: "SERVER_ERROR" };
+  }
+}
+
+export async function bulkDeleteProducts(
+  input: unknown,
+): Promise<BulkProductResult> {
+  try {
+    await requireAdmin();
+  } catch {
+    return { ok: false, error: "FORBIDDEN" };
+  }
+  const parsed = bulkProductIdsSchema.safeParse(input);
+  if (!parsed.success) return { ok: false, error: "INVALID_INPUT" };
+  const productIds = [...new Set(parsed.data.productIds)];
+  try {
+    const result = await prisma.product.updateMany({
+      where: { id: { in: productIds }, isActive: true },
+      data: { isActive: false },
+    });
+    revalidateTag("products", "max");
+    revalidatePath("/admin/products", "page");
+    revalidatePath("/products/[slug]", "page");
+    return {
+      ok: true,
+      updated: result.count,
+      skipped: productIds.length - result.count,
+    };
+  } catch (e) {
+    console.error("bulkDeleteProducts failed", e);
+    return { ok: false, error: "SERVER_ERROR" };
+  }
+}
+
+export async function bulkRestoreProducts(
+  input: unknown,
+): Promise<BulkProductResult> {
+  try {
+    await requireAdmin();
+  } catch {
+    return { ok: false, error: "FORBIDDEN" };
+  }
+  const parsed = bulkProductIdsSchema.safeParse(input);
+  if (!parsed.success) return { ok: false, error: "INVALID_INPUT" };
+  const productIds = [...new Set(parsed.data.productIds)];
+  try {
+    const result = await prisma.product.updateMany({
+      where: { id: { in: productIds }, isActive: false },
+      data: { isActive: true },
+    });
+    revalidateTag("products", "max");
+    revalidatePath("/admin/products", "page");
+    revalidatePath("/products/[slug]", "page");
+    return {
+      ok: true,
+      updated: result.count,
+      skipped: productIds.length - result.count,
+    };
+  } catch (e) {
+    console.error("bulkRestoreProducts failed", e);
     return { ok: false, error: "SERVER_ERROR" };
   }
 }

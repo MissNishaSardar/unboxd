@@ -1,5 +1,6 @@
 import prisma from "@/lib/dbClient/prisma";
 import { productCardInclude, toProductCardData } from "@/server/catalog";
+import { getActiveSalePercent } from "@/server/deals";
 
 export type SearchSuggestionBrand = {
   slug: string;
@@ -51,8 +52,12 @@ export async function getSearchSuggestions(q: string) {
     .sort((a, b) => b.count - a.count || a.name.localeCompare(b.name))
     .slice(0, 3);
 
+  const salePercent = await getActiveSalePercent();
+
   return {
-    products: products.map(toProductCardData),
+    products: products.map((product) =>
+      toProductCardData(product, salePercent),
+    ),
     brands,
   };
 }

@@ -16,9 +16,10 @@ const productOrderByMap: Record<
 > = {
   newest: [{ createdAt: "desc" }, { id: "asc" }],
   oldest: [{ createdAt: "asc" }, { id: "asc" }],
-  price_asc: { basePrice: "asc" },
-  price_desc: { basePrice: "desc" },
-  name_asc: { name: "asc" },
+  price_asc: [{ basePrice: "asc" }, { id: "asc" }],
+  price_desc: [{ basePrice: "desc" }, { id: "asc" }],
+  name_asc: [{ name: "asc" }, { id: "asc" }],
+  name_desc: [{ name: "desc" }, { id: "asc" }],
 };
 
 export async function getAdminProducts(
@@ -75,9 +76,16 @@ export async function getAdminProducts(
       name: product.name,
       basePrice: String(product.basePrice),
       discountPercent: product.discountPercent,
+      discountStartsAt:
+        product.discountStartsAt ?
+          product.discountStartsAt.toISOString()
+        : null,
+      discountEndsAt:
+        product.discountEndsAt ? product.discountEndsAt.toISOString() : null,
       isActive: product.isActive,
       featured: product.featured,
       categoryName: product.category.name,
+      createdAt: product.createdAt.toISOString(),
       imageUrl:
         product.images[0] ?
           resolveProductImageUrl(product.images[0].url, product.slug, 0)
@@ -134,6 +142,10 @@ export async function getAdminProductForEdit(id: string) {
     description: product.description,
     basePrice: String(product.basePrice),
     discountPercent: product.discountPercent,
+    discountStartsAt:
+      product.discountStartsAt ? product.discountStartsAt.toISOString() : null,
+    discountEndsAt:
+      product.discountEndsAt ? product.discountEndsAt.toISOString() : null,
     brand: product.brand,
     categoryId: product.categoryId,
     isActive: product.isActive,
@@ -280,11 +292,20 @@ export async function getAdminTotals() {
 export async function getAdminUsers(params: {
   search?: string;
   role?: string;
+  sort?: string;
   page?: number;
 }) {
-  const { search, role = "all", page = 1 } = params;
+  const { search, role = "all", sort = "joined_desc", page = 1 } = params;
   const limit = ADMIN_USERS_PER_PAGE;
   const offset = (page - 1) * limit;
+
+  const orderBy =
+    sort === "name_asc" ? [{ name: "asc" }, { id: "asc" }]
+    : sort === "name_desc" ? [{ name: "desc" }, { id: "asc" }]
+    : sort === "email_asc" ? [{ email: "asc" }, { id: "asc" }]
+    : sort === "email_desc" ? [{ email: "desc" }, { id: "asc" }]
+    : sort === "joined_asc" ? [{ createdAt: "asc" }, { id: "asc" }]
+    : [{ createdAt: "desc" }, { id: "asc" }];
 
   const where: Record<string, unknown> = {
     deletedAt: null,
@@ -299,7 +320,7 @@ export async function getAdminUsers(params: {
   const [users, total] = await Promise.all([
     prisma.user.findMany({
       where: where as never,
-      orderBy: { createdAt: "desc" },
+      orderBy: orderBy as never,
       skip: offset,
       take: limit,
       select: {
