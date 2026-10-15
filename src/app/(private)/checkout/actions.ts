@@ -7,7 +7,13 @@ import { auth } from "@/lib/auth";
 import prisma from "@/lib/dbClient/prisma";
 import type { Product, ProductVariant } from "@generated/prisma/client";
 import { checkoutSchema } from "@/lib/zodSchema";
-import { effectivePrice } from "@/lib/pricing";
+import {
+  activeDiscountPercent,
+  combineDiscountPercent,
+  effectivePrice,
+  mrp,
+} from "@/lib/pricing";
+import { getActiveSalePercent } from "@/server/deals";
 import { getStoreSettings } from "@/server/admin/settings";
 
 const cartLineSchema = z.object({
@@ -96,14 +102,20 @@ export async function placeOrder(input: unknown): Promise<PlaceOrderResult> {
   try {
     const order = await prisma.$transaction(
       async (tx) => {
+        const salePercent = await getActiveSalePercent();
+        const skus = cart.map((line) => line.sku);
+        const found = await tx.productVariant.findMany({
+          where: { sku: { in: skus } },
+          include: { product: true },
+        });
+        const bySku = new Map(found.map((variant) => [variant.sku, variant]));
         const variants: (ProductVariant & { product: Product })[] = [];
         for (const line of cart) {
-          variants.push(
-            await tx.productVariant.findUniqueOrThrow({
-              where: { sku: line.sku },
-              include: { product: true },
-            }),
-          );
+          const variant = bySku.get(line.sku);
+          if (!variant || !variant.product.isActive) {
+            throw new OutOfStockError();
+          }
+          variants.push(variant);
         }
 
         for (const line of cart) {
@@ -120,7 +132,17 @@ export async function placeOrder(input: unknown): Promise<PlaceOrderResult> {
           effectivePrice(
             Number(variant.product.basePrice),
             Number(variant.priceDiff),
-            variant.product.discountPercent ?? 0,
+            combineDiscountPercent(
+              activeDiscountPercent(
+                {
+                  discountPercent: variant.product.discountPercent ?? 0,
+                  discountStartsAt: variant.product.discountStartsAt,
+                  discountEndsAt: variant.product.discountEndsAt,
+                },
+                Date.now(),
+              ),
+              salePercent,
+            ),
           );
 
         const subtotal = variants.reduce(
@@ -205,7 +227,90 @@ export async function placeOrder(input: unknown): Promise<PlaceOrderResult> {
     if (e instanceof OutOfStockError) {
       return { ok: false, error: "OUT_OF_STOCK" };
     }
+    if (
+      typeof e === "object" &&
+      e !== null &&
+      "code" in e &&
+      (e as { code?: string }).code === "P2025"
+    ) {
+      return { ok: false, error: "OUT_OF_STOCK" };
+    }
     console.error("placeOrder failed", e);
+    return { ok: false, error: "SERVER_ERROR" };
+  }
+}
+
+export type CartQuoteLine = {
+  sku: string;
+  price: number;
+  mrp: number;
+  maxStock: number;
+  available: boolean;
+};
+
+export type CartQuoteResult =
+  | {
+      ok: true;
+      lines: CartQuoteLine[];
+      freeShippingThreshold: number;
+      shippingFlatRate: number;
+    }
+  | { ok: false; error: "INVALID_INPUT" | "SERVER_ERROR" };
+
+export async function quoteCart(input: unknown): Promise<CartQuoteResult> {
+  const parsed = z.array(cartLineSchema).safeParse(input);
+  if (!parsed.success) {
+    return { ok: false, error: "INVALID_INPUT" };
+  }
+  try {
+    const salePercent = await getActiveSalePercent();
+    const settings = await getStoreSettings();
+    const freeShippingThreshold = Number(settings.freeShippingThreshold);
+    const shippingFlatRate = Number(settings.shippingFlatRate);
+    const skus = parsed.data.map((line) => line.sku);
+    const found = await prisma.productVariant.findMany({
+      where: { sku: { in: skus } },
+      include: { product: true },
+    });
+    const bySku = new Map(found.map((variant) => [variant.sku, variant]));
+    const lines = parsed.data.map((line) => {
+      const variant = bySku.get(line.sku);
+      if (!variant || !variant.product.isActive) {
+        return {
+          sku: line.sku,
+          price: 0,
+          mrp: 0,
+          maxStock: 0,
+          available: false,
+        };
+      }
+      const base = Number(variant.product.basePrice);
+      const diff = Number(variant.priceDiff);
+      return {
+        sku: line.sku,
+        price: effectivePrice(
+          base,
+          diff,
+          combineDiscountPercent(
+            activeDiscountPercent(
+              {
+                discountPercent: variant.product.discountPercent ?? 0,
+                discountStartsAt: variant.product.discountStartsAt,
+                discountEndsAt: variant.product.discountEndsAt,
+              },
+              Date.now(),
+            ),
+            salePercent,
+          ),
+        ),
+        mrp: mrp(base, diff),
+        maxStock: variant.stock,
+        available: variant.stock > 0,
+      };
+    });
+    return { ok: true, lines, freeShippingThreshold, shippingFlatRate };
+  } catch (e) {
+    console.error("quoteCart failed", e);
     return { ok: false, error: "SERVER_ERROR" };
   }
 }

@@ -23,6 +23,7 @@ import {
   cartTotalAtom,
   clearCart,
   removeCartItem,
+  setManyToCart,
   updateQuantity,
   type CartItem,
 } from "@/lib/cart/atoms";
@@ -30,7 +31,7 @@ import { formatPrice } from "@/lib/format";
 import { withMinDelay } from "@/lib/minDelay";
 import { getPlaceholderPhotoUrl } from "@/lib/placeholder";
 import type { checkoutType } from "@/lib/zodSchema";
-import { placeOrder } from "./actions";
+import { placeOrder, quoteCart } from "./actions";
 import {
   createUserAddress,
   deleteUserAddress,
@@ -62,6 +63,11 @@ export type BuyNowLine = {
   maxStock: number;
 };
 
+export type ReorderSkippedLine = {
+  name: string;
+  reason: string;
+};
+
 const CheckoutClient = ({
   freeShippingThreshold,
   shippingFlatRate,
@@ -70,6 +76,10 @@ const CheckoutClient = ({
   deliveryDate,
   initialAddresses,
   buyNowItem = null,
+  reorderOrderId = null,
+  reorderItems = null,
+  reorderSkipped = [],
+  reorderError = null,
 }: {
   freeShippingThreshold: number;
   shippingFlatRate: number;
@@ -78,6 +88,10 @@ const CheckoutClient = ({
   deliveryDate: string;
   initialAddresses: UserAddressData[];
   buyNowItem?: BuyNowLine | null;
+  reorderOrderId?: string | null;
+  reorderItems?: CartItem[] | null;
+  reorderSkipped?: ReorderSkippedLine[];
+  reorderError?: string | null;
 }) => {
   const cartItems = useAtomValue(cartAtom);
   const cartTotal = useAtomValue(cartTotalAtom);
@@ -85,21 +99,37 @@ const CheckoutClient = ({
   const router = useRouter();
   const mounted = useMounted();
 
-  // Buy Now express mode: checkout the single resolved line without touching
-  // the saved cart. Lines live in local state so quantity edits never leak
-  // into cart atoms.
+  // Buy Now and Buy Again express modes: checkout the resolved lines without
+  // touching the saved cart. Lines live in local state so quantity edits
+  // never leak into cart atoms. Repeat Buy Again clicks reload the same
+  // reorder view instead of growing cart quantities.
   const isBuyNow = buyNowItem !== null;
+  const isReorder = reorderOrderId !== null && reorderItems !== null;
+  const isExpress = isBuyNow || isReorder;
   const [buyNowLines, setBuyNowLines] = useState<CartItem[]>(
     buyNowItem ? [{ ...buyNowItem, quantity: 1 }] : [],
   );
-  const items = isBuyNow ? buyNowLines : cartItems;
+  const [reorderLines, setReorderLines] = useState<CartItem[]>(
+    reorderItems ?? [],
+  );
+  const items =
+    isBuyNow ? buyNowLines
+    : isReorder ? reorderLines
+    : cartItems;
   const total =
     isBuyNow ?
       buyNowLines.reduce((sum, item) => sum + item.price * item.quantity, 0)
+    : isReorder ?
+      reorderLines.reduce((sum, item) => sum + item.price * item.quantity, 0)
     : cartTotal;
   const savings =
     isBuyNow ?
       buyNowLines.reduce(
+        (sum, item) => sum + Math.max(0, item.mrp - item.price) * item.quantity,
+        0,
+      )
+    : isReorder ?
+      reorderLines.reduce(
         (sum, item) => sum + Math.max(0, item.mrp - item.price) * item.quantity,
         0,
       )
@@ -128,14 +158,17 @@ const CheckoutClient = ({
 
   // A restored success view must never survive new cart activity. The App
   // Router can serve /checkout from its client-side cache (back button or
-  // Buy Now re-navigation), bringing the old placedOrder state back with it.
+  // express re-navigation), bringing the old placedOrder state back with it.
   // Any items in the cart mean a new order is in progress, so the success
-  // view only applies to an empty cart. Derived during render instead of a
-  // syncing effect, which the hooks lint forbids.
+  // view only applies to an empty cart, except express modes which never
+  // use the cart. Derived during render instead of a syncing effect, which
+  // the hooks lint forbids.
   const visiblePlacedOrder =
-    isBuyNow || items.length === 0 ? placedOrder : null;
+    isExpress || items.length === 0 ? placedOrder : null;
 
-  const shipping = total >= freeShippingThreshold ? 0 : shippingFlatRate;
+  const [liveThreshold, setLiveThreshold] = useState(freeShippingThreshold);
+  const [liveFlatRate, setLiveFlatRate] = useState(shippingFlatRate);
+  const shipping = total >= liveThreshold ? 0 : liveFlatRate;
 
   const selectedAddress = addresses.find((a) => a.id === selectedId) ?? null;
 
@@ -161,6 +194,80 @@ const CheckoutClient = ({
     placingRef.current = true;
     setPlacing(true);
     try {
+      // Timed deals can start or end while checkout is open. Refresh live
+      // prices first. When anything moved, sync the new totals, stop, and
+      // let the shopper review before placing the order again.
+      const quote = await quoteCart(
+        items.map((item) => ({ sku: item.sku, quantity: item.quantity })),
+      );
+      if (quote.ok) {
+        if (
+          quote.freeShippingThreshold !== liveThreshold ||
+          quote.shippingFlatRate !== liveFlatRate
+        ) {
+          setLiveThreshold(quote.freeShippingThreshold);
+          setLiveFlatRate(quote.shippingFlatRate);
+        }
+        const bySku = new Map(quote.lines.map((line) => [line.sku, line]));
+        let removed = 0;
+        let priceChanged = false;
+        let stockChanged = false;
+        const fresh: typeof items = [];
+        for (const item of items) {
+          const line = bySku.get(item.sku);
+          if (!line || !line.available || line.maxStock <= 0) {
+            removed += 1;
+            continue;
+          }
+          if (
+            line.price === item.price &&
+            line.mrp === item.mrp &&
+            line.maxStock === item.maxStock
+          ) {
+            fresh.push(item);
+            continue;
+          }
+          if (line.price !== item.price || line.mrp !== item.mrp) {
+            priceChanged = true;
+          } else {
+            stockChanged = true;
+          }
+          fresh.push({
+            ...item,
+            price: line.price,
+            mrp: line.mrp,
+            maxStock: line.maxStock,
+            quantity: Math.min(item.quantity, line.maxStock),
+          });
+        }
+        if (removed > 0 || priceChanged || stockChanged) {
+          if (isBuyNow) setBuyNowLines(fresh);
+          else if (isReorder) setReorderLines(fresh);
+          else {
+            const keptSkus = new Set(fresh.map((entry) => entry.sku));
+            for (const item of items) {
+              if (!keptSkus.has(item.sku)) {
+                removeCartItem(item.productId, item.sku);
+              }
+            }
+            if (fresh.length > 0) setManyToCart(fresh);
+          }
+          toast.add({
+            title:
+              removed > 0 ? "Some items are unavailable"
+              : priceChanged ? "Prices updated"
+              : "Stock updated",
+            description:
+              removed > 0 ?
+                "Some items are out of stock or no longer available. Review your order, then place it again."
+              : priceChanged ?
+                "A deal started or ended while you were checking out. Review the new totals, then place your order again."
+              : "Stock changed while you were checking out. Review quantities, then place your order again.",
+            type: "info",
+          });
+          return;
+        }
+      }
       // Keep the button locked with a spinner for at least a beat, so a
       // fast response does not flash the placing state.
       const result = await withMinDelay(
@@ -174,13 +281,23 @@ const CheckoutClient = ({
       );
       if (!result.ok) {
         if (result.error === "UNAUTHENTICATED") {
-          router.push("/auth/login?callbackUrl=/checkout");
+          if (isBuyNow && buyNowItem) {
+            router.push(
+              `/auth/login?callbackUrl=/checkout?buyNow=${encodeURIComponent(buyNowItem.sku)}`,
+            );
+          } else if (isReorder && reorderOrderId) {
+            router.push(
+              `/auth/login?callbackUrl=/checkout?reorder=${encodeURIComponent(reorderOrderId)}`,
+            );
+          } else {
+            router.push("/auth/login?callbackUrl=/checkout");
+          }
           return;
         }
         failToast(result.error);
         return;
       }
-      if (!isBuyNow) clearCart();
+      if (!isExpress) clearCart();
       setPlacedOrder({
         orderId: result.orderId,
         orderNumber: result.orderNumber,
@@ -300,20 +417,31 @@ const CheckoutClient = ({
   };
 
   const setLineQuantity = (sku: string, quantity: number) => {
-    setBuyNowLines((prev) =>
-      prev.map((item) =>
-        item.sku === sku ?
-          {
-            ...item,
-            quantity: Math.max(1, Math.min(quantity, item.maxStock, 99)),
-          }
-        : item,
-      ),
-    );
+    const clamp = (item: CartItem) => ({
+      ...item,
+      quantity: Math.max(1, Math.min(quantity, item.maxStock, 99)),
+    });
+    if (isBuyNow) {
+      setBuyNowLines((prev) =>
+        prev.map((item) => (item.sku === sku ? clamp(item) : item)),
+      );
+      return;
+    }
+    if (isReorder) {
+      setReorderLines((prev) =>
+        prev.map((item) => (item.sku === sku ? clamp(item) : item)),
+      );
+    }
   };
 
   const removeLine = (sku: string) => {
-    setBuyNowLines((prev) => prev.filter((item) => item.sku !== sku));
+    if (isBuyNow) {
+      setBuyNowLines((prev) => prev.filter((item) => item.sku !== sku));
+      return;
+    }
+    if (isReorder) {
+      setReorderLines((prev) => prev.filter((item) => item.sku !== sku));
+    }
   };
 
   if (visiblePlacedOrder) {
@@ -381,6 +509,8 @@ const CheckoutClient = ({
               href={
                 isBuyNow && buyNowItem ?
                   (`/products/${buyNowItem.slug}` as never)
+                : isReorder ?
+                  ("/orders" as never)
                 : ("/cart" as never)
               }
             />
@@ -388,15 +518,36 @@ const CheckoutClient = ({
           nativeButton={false}
           data-icon="inline-start">
           <ArrowLeftIcon aria-hidden="true" />
-          {isBuyNow ? "Back to product" : "Back to cart"}
+          {isBuyNow ?
+            "Back to product"
+          : isReorder ?
+            "Back to orders"
+          : "Back to cart"}
         </Button>
         <h1 className="font-heading text-2xl font-semibold tracking-tight md:text-3xl">
           Checkout
         </h1>
         <p className="text-muted-foreground text-sm">
-          Cash on delivery, no prepayment needed.
+          {isReorder ?
+            "Reordering only these items. Your saved cart stays untouched."
+          : "Cash on delivery, no prepayment needed."}
         </p>
       </header>
+
+      {isReorder && reorderSkipped.length > 0 && !visiblePlacedOrder && (
+        <div
+          role="status"
+          className="border-border bg-muted/40 rounded-2xl border p-4 text-sm">
+          <p className="font-medium">Some items were skipped</p>
+          <ul className="text-muted-foreground mt-1 flex flex-col gap-1 text-xs">
+            {reorderSkipped.map((line) => (
+              <li key={line.name}>
+                {line.name}: {line.reason.toLowerCase()}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
 
       {!mounted || items.length === 0 ?
         <Empty>
@@ -404,16 +555,35 @@ const CheckoutClient = ({
             <EmptyMedia variant="icon">
               <ShoppingBagIcon />
             </EmptyMedia>
-            <EmptyTitle>Your cart is empty</EmptyTitle>
+            <EmptyTitle>
+              {isReorder ?
+                "Nothing available to reorder"
+              : "Your cart is empty"}
+            </EmptyTitle>
             <EmptyDescription>
-              Add something to your cart before checking out.
+              {isReorder ?
+                reorderError ?
+                  "This order could not be loaded. Please try again from your orders."
+                : "All items from this order are out of stock or no longer available."
+
+              : "Add something to your cart before checking out."}
             </EmptyDescription>
           </EmptyHeader>
-          <Button
-            render={<Link href="/products" />}
-            nativeButton={false}>
-            Browse products
-          </Button>
+          <div className="flex flex-wrap justify-center gap-2">
+            {isReorder && (
+              <Button
+                variant="outline"
+                render={<Link href="/orders" />}
+                nativeButton={false}>
+                Back to orders
+              </Button>
+            )}
+            <Button
+              render={<Link href="/products" />}
+              nativeButton={false}>
+              Browse products
+            </Button>
+          </div>
         </Empty>
       : <div className="flex flex-col gap-8 lg:flex-row lg:items-start">
           <div className="border-border bg-card flex min-w-0 flex-1 flex-col gap-4 rounded-2xl border p-5">
@@ -568,7 +738,7 @@ const CheckoutClient = ({
                           aria-label={`Decrease quantity of ${item.name}`}
                           disabled={item.quantity <= 1}
                           onClick={() =>
-                            isBuyNow ?
+                            isExpress ?
                               setLineQuantity(item.sku, item.quantity - 1)
                             : updateQuantity(
                                 item.productId,
@@ -588,7 +758,7 @@ const CheckoutClient = ({
                           aria-label={`Increase quantity of ${item.name}`}
                           disabled={item.quantity >= item.maxStock}
                           onClick={() =>
-                            isBuyNow ?
+                            isExpress ?
                               setLineQuantity(item.sku, item.quantity + 1)
                             : updateQuantity(
                                 item.productId,
@@ -605,7 +775,7 @@ const CheckoutClient = ({
                           aria-label={`Remove ${item.name} from order`}
                           className="hover:text-destructive"
                           onClick={() =>
-                            isBuyNow ?
+                            isExpress ?
                               removeLine(item.sku)
                             : removeCartItem(item.productId, item.sku)
                           }>
