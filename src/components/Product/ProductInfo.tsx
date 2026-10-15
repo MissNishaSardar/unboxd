@@ -24,6 +24,7 @@ import { Separator } from "@/components/shadcnui/separator";
 import { toast } from "@/components/shadcnui/toast";
 import WishlistButton from "@/components/Product/WishlistButton";
 import { addToCart } from "@/lib/cart/atoms";
+import { displayProductName } from "@/lib/brand";
 import { formatPrice } from "@/lib/format";
 import { discountBadge, effectivePrice, hasDiscount } from "@/lib/pricing";
 import { getReviewsAtom } from "@/lib/reviews/atoms";
@@ -259,6 +260,7 @@ const ProductInfo = ({
   const outOfStock = variant.stock === 0;
   const lowStock = !outOfStock && variant.stock <= 5;
   const showsFrom = Number(priceFrom) < price;
+  const displayName = displayProductName(name, brand);
 
   const selectedColour = variant.colour;
   const selectedModel = variant.model;
@@ -292,7 +294,7 @@ const ProductInfo = ({
       productId,
       sku: variant.sku,
       slug,
-      name,
+      name: displayName,
       variantName: variant.name,
       price,
       mrp: mrpValue,
@@ -301,7 +303,7 @@ const ProductInfo = ({
     });
     toast.add({
       title: "Added to cart",
-      description: `${name} · ${variant.name}`,
+      description: `${displayName} · ${variant.name}`,
       type: "success",
     });
   };
@@ -323,7 +325,7 @@ const ProductInfo = ({
       <Card className="overflow-hidden">
         <CardContent className="flex flex-col gap-5 p-6">
           <div className="flex flex-col gap-2">
-            <span className="flex items-center justify-end gap-1">
+            <span className="flex items-center justify-start gap-1">
               <Link
                 href={`/products?brand=${brandSlug}`}
                 className="text-muted-foreground text-xs font-medium tracking-wide uppercase hover:underline">
@@ -335,7 +337,7 @@ const ProductInfo = ({
               />
             </span>
             <h1 className="font-heading text-2xl font-semibold tracking-tight md:text-3xl">
-              {name}
+              {displayName}
             </h1>
             <div className="flex flex-wrap items-center gap-2">
               <p className="text-2xl font-semibold tabular-nums">

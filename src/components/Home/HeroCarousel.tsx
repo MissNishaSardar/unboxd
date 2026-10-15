@@ -18,7 +18,6 @@ import {
 } from "lucide-react";
 import { resolveProductImageUrl } from "@/lib/placeholder";
 import type { ProductCardData } from "@/components/Product/ProductCard";
-import UnboxdLogo from "@/components/Brand/UnboxdLogo";
 import Image from "next/image";
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -214,17 +213,6 @@ const HeroCarousel = ({ products }: { products?: ProductCardData[] }) => {
                 className="flex min-w-full flex-none justify-center px-6 py-10 md:px-10 md:py-14">
                 <div className="flex w-full max-w-7xl flex-col gap-6 lg:grid lg:grid-cols-2 lg:items-center lg:gap-8">
                   <div className="flex flex-col items-start gap-4">
-                    {isFirst && (
-                      <div className="flex items-center gap-2">
-                        <UnboxdLogo
-                          className="size-7 shrink-0"
-                          aria-hidden
-                        />
-                        <span className="font-heading text-[17px] font-semibold tracking-tight">
-                          Unboxd
-                        </span>
-                      </div>
-                    )}
                     <span className="border-border bg-muted inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-medium">
                       <SparklesIcon
                         aria-hidden="true"

@@ -12,10 +12,14 @@ type ProductCardData = ReturnType<typeof toProductCardData>;
 type Props = {
   initialProducts: ProductCardData[];
   total: number;
-  pathname?: string;
+  baseCategories?: string[];
 };
 
-const ProductLoadMoreGrid = ({ initialProducts, total }: Props) => {
+const ProductLoadMoreGrid = ({
+  initialProducts,
+  total,
+  baseCategories,
+}: Props) => {
   const searchParams = useSearchParams();
   const [products, setProducts] = useState(initialProducts);
   const [page, setPage] = useState(1);
@@ -34,6 +38,21 @@ const ProductLoadMoreGrid = ({ initialProducts, total }: Props) => {
     setIsLoading(true);
     try {
       const params = new URLSearchParams(searchParams.toString());
+      if (baseCategories && baseCategories.length > 0) {
+        const rawSelected = [
+          ...params.getAll("categories").flatMap((v) => v.split(",")),
+          ...params.getAll("category").flatMap((v) => v.split(",")),
+        ]
+          .map((s) => s.trim())
+          .filter(Boolean);
+        const narrowed = rawSelected.filter((c) => baseCategories.includes(c));
+        params.delete("categories");
+        params.delete("category");
+        params.set(
+          "categories",
+          (narrowed.length > 0 ? narrowed : baseCategories).join(","),
+        );
+      }
       params.set("page", String(nextPage));
       const res = await fetch(`/api/products?${params.toString()}`);
       if (!res.ok) throw new Error("Failed to load");

@@ -73,7 +73,7 @@ const HomePage = async () => {
           aria-hidden="true"
         />
         <div className="relative flex flex-col items-start gap-4 lg:justify-center">
-          <Badge variant="secondary">Ready to unbox</Badge>
+          <Badge variant="secondary">Shop the full catalog</Badge>
           <h2 className="font-heading text-3xl font-semibold tracking-tight md:text-4xl">
             Ready to unbox?
           </h2>

@@ -7,6 +7,7 @@ import type {
   SearchSuggestionProduct,
 } from "@/server/search";
 import { resolveProductImageUrl } from "@/lib/placeholder";
+import { displayProductName } from "@/lib/brand";
 import { cn } from "@/lib/utils";
 import {
   parseAsArrayOf,
@@ -253,14 +254,17 @@ const SearchAutocompleteDropdown = ({
                         "truncate text-sm font-medium",
                         isDark ? "text-white" : "text-foreground",
                       )}>
-                      {highlight(product.name, q)}
+                      {highlight(
+                        displayProductName(product.name, product.brand),
+                        q,
+                      )}
                     </span>
                     <span
                       className={cn(
                         "flex items-center gap-1 truncate text-xs",
                         isDark ? "text-white/50" : "text-muted-foreground",
                       )}>
-                      {product.brand}
+                      {highlight(product.brand, q)}
                       <BadgeCheckIcon
                         aria-label="Verified brand"
                         className="size-3 shrink-0 fill-sky-500 text-white"

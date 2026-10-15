@@ -16,6 +16,7 @@ import { Card, CardContent, CardFooter } from "@/components/shadcnui/card";
 import { toast } from "@/components/shadcnui/toast";
 import WishlistButton from "@/components/Product/WishlistButton";
 import { addToCart } from "@/lib/cart/atoms";
+import { displayProductName } from "@/lib/brand";
 import { formatPrice } from "@/lib/format";
 import { discountBadge, hasDiscount } from "@/lib/pricing";
 import { resolveProductImageUrl } from "@/lib/placeholder";
@@ -65,6 +66,7 @@ const ProductCard = ({
   const { data: session, isPending } = authClient.useSession();
   const router = useRouter();
   const rating = getRatingSummary(getReviewsForProduct(product.slug));
+  const displayName = displayProductName(product.name, product.brand);
 
   const handleAddToCart = () => {
     if (isPending) return;
@@ -81,7 +83,7 @@ const ProductCard = ({
       productId: product.id,
       sku: variant.sku,
       slug: product.slug,
-      name: product.name,
+      name: displayName,
       variantName: variant.name,
       price,
       mrp: product.mrp,
@@ -90,7 +92,7 @@ const ProductCard = ({
     });
     toast.add({
       title: "Added to cart",
-      description: `${product.name} · ${variant.name}`,
+      description: `${displayName} · ${variant.name}`,
       type: "success",
     });
   };
@@ -107,7 +109,7 @@ const ProductCard = ({
       productId: product.id,
       sku: variant.sku,
       slug: product.slug,
-      name: product.name,
+      name: displayName,
       variantName: variant.name,
       price,
       mrp: product.mrp,
@@ -155,7 +157,7 @@ const ProductCard = ({
           "flex flex-col gap-0.5 px-3 pt-3 pb-0",
           compact && "gap-0 px-2.5 pt-2",
         )}>
-        <span className="flex items-center justify-end gap-1">
+        <span className="flex items-center justify-start gap-1">
           <Link
             href={`/products?brand=${product.brandSlug}`}
             className={cn(
@@ -178,9 +180,9 @@ const ProductCard = ({
             "leading-tight font-medium hover:underline",
             compact ? "line-clamp-1 text-xs" : "line-clamp-2 text-sm",
           )}>
-          {product.name}
+          {displayName}
         </Link>
-        <div className="flex items-center justify-between pt-1">
+        <div className="flex items-center justify-between gap-2 pt-1">
           <span
             className={cn(
               "font-semibold tabular-nums",
@@ -246,7 +248,7 @@ const ProductCard = ({
 
       <CardFooter
         className={cn(
-          "flex flex-col gap-0 px-3 pt-2 pb-3",
+          "mt-auto flex flex-col gap-0 px-3 pt-2 pb-3",
           compact && "px-2.5 pt-1.5 pb-2.5",
         )}>
         {compact ?
