@@ -12,7 +12,8 @@
     "prod": "prisma generate && next build && next start",
     "migrate": "prisma migrate dev && prisma generate",
     "seed": "bun prisma/seed.ts",
-    "studio": "prisma studio --browser none"
+    "studio": "prisma studio --browser none",
+    "test:e2e": "playwright test"
   },
   "dependencies": {
     "@base-ui/react": "^1.6.0",
@@ -20,6 +21,7 @@
     "@prisma/adapter-libsql": "^7.9.0",
     "@prisma/client": "^7.9.0",
     "@t3-oss/env-nextjs": "^0.13.11",
+    "@tanstack/react-table": "8.21.3",
     "better-auth": "^1.6.27",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
@@ -43,6 +45,7 @@
     "zod": "^4.4.3"
   },
   "devDependencies": {
+    "@playwright/test": "^1.63.0",
     "@tailwindcss/postcss": "^4.3.3",
     "@types/node": "^20.19.43",
     "@types/react": "^19.2.17",
@@ -50,7 +53,7 @@
     "babel-plugin-react-compiler": "^1.0.0",
     "eslint": "^9.39.5",
     "eslint-config-next": "^16.2.11",
-    "playwright-core": "^1.62.1",
+    "playwright-core": "^1.63.0",
     "prettier": "^3.9.6",
     "prettier-plugin-tailwindcss": "^0.8.1",
     "prisma": "^7.9.0",

@@ -48,3 +48,9 @@ prisma/dev.db
 # uploads
 public/uploads/*
 !public/uploads/.gitkeep
+
+# screenshots
+screenshots/**
+test-results/
+playwright-report/
+blob-report/
