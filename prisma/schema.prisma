@@ -62,6 +62,8 @@ model Product {
   description   String
   basePrice     Decimal
   discountPercent Int @default(0)
+  discountStartsAt DateTime?
+  discountEndsAt   DateTime?
   brand         String          @default("Unknown")
   brandSlug     String          @default("unknown")
   isActive      Boolean         @default(true)
@@ -220,6 +222,23 @@ model ReviewHelpful {
 model OrderCounter {
   id        String @id @default("orders")
   nextValue Int    @default(1001)
+}
+
+// Store wide flash sales edited from /admin/deals. At most one discount
+// sale is live at a time. Percent 0 rows are info banners with no price cut.
+model FlashSale {
+  id              String   @id @default(cuid())
+  name            String
+  discountPercent Int      @default(0)
+  startsAt        DateTime?
+  endsAt          DateTime?
+  bannerText      String   @default("")
+  bannerEnabled   Boolean  @default(true)
+  isActive        Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([isActive])
 }
 
 // Single-row store configuration edited from /admin/settings.
