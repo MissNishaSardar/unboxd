@@ -35,3 +35,23 @@ export const BRAND_MAP: Record<string, { brand: string; brandSlug: string }> = {
   "spigen-ultra-hybrid": { brand: "Spigen", brandSlug: "spigen" },
   "samsung-25w-charger": { brand: "Samsung", brandSlug: "samsung" },
 };
+
+export const displayProductName = (name: string, brand: string): string => {
+  const cleanName = name.trim();
+  const cleanBrand = brand.trim();
+  if (!cleanName || !cleanBrand) return cleanName;
+  const lowerName = cleanName.toLowerCase();
+  const lowerBrand = cleanBrand.toLowerCase();
+  if (lowerName === lowerBrand) return cleanName;
+  const startsWithBrand =
+    lowerName.startsWith(lowerBrand + " ") ||
+    lowerName.startsWith(lowerBrand + "-") ||
+    lowerName.startsWith(lowerBrand + ":");
+  if (!startsWithBrand) return cleanName;
+  const candidate = cleanName
+    .slice(cleanBrand.length)
+    .replace(/^[\s\-:]+/, "")
+    .trim();
+  if (!candidate || candidate.length < 3) return cleanName;
+  return candidate;
+};

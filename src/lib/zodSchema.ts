@@ -202,6 +202,61 @@ const money = (label: string) =>
       .max(999999, { error: `${label} must be at most 999999` }),
   );
 
+const optionalDateTime = z.preprocess((value) => {
+  if (value === "" || value === null || value === undefined) return undefined;
+  if (value instanceof Date) return value;
+  if (typeof value === "string") {
+    const trimmed = value.trim();
+    if (!trimmed) return undefined;
+    if (/[zZ]$|[+-]\d{2}:?\d{2}$/.test(trimmed)) {
+      const zoned = new Date(trimmed);
+      return Number.isNaN(zoned.getTime()) ? trimmed : zoned;
+    }
+    if (/T\d{2}:\d{2}:\d{2}$/.test(trimmed)) {
+      const withZone = new Date(`${trimmed}+05:30`);
+      return Number.isNaN(withZone.getTime()) ? trimmed : withZone;
+    }
+    const istDate = new Date(`${trimmed}:00+05:30`);
+    return Number.isNaN(istDate.getTime()) ? trimmed : istDate;
+  }
+  return value;
+}, z.date().optional());
+
+export const flashSaleSchema = z
+  .object({
+    name: z
+      .string()
+      .trim()
+      .min(2, { error: "Name must be at least 2 characters" })
+      .max(80, { error: "Name must be at most 80 characters" }),
+    discountPercent: z.coerce
+      .number()
+      .int({ error: "Discount must be a whole percent" })
+      .min(0, { error: "Discount must be 0 or more" })
+      .max(90, { error: "Discount must be at most 90" })
+      .default(0),
+    startsAt: optionalDateTime,
+    endsAt: optionalDateTime,
+    bannerText: z
+      .string()
+      .trim()
+      .max(140, { error: "Must be at most 140 characters" })
+      .default(""),
+    bannerEnabled: z.boolean().default(true),
+    isActive: z.boolean().default(true),
+  })
+  .superRefine((data, ctx) => {
+    if (data.startsAt && data.endsAt && data.endsAt <= data.startsAt) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["endsAt"],
+        message: "End time must be after start time",
+      });
+    }
+  });
+
+export type flashSaleType = z.infer<typeof flashSaleSchema>;
+
 export const productVariantFormSchema = z.object({
   name: z
     .string()
@@ -238,8 +293,10 @@ export const productFormSchema = z
       .number()
       .int({ error: "Discount must be a whole percent" })
       .min(0, { error: "Discount must be 0 or more" })
-      .max(100, { error: "Discount must be at most 100" })
+      .max(90, { error: "Discount must be at most 90" })
       .default(0),
+    discountStartsAt: optionalDateTime,
+    discountEndsAt: optionalDateTime,
     brand: z
       .string()
       .trim()
@@ -267,6 +324,17 @@ export const productFormSchema = z
       }
       seen.add(key);
     });
+    if (
+      data.discountStartsAt &&
+      data.discountEndsAt &&
+      data.discountEndsAt <= data.discountStartsAt
+    ) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["discountEndsAt"],
+        message: "End time must be after start time",
+      });
+    }
   });
 
 export type productFormType = z.infer<typeof productFormSchema>;
@@ -278,6 +346,7 @@ export const adminProductSortSchema = z.enum([
   "price_asc",
   "price_desc",
   "name_asc",
+  "name_desc",
 ]);
 
 export const adminProductListSearchParamsSchema = z.object({
@@ -305,10 +374,15 @@ export type orderStatusType = z.infer<typeof orderStatusSchema>;
 
 const dateStringSchema = z.string().regex(/^\d{4}-\d{2}-\d{2}$/);
 
+export const adminOrderSortSchema = z.enum(["date_desc", "date_asc"]);
+
+export type adminOrderSortType = z.infer<typeof adminOrderSortSchema>;
+
 export const adminOrderListSearchParamsSchema = z.object({
   search: queryString(z.string().min(1).max(100)).optional(),
   status: queryString(orderStatusSchema).optional(),
   date: queryString(dateStringSchema).optional(),
+  sort: adminOrderSortSchema.catch("date_desc"),
   page: z.coerce.number().int().min(1).optional().catch(1),
 });
 
@@ -431,9 +505,27 @@ export const bulkUserIdsSchema = z.object({
 
 export type bulkUserIdsType = z.infer<typeof bulkUserIdsSchema>;
 
+export const bulkProductIdsSchema = z.object({
+  productIds: z.array(z.string().min(1)).min(1).max(100),
+});
+
+export type bulkProductIdsType = z.infer<typeof bulkProductIdsSchema>;
+
+export const adminUserSortSchema = z.enum([
+  "joined_desc",
+  "joined_asc",
+  "name_asc",
+  "name_desc",
+  "email_asc",
+  "email_desc",
+]);
+
+export type adminUserSortType = z.infer<typeof adminUserSortSchema>;
+
 export const adminUserListSearchParamsSchema = z.object({
   search: queryString(z.string().min(1).max(100)).optional(),
   role: z.enum(["all", "admin", "user"]).catch("all"),
+  sort: adminUserSortSchema.catch("joined_desc"),
   page: z.coerce.number().int().min(1).optional().catch(1),
 });
 
