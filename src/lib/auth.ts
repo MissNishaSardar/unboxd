@@ -20,15 +20,14 @@ export const auth = betterAuth({
     sendResetPassword: async ({ user, url, token }) => {
       const base = serverEnv.BETTER_AUTH_URL.replace(/\/$/, "");
       const pageUrl = `${base}/auth/reset-password?token=${token}`;
-      // Dev: formatted clickable link in the dev server terminal
-      // Prod TODO: replace with Resend / email provider
+      // Dev: formatted clickable link in the dev server terminal.
+      // Prod has no email provider wired yet, so fail loudly instead of
+      // pretending the email was sent. Wire a provider here later.
       // Better Auth's `url` is the API route that redirects to `redirectTo` with ?token
       if (process.env.NODE_ENV === "production") {
-        // TODO: send via Resend/email provider using `url` or `pageUrl`
-        void console.log(
-          `[auth] password reset for ${user.email} → ${pageUrl}`,
+        throw new Error(
+          `Password reset email is not configured, cannot send reset to ${user.email}`,
         );
-        return;
       }
       void console.log(
         `\n` +
