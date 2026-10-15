@@ -37,7 +37,6 @@ import {
   InputGroupAddon,
   InputGroupInput,
 } from "@/components/shadcnui/input-group";
-import { Textarea } from "@/components/shadcnui/textarea";
 import { toast } from "@/components/shadcnui/toast";
 
 const StoreSettingsForm = ({
@@ -50,16 +49,12 @@ const StoreSettingsForm = ({
     handleSubmit,
     control,
     reset,
-    watch,
     formState: { isSubmitting, isDirty },
   } = useForm({
     resolver: zodResolver(storeSettingsSchema),
     defaultValues: initialData,
     mode: "all",
   });
-
-  const announcementText = watch("announcementText");
-  const announcementEnabled = watch("announcementEnabled");
 
   const onSubmit = async (values: storeSettingsType) => {
     const result = await updateStoreSettings(values);
@@ -384,65 +379,6 @@ const StoreSettingsForm = ({
                       max={90}
                       aria-invalid={fieldState.invalid}
                     />
-                    {fieldState.invalid && (
-                      <FieldError errors={[fieldState.error]} />
-                    )}
-                  </Field>
-                )}
-              />
-            </FieldGroup>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Announcement</CardTitle>
-            <CardDescription>
-              Banner shown across the storefront when enabled.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <FieldGroup>
-              <Controller
-                name="announcementEnabled"
-                control={control}
-                render={({ field }) => (
-                  <Field orientation="horizontal">
-                    <Checkbox
-                      id={field.name}
-                      checked={field.value}
-                      onCheckedChange={field.onChange}
-                    />
-                    <FieldLabel
-                      htmlFor={field.name}
-                      className="font-normal">
-                      Show announcement banner
-                    </FieldLabel>
-                  </Field>
-                )}
-              />
-              <Controller
-                name="announcementText"
-                control={control}
-                render={({ field, fieldState }) => (
-                  <Field data-invalid={fieldState.invalid}>
-                    <FieldLabel htmlFor={field.name}>
-                      Announcement text
-                    </FieldLabel>
-                    <Textarea
-                      {...field}
-                      id={field.name}
-                      rows={2}
-                      maxLength={140}
-                      aria-invalid={fieldState.invalid}
-                    />
-                    {announcementEnabled && announcementText.trim() !== "" && (
-                      <p
-                        aria-label="Announcement preview"
-                        className="bg-primary text-primary-foreground rounded-md px-4 py-2 text-center text-xs font-medium">
-                        {announcementText}
-                      </p>
-                    )}
                     {fieldState.invalid && (
                       <FieldError errors={[fieldState.error]} />
                     )}

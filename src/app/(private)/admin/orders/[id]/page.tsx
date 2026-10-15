@@ -24,6 +24,7 @@ export async function generateMetadata({
 import OrderStatusActions from "@/components/Admin/OrderStatusActions";
 import CopyAddressButton from "@/components/Admin/CopyAddressButton";
 import PrintOrderButton from "@/components/Admin/PrintOrderButton";
+import OrderItemsTable from "@/components/Admin/OrderItemsTable";
 import OrderStatusBadge from "@/components/Orders/OrderStatusBadge";
 import OrderTimeline from "@/components/Orders/OrderTimeline";
 import { Badge } from "@/components/shadcnui/badge";
@@ -35,14 +36,6 @@ import {
   CardTitle,
 } from "@/components/shadcnui/card";
 import { Separator } from "@/components/shadcnui/separator";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/shadcnui/table";
 import { formatDate, formatPrice } from "@/lib/format";
 import { requireAdminPage } from "@/lib/guard";
 import { CANCEL_REASON_LABELS } from "@/lib/zodSchema";
@@ -241,59 +234,14 @@ const AdminOrderDetailPage = async ({
         </Card>
       )}
 
+      <OrderItemsTable items={order.items} />
+
       <Card>
         <CardHeader>
-          <CardTitle>Items</CardTitle>
+          <CardTitle>Totals</CardTitle>
         </CardHeader>
         <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Item</TableHead>
-                <TableHead>SKU</TableHead>
-                <TableHead>Qty</TableHead>
-                <TableHead className="text-right">Price</TableHead>
-                <TableHead className="text-right">Total</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {order.items.map((item) => (
-                <TableRow key={item.id}>
-                  <TableCell className="font-medium">
-                    <div className="flex items-center gap-3">
-                      <div className="bg-muted size-14 shrink-0 overflow-hidden rounded-lg">
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img
-                          src={item.imageUrl}
-                          alt={item.nameSnapshot}
-                          className="size-full object-cover"
-                        />
-                      </div>
-                      <Link
-                        href={`/admin/products/${item.productId}/edit` as Route}
-                        className="hover:text-primary underline-offset-4 hover:underline">
-                        {item.nameSnapshot}
-                      </Link>
-                    </div>
-                  </TableCell>
-                  <TableCell className="text-muted-foreground">
-                    {item.sku ?? "-"}
-                  </TableCell>
-                  <TableCell className="tabular-nums">
-                    {item.quantity}
-                  </TableCell>
-                  <TableCell className="text-right tabular-nums">
-                    {formatPrice(item.priceSnapshot)}
-                  </TableCell>
-                  <TableCell className="text-right tabular-nums">
-                    {formatPrice(Number(item.priceSnapshot) * item.quantity)}
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-
-          <div className="flex flex-col gap-2 pt-4">
+          <div className="flex flex-col gap-2">
             <div className="flex items-center justify-between">
               <span className="text-muted-foreground text-sm">Subtotal</span>
               <span className="text-sm tabular-nums">

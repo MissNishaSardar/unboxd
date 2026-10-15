@@ -1,17 +1,16 @@
 "use client";
 
-import Link from "next/link";
-import type { Route } from "next";
-import { useRouter } from "next/navigation";
-import { useState } from "react";
-import {
-  CheckCircle2Icon,
-  EyeIcon,
-  TruckIcon,
-  XCircleIcon,
-} from "lucide-react";
+/* eslint-disable react-hooks/set-state-in-effect -- clearing row selection after filter or sort change is intentional */
+import { useEffect, useMemo, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import type { OnChangeFn, SortingState } from "@tanstack/react-table";
+import type { RowSelectionState } from "@tanstack/react-table";
+import { CheckCircle2Icon, TruckIcon, XCircleIcon } from "lucide-react";
 import type { AdminOrderRow } from "@/server/admin/orders";
 import { bulkUpdateOrderStatus } from "@/server/admin/order-actions";
+import DataTable from "@/components/Admin/DataTable";
+import OrdersFilters from "@/components/Admin/OrdersFilters";
+import { getOrdersColumns } from "@/components/Admin/OrdersColumns";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -23,49 +22,64 @@ import {
   AlertDialogTrigger,
 } from "@/components/shadcnui/alert-dialog";
 import { Button } from "@/components/shadcnui/button";
-import { Badge } from "@/components/shadcnui/badge";
-import { Card, CardContent } from "@/components/shadcnui/card";
-import { Checkbox } from "@/components/shadcnui/checkbox";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/shadcnui/table";
 import { toast } from "@/components/shadcnui/toast";
-import { formatDate, formatPrice } from "@/lib/format";
 import { withMinDelay } from "@/lib/minDelay";
 import { CANCEL_REASON_LABELS } from "@/lib/zodSchema";
 import type { cancelReasonType } from "@/lib/zodSchema";
 import { cancelReasonSchema } from "@/lib/zodSchema";
 import { cn } from "@/lib/utils";
-import OrderStatusBadge from "@/components/Orders/OrderStatusBadge";
 
-const OrdersTable = ({ orders }: { orders: AdminOrderRow[] }) => {
+const urlSortToSortingState = (urlSort: string): SortingState => {
+  if (urlSort === "date_asc") return [{ id: "createdAt", desc: false }];
+  return [{ id: "createdAt", desc: true }];
+};
+
+const OrdersTable = ({
+  orders,
+  total,
+  statusCounts,
+}: {
+  orders: AdminOrderRow[];
+  total: number;
+  statusCounts: Record<string, number>;
+}) => {
   const router = useRouter();
-  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const searchParams = useSearchParams();
+  const resetKey = searchParams.toString();
+
+  const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
   const [isPending, setIsPending] = useState(false);
   const [cancelOpen, setCancelOpen] = useState(false);
   const [cancelReason, setCancelReason] = useState<cancelReasonType | null>(
     null,
   );
 
-  const allSelected = orders.length > 0 && selected.size === orders.length;
+  useEffect(() => {
+    setRowSelection({});
+  }, [resetKey]);
 
-  const toggleAll = (checked: boolean) => {
-    setSelected(checked ? new Set(orders.map((order) => order.id)) : new Set());
+  const urlSort = searchParams.get("sort") ?? "date_desc";
+  const sorting = useMemo(() => urlSortToSortingState(urlSort), [urlSort]);
+
+  const handleSortingChange: OnChangeFn<SortingState> = (updater) => {
+    const next = typeof updater === "function" ? updater(sorting) : updater;
+    if (next.length === 0) return;
+    const { desc } = next[0];
+    const nextUrlSort = desc ? "date_desc" : "date_asc";
+    const params = new URLSearchParams(searchParams.toString());
+    if (nextUrlSort === "date_desc") params.delete("sort");
+    else params.set("sort", nextUrlSort);
+    params.delete("page");
+    const query = params.toString();
+    router.replace(query ? `/admin/orders?${query}` : "/admin/orders");
   };
 
-  const toggle = (id: string) => {
-    setSelected((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      return next;
-    });
-  };
+  const selectedIds = useMemo(
+    () => Object.keys(rowSelection).filter((id) => rowSelection[id] === true),
+    [rowSelection],
+  );
+
+  const columns = useMemo(() => getOrdersColumns(), []);
 
   const handleBulk = async (
     status: "SHIPPED" | "DELIVERED" | "CANCELLED",
@@ -78,7 +92,7 @@ const OrdersTable = ({ orders }: { orders: AdminOrderRow[] }) => {
     setIsPending(true);
     const result = await withMinDelay(
       bulkUpdateOrderStatus({
-        orderIds: [...selected],
+        orderIds: selectedIds,
         status,
         ...(reason ? { reason } : {}),
       }),
@@ -99,7 +113,7 @@ const OrdersTable = ({ orders }: { orders: AdminOrderRow[] }) => {
           type: "info",
         });
       }
-      setSelected(new Set());
+      setRowSelection({});
       setCancelReason(null);
       setCancelOpen(false);
       router.refresh();
@@ -108,12 +122,19 @@ const OrdersTable = ({ orders }: { orders: AdminOrderRow[] }) => {
     }
   };
 
-  return (
+  const toolbar = (
     <div className="flex flex-col gap-3">
-      {selected.size > 0 && (
-        <div className="bg-muted/40 flex flex-wrap items-center justify-between gap-2 rounded-md border px-3 py-2">
-          <p className="text-sm">{selected.size} selected</p>
-          <div className="flex items-center gap-2">
+      <OrdersFilters
+        total={total}
+        statusCounts={statusCounts}
+      />
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <p className="text-muted-foreground text-xs tabular-nums">
+          {total} order{total === 1 ? "" : "s"}
+          {selectedIds.length > 0 ? ` · ${selectedIds.length} selected` : ""}
+        </p>
+        {selectedIds.length > 0 && (
+          <div className="flex flex-wrap items-center gap-2">
             <Button
               variant="outline"
               size="sm"
@@ -226,126 +247,25 @@ const OrdersTable = ({ orders }: { orders: AdminOrderRow[] }) => {
               </AlertDialogContent>
             </AlertDialog>
           </div>
-        </div>
-      )}
-
-      <Card className="overflow-hidden">
-        <CardContent className="p-0 sm:p-6">
-          <div className="-mx-6 overflow-x-auto px-6 sm:mx-0 sm:overflow-visible sm:px-0">
-            <Table className="min-w-[920px]">
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="w-10">
-                    <Checkbox
-                      checked={allSelected}
-                      onCheckedChange={(checked) => toggleAll(checked === true)}
-                      aria-label="Select all orders"
-                    />
-                  </TableHead>
-                  <TableHead>Order</TableHead>
-                  <TableHead>Date</TableHead>
-                  <TableHead>Customer</TableHead>
-                  <TableHead>Items</TableHead>
-                  <TableHead>Total</TableHead>
-                  <TableHead>Payment</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Cancel reason</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {orders.map((order) => (
-                  <TableRow key={order.id}>
-                    <TableCell>
-                      <Checkbox
-                        checked={selected.has(order.id)}
-                        onCheckedChange={() => toggle(order.id)}
-                        aria-label={`Select order ${order.id}`}
-                      />
-                    </TableCell>
-                    <TableCell className="max-w-40">
-                      <p
-                        className="truncate text-sm font-medium"
-                        title={order.id}>
-                        #{order.orderNumber}
-                      </p>
-                    </TableCell>
-                    <TableCell className="text-muted-foreground whitespace-nowrap">
-                      {formatDate(order.createdAt)}
-                    </TableCell>
-                    <TableCell>
-                      <p className="truncate text-sm font-medium">
-                        {order.customerName}
-                      </p>
-                      <p className="text-muted-foreground truncate text-xs">
-                        {order.customerEmail}
-                      </p>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-2">
-                        <div className="flex -space-x-2">
-                          {order.thumbnails.map((src) => (
-                            /* eslint-disable-next-line @next/next/no-img-element */
-                            <img
-                              key={src}
-                              src={src}
-                              alt=""
-                              aria-hidden="true"
-                              className="border-background size-7 rounded-full border-2 object-cover"
-                            />
-                          ))}
-                        </div>
-                        <span className="tabular-nums">{order.itemCount}</span>
-                      </div>
-                    </TableCell>
-                    <TableCell className="tabular-nums">
-                      {formatPrice(order.total)}
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant="secondary">{order.paymentMethod}</Badge>
-                    </TableCell>
-                    <TableCell>
-                      <OrderStatusBadge status={order.status} />
-                    </TableCell>
-                    <TableCell className="max-w-44">
-                      {order.status === "CANCELLED" ?
-                        <p
-                          className="truncate text-xs"
-                          title={order.cancelReason ?? undefined}>
-                          {(
-                            order.cancelReason != null &&
-                            order.cancelReason in CANCEL_REASON_LABELS
-                          ) ?
-                            CANCEL_REASON_LABELS[
-                              order.cancelReason as keyof typeof CANCEL_REASON_LABELS
-                            ]
-                          : "No reason given"}
-                        </p>
-                      : <span className="text-muted-foreground text-xs">-</span>
-                      }
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center justify-end">
-                        <Button
-                          render={
-                            <Link href={`/admin/orders/${order.id}` as Route} />
-                          }
-                          nativeButton={false}
-                          variant="ghost"
-                          size="icon-sm"
-                          aria-label={`View order ${order.id}`}>
-                          <EyeIcon aria-hidden="true" />
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
-        </CardContent>
-      </Card>
+        )}
+      </div>
     </div>
+  );
+
+  return (
+    <DataTable
+      columns={columns}
+      data={orders}
+      getRowId={(row) => row.id}
+      sorting={sorting}
+      onSortingChange={handleSortingChange}
+      rowSelection={rowSelection}
+      onRowSelectionChange={setRowSelection}
+      toolbar={toolbar}
+      emptyTitle="No orders found"
+      emptyDescription="Try adjusting your search or filters."
+      minWidthClass="min-w-[920px]"
+    />
   );
 };
 

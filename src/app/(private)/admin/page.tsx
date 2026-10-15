@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import type { Route } from "next";
 import Link from "next/link";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
@@ -9,7 +10,6 @@ export const metadata: Metadata = {
   description: "Unboxd admin overview. Manage products, orders, and users.",
 };
 import SalesSummaryCard from "@/components/Admin/SalesSummaryCard";
-import AttentionQueue from "@/components/Admin/AttentionQueue";
 import { Button } from "@/components/shadcnui/button";
 import {
   Card,
@@ -59,6 +59,49 @@ const AdminPage = async () => {
     Users: `${totals.totalUsers} user${totals.totalUsers === 1 ? "" : "s"}`,
   };
 
+  type SectionAlert = { count: number; label: string; href: Route };
+  const alertsBySection: Record<string, SectionAlert[]> = {
+    Products:
+      attention.lowStock > 0 ?
+        [
+          {
+            count: attention.lowStock,
+            label: "low stock",
+            href: "/admin/products?stock=low" as Route,
+          },
+        ]
+      : [],
+    Orders: [
+      ...(attention.awaitingShipment > 0 ?
+        [
+          {
+            count: attention.awaitingShipment,
+            label: "awaiting shipment",
+            href: "/admin/orders?status=CONFIRMED" as Route,
+          },
+        ]
+      : []),
+      ...(attention.inTransit > 0 ?
+        [
+          {
+            count: attention.inTransit,
+            label: "in transit",
+            href: "/admin/orders?status=SHIPPED" as Route,
+          },
+        ]
+      : []),
+      ...(attention.returned > 0 ?
+        [
+          {
+            count: attention.returned,
+            label: "returned",
+            href: "/admin/orders?status=RETURNED" as Route,
+          },
+        ]
+      : []),
+    ],
+  };
+
   return (
     <div className="flex flex-col gap-6">
       <div>
@@ -67,7 +110,6 @@ const AdminPage = async () => {
           Signed in as {session?.user.email} ({session?.user.role})
         </p>
       </div>
-      <AttentionQueue attention={attention} />
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {SECTIONS.map((section) => (
           <Card key={section.title}>
@@ -87,7 +129,24 @@ const AdminPage = async () => {
               )}
             </CardHeader>
             {countBySection[section.title] && (
-              <CardContent>
+              <CardContent className="flex flex-col gap-2">
+                {(alertsBySection[section.title] ?? []).map((alert) => (
+                  <p
+                    key={alert.label}
+                    className="flex items-center justify-between gap-2 rounded-lg bg-amber-500/10 px-2.5 py-1.5 text-xs">
+                    <span className="text-amber-700 dark:text-amber-400">
+                      <span className="font-semibold tabular-nums">
+                        {alert.count}
+                      </span>{" "}
+                      {alert.label}
+                    </span>
+                    <Link
+                      href={alert.href}
+                      className="font-medium text-amber-700 underline-offset-4 hover:underline dark:text-amber-400">
+                      View
+                    </Link>
+                  </p>
+                ))}
                 <p className="text-sm font-medium tabular-nums">
                   {countBySection[section.title]}
                 </p>

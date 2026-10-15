@@ -25,6 +25,7 @@ import {
   FieldLabel,
 } from "@/components/shadcnui/field";
 import { Input } from "@/components/shadcnui/input";
+import { Button } from "@/components/shadcnui/button";
 import {
   Select,
   SelectContent,
@@ -38,8 +39,23 @@ import {
   type productFormInputType,
   type productFormType,
 } from "@/lib/zodSchema";
-import { effectivePrice } from "@/lib/pricing";
+import {
+  effectivePrice,
+  activeDiscountPercent,
+  dealStatus,
+} from "@/lib/pricing";
 import { formatPrice } from "@/lib/format";
+import {
+  formatISTRange,
+  fromDateTimeLocalIST,
+  toDateTimeLocalIST,
+} from "@/lib/deals";
+
+const toScheduleDate = (value: unknown): Date | undefined => {
+  if (value instanceof Date) return value;
+  if (typeof value === "string") return fromDateTimeLocalIST(value);
+  return undefined;
+};
 
 const ProductDetailsFields = ({
   categories,
@@ -49,13 +65,58 @@ const ProductDetailsFields = ({
   onCategoryCreated?: (cat: { id: string; name: string }) => void;
 }) => {
   const [createOpen, setCreateOpen] = useState(false);
-  const { control, watch } = useFormContext<
+  const { control, watch, setValue } = useFormContext<
     productFormInputType,
     undefined,
     productFormType
   >();
   const basePriceValue = watch("basePrice");
   const discountValue = watch("discountPercent");
+  const scheduleStartRaw = watch("discountStartsAt");
+  const scheduleEndRaw = watch("discountEndsAt");
+  const scheduleStart = toScheduleDate(scheduleStartRaw);
+  const scheduleEnd = toScheduleDate(scheduleEndRaw);
+  const schedulePercent = Number(discountValue) || 0;
+  const scheduleWindow = {
+    discountPercent: schedulePercent,
+    discountStartsAt: scheduleStart,
+    discountEndsAt: scheduleEnd,
+  };
+  const scheduleState = dealStatus(scheduleWindow);
+  const schedulePrice = formatPrice(
+    effectivePrice(
+      Number(basePriceValue) || 0,
+      0,
+      activeDiscountPercent(scheduleWindow),
+    ),
+  );
+  const scheduleRange = formatISTRange(scheduleStart, scheduleEnd);
+  const scheduleSummary =
+    schedulePercent <= 0 ?
+      "Set a discount above 0 to schedule a deal. Times are IST."
+    : scheduleState === "live" ?
+      `Deal is live${scheduleRange ? `, ${scheduleRange}` : ""}. Base configuration sells for ${schedulePrice}.`
+    : scheduleState === "scheduled" ?
+      `Deal is scheduled${scheduleRange ? ` for ${scheduleRange}` : ""}. Base configuration will sell for ${schedulePrice}.`
+    : `Deal is over${scheduleRange ? `, ${scheduleRange}` : ""}. Shoppers see full price.`;
+
+  const handleEndNow = () => {
+    setValue("discountEndsAt", toDateTimeLocalIST(new Date()), {
+      shouldDirty: true,
+      shouldValidate: true,
+    });
+  };
+
+  const handleClearSchedule = () => {
+    setValue("discountStartsAt", "", {
+      shouldDirty: true,
+      shouldValidate: true,
+    });
+    setValue("discountEndsAt", "", {
+      shouldDirty: true,
+      shouldValidate: true,
+    });
+  };
 
   return (
     <>
@@ -140,7 +201,7 @@ const ProductDetailsFields = ({
                     type="number"
                     step="1"
                     min="0"
-                    max="100"
+                    max="90"
                     value={field.value as number}
                     aria-invalid={fieldState.invalid}
                   />
@@ -161,6 +222,70 @@ const ProductDetailsFields = ({
                 </Field>
               )}
             />
+
+            <div className="flex flex-col gap-3 rounded-xl border p-4">
+              <div className="grid gap-3 sm:grid-cols-2">
+                <Controller
+                  name="discountStartsAt"
+                  control={control}
+                  render={({ field, fieldState }) => (
+                    <Field data-invalid={fieldState.invalid}>
+                      <FieldLabel htmlFor={field.name}>
+                        Deal starts (IST)
+                      </FieldLabel>
+                      <Input
+                        {...field}
+                        id={field.name}
+                        type="datetime-local"
+                        value={(field.value as string) ?? ""}
+                        aria-invalid={fieldState.invalid}
+                      />
+                      {fieldState.invalid && (
+                        <FieldError errors={[fieldState.error]} />
+                      )}
+                    </Field>
+                  )}
+                />
+                <Controller
+                  name="discountEndsAt"
+                  control={control}
+                  render={({ field, fieldState }) => (
+                    <Field data-invalid={fieldState.invalid}>
+                      <FieldLabel htmlFor={field.name}>
+                        Deal ends (IST)
+                      </FieldLabel>
+                      <Input
+                        {...field}
+                        id={field.name}
+                        type="datetime-local"
+                        value={(field.value as string) ?? ""}
+                        aria-invalid={fieldState.invalid}
+                      />
+                      {fieldState.invalid && (
+                        <FieldError errors={[fieldState.error]} />
+                      )}
+                    </Field>
+                  )}
+                />
+              </div>
+              <div className="flex flex-wrap gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={handleEndNow}>
+                  End now
+                </Button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleClearSchedule}>
+                  Clear schedule
+                </Button>
+              </div>
+              <p className="text-muted-foreground text-xs">{scheduleSummary}</p>
+            </div>
 
             <Controller
               name="brand"

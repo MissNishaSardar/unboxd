@@ -3,54 +3,19 @@
 /* eslint-disable react-hooks/set-state-in-effect -- syncing URL query state to list after filter change is intentional */
 import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import Image from "next/image";
-import Link from "next/link";
-import type { Route } from "next";
-import { PencilIcon } from "lucide-react";
-import ProductActions from "@/components/Admin/ProductActions";
-import { Badge } from "@/components/shadcnui/badge";
+import ProductsTable from "@/components/Admin/ProductsTable";
+import type { AdminProductRow } from "@/components/Admin/ProductsColumns";
 import { Button } from "@/components/shadcnui/button";
-import { Card, CardContent } from "@/components/shadcnui/card";
 import { toast } from "@/components/shadcnui/toast";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/shadcnui/table";
-import { formatPrice } from "@/lib/format";
-import { discountBadge, effectivePrice, hasDiscount } from "@/lib/pricing";
-
-type AdminProductFlaggedVariant = {
-  id: string;
-  name: string;
-  sku: string;
-  stock: number;
-};
-
-type AdminProduct = {
-  id: string;
-  slug: string;
-  name: string;
-  basePrice: string;
-  discountPercent: number;
-  isActive: boolean;
-  featured?: boolean;
-  categoryName: string;
-  imageUrl: string;
-  totalStock: number;
-  variantCount: number;
-  flaggedVariants: AdminProductFlaggedVariant[];
-};
 
 const AdminProductsLoadMore = ({
   initialProducts,
   total,
+  lowStockThreshold = 5,
 }: {
-  initialProducts: AdminProduct[];
+  initialProducts: AdminProductRow[];
   total: number;
+  lowStockThreshold?: number;
 }) => {
   const searchParams = useSearchParams();
   const [products, setProducts] = useState(initialProducts);
@@ -79,7 +44,7 @@ const AdminProductsLoadMore = ({
         setError("Could not load more products. Try again.");
         return;
       }
-      const data = (await res.json()) as { products: AdminProduct[] };
+      const data = (await res.json()) as { products: AdminProductRow[] };
       setProducts((prev) => [...prev, ...data.products]);
       setPage(nextPage);
     } catch {
@@ -92,125 +57,11 @@ const AdminProductsLoadMore = ({
 
   return (
     <>
-      <Card className="overflow-hidden">
-        <CardContent className="p-0 sm:p-6">
-          <div className="-mx-6 overflow-x-auto px-6 sm:mx-0 sm:overflow-visible sm:px-0">
-            <Table className="min-w-[720px]">
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Product</TableHead>
-                  <TableHead>Category</TableHead>
-                  <TableHead>Price</TableHead>
-                  <TableHead>Stock</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Variants</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {products.map((product) => (
-                  <TableRow key={product.id}>
-                    <TableCell>
-                      <div className="flex items-center gap-3">
-                        <Image
-                          src={product.imageUrl}
-                          alt={product.name}
-                          width={40}
-                          height={40}
-                          unoptimized
-                          className="size-10 shrink-0 rounded-md object-cover"
-                        />
-                        <div className="min-w-0">
-                          <p className="truncate text-sm font-medium">
-                            {product.name}
-                          </p>
-                          <p className="text-muted-foreground truncate text-xs">
-                            {product.slug}
-                          </p>
-                        </div>
-                      </div>
-                    </TableCell>
-                    <TableCell>{product.categoryName}</TableCell>
-                    <TableCell className="tabular-nums">
-                      <span className="flex items-center gap-1.5">
-                        {formatPrice(
-                          effectivePrice(
-                            Number(product.basePrice),
-                            0,
-                            product.discountPercent,
-                          ),
-                        )}
-                        {hasDiscount(product.discountPercent) && (
-                          <Badge variant="secondary">
-                            {discountBadge(product.discountPercent)}
-                          </Badge>
-                        )}
-                      </span>
-                    </TableCell>
-                    <TableCell className="tabular-nums">
-                      {product.flaggedVariants.length > 0 ?
-                        <span className="flex flex-col gap-1">
-                          {product.flaggedVariants.map((variant) => (
-                            <span
-                              key={variant.id}
-                              className="flex items-baseline gap-1.5 text-sm">
-                              <span className="min-w-0 truncate font-medium">
-                                {variant.name}
-                              </span>
-                              <span className="text-muted-foreground truncate text-xs">
-                                {variant.sku}
-                              </span>
-                              <span
-                                className={
-                                  variant.stock === 0 ?
-                                    "text-destructive font-semibold"
-                                  : "font-semibold text-amber-600 dark:text-amber-400"
-                                }>
-                                {variant.stock}
-                              </span>
-                            </span>
-                          ))}
-                        </span>
-                      : product.totalStock}
-                    </TableCell>
-                    <TableCell>
-                      <Badge
-                        variant={product.isActive ? "default" : "secondary"}>
-                        {product.isActive ? "Active" : "Inactive"}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="tabular-nums">
-                      {product.variantCount}
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center justify-end gap-1">
-                        <Button
-                          render={
-                            <Link
-                              href={
-                                `/admin/products/${product.id}/edit` as Route
-                              }
-                            />
-                          }
-                          nativeButton={false}
-                          variant="ghost"
-                          size="icon-sm"
-                          aria-label={`Edit ${product.name}`}>
-                          <PencilIcon aria-hidden="true" />
-                        </Button>
-                        <ProductActions
-                          id={product.id}
-                          isActive={product.isActive}
-                        />
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
-        </CardContent>
-      </Card>
+      <ProductsTable
+        products={products}
+        total={total}
+        lowStockThreshold={lowStockThreshold}
+      />
       {canLoadMore && (
         <div className="flex flex-col items-center gap-2 pt-2">
           <p className="text-muted-foreground text-xs tabular-nums">

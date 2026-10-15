@@ -8,6 +8,7 @@ import {
   PackageIcon,
   PackageOpenIcon,
   SettingsIcon,
+  TagIcon,
   UsersIcon,
 } from "lucide-react";
 
@@ -33,6 +34,7 @@ const ADMIN_NAV = [
     label: "Products",
     icon: PackageOpenIcon,
   },
+  { href: "/admin/deals" as const, label: "Deals", icon: TagIcon },
   {
     href: "/admin/categories" as const,
     label: "Categories",

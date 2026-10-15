@@ -5,7 +5,7 @@ import { getStoreSettings } from "@/server/admin/settings";
 
 export const metadata: Metadata = {
   title: "Store Settings",
-  description: "Manage store name, ordering, inventory, and announcements.",
+  description: "Manage store name, ordering, and inventory.",
 };
 
 const AdminSettingsPage = async () => {

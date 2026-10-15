@@ -1,13 +1,4 @@
-import { UsersIcon } from "lucide-react";
-import UserFilters from "@/components/Admin/UserFilters";
 import AdminUsersLoadMore from "@/components/Admin/AdminUsersLoadMore";
-import {
-  Empty,
-  EmptyDescription,
-  EmptyHeader,
-  EmptyMedia,
-  EmptyTitle,
-} from "@/components/shadcnui/empty";
 import type { Metadata } from "next";
 import { requireAdminPage } from "@/lib/guard";
 import { adminUserListSearchParamsSchema } from "@/lib/zodSchema";
@@ -25,16 +16,15 @@ const AdminUsersPage = async ({
 }) => {
   const session = await requireAdminPage();
 
-  const {
-    search,
-    role,
-    page = 1,
-  } = adminUserListSearchParamsSchema.parse(await searchParams);
+  const { search, role, sort } = adminUserListSearchParamsSchema.parse(
+    await searchParams,
+  );
 
   const { users, total } = await getAdminUsers({
     search,
     role,
-    page,
+    sort,
+    page: 1,
   });
 
   return (
@@ -48,26 +38,11 @@ const AdminUsersPage = async ({
         </p>
       </div>
 
-      <UserFilters />
-
-      {users.length === 0 ?
-        <Empty>
-          <EmptyHeader>
-            <EmptyMedia variant="icon">
-              <UsersIcon aria-hidden="true" />
-            </EmptyMedia>
-            <EmptyTitle>No users found</EmptyTitle>
-            <EmptyDescription>
-              Try adjusting your search or filters.
-            </EmptyDescription>
-          </EmptyHeader>
-        </Empty>
-      : <AdminUsersLoadMore
-          initialUsers={users}
-          total={total}
-          currentUserId={session.user.id}
-        />
-      }
+      <AdminUsersLoadMore
+        initialUsers={users}
+        total={total}
+        currentUserId={session.user.id}
+      />
     </div>
   );
 };

@@ -140,9 +140,13 @@ const CategoryActions = ({
   const trigger = (
     <Button
       variant="ghost"
-      size="icon-sm"
-      aria-label={`Delete ${categoryName}`}>
-      <Trash2Icon aria-hidden="true" />
+      size="sm"
+      className="hover:text-destructive">
+      <Trash2Icon
+        data-icon="inline-start"
+        aria-hidden="true"
+      />
+      Delete
     </Button>
   );
 

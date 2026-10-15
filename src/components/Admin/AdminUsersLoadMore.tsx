@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import UsersTable from "@/components/Admin/UsersTable";
 import { Button } from "@/components/shadcnui/button";
+import { toast } from "@/components/shadcnui/toast";
 
 type UserRow = {
   id: string;
@@ -31,10 +32,12 @@ const AdminUsersLoadMore = ({
   const [users, setUsers] = useState(initialUsers);
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     setUsers(initialUsers);
     setPage(1);
+    setError(null);
   }, [initialUsers]);
 
   const canLoadMore = users.length < total;
@@ -42,13 +45,22 @@ const AdminUsersLoadMore = ({
   const handleLoadMore = async () => {
     const nextPage = page + 1;
     setLoading(true);
+    setError(null);
     try {
       const params = new URLSearchParams(searchParams.toString());
       params.set("page", String(nextPage));
       const res = await fetch(`/api/admin/users?${params.toString()}`);
+      if (!res.ok) {
+        toast.add({ title: "Could not load more users", type: "error" });
+        setError("Could not load more users. Try again.");
+        return;
+      }
       const data = (await res.json()) as { users: UserRow[] };
       setUsers((prev) => [...prev, ...data.users]);
       setPage(nextPage);
+    } catch {
+      toast.add({ title: "Could not load more users", type: "error" });
+      setError("Could not load more users. Try again.");
     } finally {
       setLoading(false);
     }
@@ -58,6 +70,7 @@ const AdminUsersLoadMore = ({
     <>
       <UsersTable
         users={users}
+        total={total}
         currentUserId={currentUserId}
       />
       {canLoadMore && (
@@ -73,6 +86,13 @@ const AdminUsersLoadMore = ({
             className="w-full rounded-full px-8 sm:w-auto">
             {loading ? "Loading..." : "Load more"}
           </Button>
+          {error && (
+            <p
+              role="alert"
+              className="text-destructive text-xs">
+              {error}
+            </p>
+          )}
         </div>
       )}
     </>

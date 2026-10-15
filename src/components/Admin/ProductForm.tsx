@@ -33,6 +33,7 @@ import {
   type productFormInputType,
   type productFormType,
 } from "@/lib/zodSchema";
+import { toDateTimeLocalIST } from "@/lib/deals";
 import { createProduct, updateProduct } from "@/server/admin/catalog";
 
 type ProductFormProps = {
@@ -43,6 +44,8 @@ type ProductFormProps = {
     description: string;
     basePrice: string;
     discountPercent: number;
+    discountStartsAt: string | null;
+    discountEndsAt: string | null;
     brand: string;
     categoryId: string;
     isActive: boolean;
@@ -76,6 +79,8 @@ const ProductForm = ({
           description: initialData.description,
           basePrice: Number(initialData.basePrice),
           discountPercent: initialData.discountPercent ?? 0,
+          discountStartsAt: toDateTimeLocalIST(initialData.discountStartsAt),
+          discountEndsAt: toDateTimeLocalIST(initialData.discountEndsAt),
           brand: initialData.brand,
           categoryId: initialData.categoryId,
           isActive: initialData.isActive,
@@ -94,6 +99,8 @@ const ProductForm = ({
           description: "",
           basePrice: 0,
           discountPercent: 0,
+          discountStartsAt: "",
+          discountEndsAt: "",
           brand: "",
           categoryId: "",
           isActive: true,
@@ -115,6 +122,8 @@ const ProductForm = ({
     "description",
     "basePrice",
     "discountPercent",
+    "discountStartsAt",
+    "discountEndsAt",
     "brand",
     "categoryId",
   ].filter((key) => errors[key as keyof typeof errors]).length;
@@ -151,7 +160,11 @@ const ProductForm = ({
         title: mode === "create" ? "Product created" : "Product updated",
         type: "success",
       });
-      methods.reset(values);
+      methods.reset({
+        ...values,
+        discountStartsAt: toDateTimeLocalIST(values.discountStartsAt),
+        discountEndsAt: toDateTimeLocalIST(values.discountEndsAt),
+      });
       router.replace("/admin/products" as Route);
       return;
     }

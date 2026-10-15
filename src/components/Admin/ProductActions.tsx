@@ -73,10 +73,14 @@ const ProductActions = ({
         render={
           <Button
             variant="ghost"
-            size="icon-sm"
+            size="sm"
             disabled={isPending}
-            aria-label="Delete product">
-            <Trash2Icon aria-hidden="true" />
+            className="hover:text-destructive">
+            <Trash2Icon
+              data-icon="inline-start"
+              aria-hidden="true"
+            />
+            Delete
           </Button>
         }
       />

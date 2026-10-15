@@ -1,26 +1,19 @@
 "use client";
 
-import { useRouter } from "next/navigation";
-import { useState } from "react";
+/* eslint-disable react-hooks/set-state-in-effect -- clearing row selection after filter or sort change is intentional */
+import { useEffect, useMemo, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import type { OnChangeFn, SortingState } from "@tanstack/react-table";
+import { BanIcon, UserXIcon } from "lucide-react";
 import {
-  BanIcon,
-  EyeIcon,
-  MoreHorizontalIcon,
-  RotateCcwIcon,
-  ShieldIcon,
-  ShieldOffIcon,
-  UserXIcon,
-  UnlockIcon,
-} from "lucide-react";
-import {
-  banUser,
   bulkBanUsers,
   bulkDeactivateUsers,
   deactivateUser,
-  impersonateUser,
   reactivateUser,
-  setUserRole,
+  banUser,
   unbanUser,
+  impersonateUser,
+  setUserRole,
 } from "@/server/admin/user-actions";
 import {
   AlertDialog,
@@ -31,76 +24,78 @@ import {
   AlertDialogFooter,
   AlertDialogTitle,
 } from "@/components/shadcnui/alert-dialog";
-import { Badge } from "@/components/shadcnui/badge";
 import { Button } from "@/components/shadcnui/button";
-import { Card, CardContent } from "@/components/shadcnui/card";
-import { Checkbox } from "@/components/shadcnui/checkbox";
+import DataTable from "@/components/Admin/DataTable";
+import UserFilters from "@/components/Admin/UserFilters";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuGroup,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/shadcnui/dropdown-menu";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/shadcnui/table";
+  getUsersColumns,
+  type AdminUserRow,
+} from "@/components/Admin/UsersColumns";
 import { toast } from "@/components/shadcnui/toast";
-import UserStatusBadge from "@/components/Admin/UserStatusBadge";
-import { formatDate } from "@/lib/format";
+import type { RowSelectionState } from "@tanstack/react-table";
 
-type UserRow = {
-  id: string;
-  name: string;
-  email: string;
-  role: string;
-  banned: boolean;
-  banReason: string | null;
-  banExpires: string | null;
-  deletedAt: string | null;
-  createdAt: string;
+const urlSortToSortingState = (urlSort: string): SortingState => {
+  if (urlSort === "name_asc") return [{ id: "name", desc: false }];
+  if (urlSort === "name_desc") return [{ id: "name", desc: true }];
+  if (urlSort === "email_asc") return [{ id: "email", desc: false }];
+  if (urlSort === "email_desc") return [{ id: "email", desc: true }];
+  if (urlSort === "joined_asc") return [{ id: "createdAt", desc: false }];
+  return [{ id: "createdAt", desc: true }];
 };
 
 const UsersTable = ({
   users,
+  total,
   currentUserId,
 }: {
-  users: UserRow[];
+  users: AdminUserRow[];
+  total: number;
   currentUserId: string;
 }) => {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const resetKey = searchParams.toString();
+
   const [isPending, setIsPending] = useState(false);
-  const [deactivateTarget, setDeactivateTarget] = useState<UserRow | null>(
+  const [deactivateTarget, setDeactivateTarget] = useState<AdminUserRow | null>(
     null,
   );
-  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
 
-  const allSelected = users.length > 0 && selected.size === users.length;
+  useEffect(() => {
+    setRowSelection({});
+  }, [resetKey]);
 
-  const toggleAll = (checked: boolean) => {
-    if (checked) {
-      setSelected(new Set(users.map((u) => u.id)));
-    } else {
-      setSelected(new Set());
-    }
+  const urlSort = searchParams.get("sort") ?? "joined_desc";
+  const sorting = useMemo(() => urlSortToSortingState(urlSort), [urlSort]);
+
+  const handleSortingChange: OnChangeFn<SortingState> = (updater) => {
+    const next = typeof updater === "function" ? updater(sorting) : updater;
+    if (next.length === 0) return;
+    const { id, desc } = next[0];
+    const nextUrlSort =
+      id === "name" ?
+        desc ? "name_desc"
+        : "name_asc"
+      : id === "email" ?
+        desc ? "email_desc"
+        : "email_asc"
+      : desc ? "joined_desc"
+      : "joined_asc";
+    const params = new URLSearchParams(searchParams.toString());
+    if (nextUrlSort === "joined_desc") params.delete("sort");
+    else params.set("sort", nextUrlSort);
+    params.delete("page");
+    const query = params.toString();
+    router.replace(query ? `/admin/users?${query}` : "/admin/users");
   };
 
-  const toggle = (id: string) => {
-    setSelected((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      return next;
-    });
-  };
+  const selectedIds = useMemo(
+    () => Object.keys(rowSelection).filter((id) => rowSelection[id] === true),
+    [rowSelection],
+  );
 
-  const handleRole = async (user: UserRow) => {
+  const handleRole = async (user: AdminUserRow) => {
     setIsPending(true);
     const result = await setUserRole(
       user.id,
@@ -125,7 +120,7 @@ const UsersTable = ({
     }
   };
 
-  const handleBan = async (user: UserRow) => {
+  const handleBanToggle = async (user: AdminUserRow) => {
     setIsPending(true);
     const result =
       user.banned ? await unbanUser(user.id) : await banUser(user.id);
@@ -145,7 +140,7 @@ const UsersTable = ({
     }
   };
 
-  const handleImpersonate = async (user: UserRow) => {
+  const handleImpersonate = async (user: AdminUserRow) => {
     setIsPending(true);
     const result = await impersonateUser(user.id);
     setIsPending(false);
@@ -182,9 +177,9 @@ const UsersTable = ({
   };
 
   const handleBulkBan = async () => {
-    if (selected.size === 0) return;
+    if (selectedIds.length === 0) return;
     setIsPending(true);
-    const result = await bulkBanUsers({ userIds: [...selected] });
+    const result = await bulkBanUsers({ userIds: selectedIds });
     setIsPending(false);
     if (result.ok) {
       toast.add({
@@ -197,7 +192,7 @@ const UsersTable = ({
           type: "info",
         });
       }
-      setSelected(new Set());
+      setRowSelection({});
       router.refresh();
     } else {
       toast.add({ title: "Something went wrong", type: "error" });
@@ -205,9 +200,9 @@ const UsersTable = ({
   };
 
   const handleBulkDeactivate = async () => {
-    if (selected.size === 0) return;
+    if (selectedIds.length === 0) return;
     setIsPending(true);
-    const result = await bulkDeactivateUsers({ userIds: [...selected] });
+    const result = await bulkDeactivateUsers({ userIds: selectedIds });
     setIsPending(false);
     if (result.ok) {
       toast.add({
@@ -220,176 +215,81 @@ const UsersTable = ({
           type: "info",
         });
       }
-      setSelected(new Set());
+      setRowSelection({});
       router.refresh();
     } else {
       toast.add({ title: "Something went wrong", type: "error" });
     }
   };
 
-  return (
-    <>
-      <div className="flex flex-col gap-3">
-        {selected.size > 0 && (
-          <div className="bg-muted/40 flex flex-wrap items-center justify-between gap-2 rounded-md border px-3 py-2">
-            <p className="text-sm">{selected.size} users selected</p>
-            <div className="flex items-center gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleBulkBan}
-                disabled={isPending}>
-                <BanIcon
-                  data-icon="inline-start"
-                  aria-hidden="true"
-                />
-                Suspend
-              </Button>
-              <Button
-                variant="destructive"
-                size="sm"
-                onClick={handleBulkDeactivate}
-                disabled={isPending}>
-                <UserXIcon
-                  data-icon="inline-start"
-                  aria-hidden="true"
-                />
-                Deactivate
-              </Button>
-            </div>
+  const columns = useMemo(
+    () =>
+      getUsersColumns({
+        currentUserId,
+        isPending,
+        onRole: handleRole,
+        onBanToggle: handleBanToggle,
+        onImpersonate: handleImpersonate,
+        onDeactivate: (user) => setDeactivateTarget(user),
+      }),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [currentUserId, isPending],
+  );
+
+  const toolbar = (
+    <div className="flex flex-col gap-3">
+      <UserFilters />
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <p className="text-muted-foreground text-xs tabular-nums">
+          {total} user{total === 1 ? "" : "s"}
+          {selectedIds.length > 0 ? ` · ${selectedIds.length} selected` : ""}
+        </p>
+        {selectedIds.length > 0 && (
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleBulkBan}
+              disabled={isPending}>
+              <BanIcon
+                data-icon="inline-start"
+                aria-hidden="true"
+              />
+              Suspend
+            </Button>
+            <Button
+              variant="destructive"
+              size="sm"
+              onClick={handleBulkDeactivate}
+              disabled={isPending}>
+              <UserXIcon
+                data-icon="inline-start"
+                aria-hidden="true"
+              />
+              Deactivate
+            </Button>
           </div>
         )}
-
-        <Card className="overflow-hidden">
-          <CardContent className="p-0 sm:p-6">
-            <div className="-mx-6 overflow-x-auto px-6 sm:mx-0 sm:overflow-visible sm:px-0">
-              <Table className="min-w-[720px]">
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="w-10">
-                      <Checkbox
-                        checked={allSelected}
-                        onCheckedChange={(checked) =>
-                          toggleAll(checked === true)
-                        }
-                        aria-label="Select all users"
-                      />
-                    </TableHead>
-                    <TableHead>User</TableHead>
-                    <TableHead>Role</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Joined</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {users.map((user) => {
-                    const isSelf = user.id === currentUserId;
-                    return (
-                      <TableRow key={user.id}>
-                        <TableCell>
-                          <Checkbox
-                            checked={selected.has(user.id)}
-                            onCheckedChange={() => toggle(user.id)}
-                            aria-label={`Select user ${user.name}`}
-                            disabled={isSelf}
-                          />
-                        </TableCell>
-                        <TableCell>
-                          <p className="truncate text-sm font-medium">
-                            {user.name}
-                          </p>
-                          <p className="text-muted-foreground truncate text-xs">
-                            {user.email}
-                          </p>
-                        </TableCell>
-                        <TableCell>
-                          <Badge
-                            variant={
-                              user.role === "admin" ? "default" : "secondary"
-                            }>
-                            {user.role === "admin" ? "Admin" : "Customer"}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>
-                          <UserStatusBadge
-                            banned={user.banned}
-                            banExpires={user.banExpires}
-                            deletedAt={user.deletedAt}
-                          />
-                        </TableCell>
-                        <TableCell className="text-muted-foreground whitespace-nowrap">
-                          {formatDate(user.createdAt)}
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex items-center justify-end">
-                            <DropdownMenu>
-                              <DropdownMenuTrigger
-                                render={
-                                  <Button
-                                    variant="ghost"
-                                    size="icon-sm"
-                                    aria-label={`Actions for ${user.name}`}
-                                  />
-                                }>
-                                <MoreHorizontalIcon aria-hidden="true" />
-                              </DropdownMenuTrigger>
-                              <DropdownMenuContent align="end">
-                                <DropdownMenuGroup>
-                                  <DropdownMenuItem
-                                    onClick={() => handleRole(user)}
-                                    disabled={isPending || isSelf}>
-                                    {user.role === "admin" ?
-                                      <ShieldOffIcon aria-hidden="true" />
-                                    : <ShieldIcon aria-hidden="true" />}
-                                    {user.role === "admin" ?
-                                      "Demote to customer"
-                                    : "Promote to admin"}
-                                  </DropdownMenuItem>
-                                  <DropdownMenuItem
-                                    onClick={() => handleBan(user)}
-                                    disabled={isPending || isSelf}>
-                                    {user.banned ?
-                                      <UnlockIcon aria-hidden="true" />
-                                    : <BanIcon aria-hidden="true" />}
-                                    {user.banned ? "Unban user" : "Ban user"}
-                                  </DropdownMenuItem>
-                                  <DropdownMenuItem
-                                    onClick={() => handleImpersonate(user)}
-                                    disabled={
-                                      isPending || user.role === "admin"
-                                    }>
-                                    <EyeIcon aria-hidden="true" />
-                                    View as user
-                                  </DropdownMenuItem>
-                                </DropdownMenuGroup>
-                                <DropdownMenuSeparator />
-                                <DropdownMenuGroup>
-                                  <DropdownMenuItem
-                                    variant="destructive"
-                                    onClick={() => setDeactivateTarget(user)}
-                                    disabled={isPending || isSelf}>
-                                    {user.deletedAt ?
-                                      <RotateCcwIcon aria-hidden="true" />
-                                    : <UserXIcon aria-hidden="true" />}
-                                    {user.deletedAt ?
-                                      "Reactivate user"
-                                    : "Deactivate user"}
-                                  </DropdownMenuItem>
-                                </DropdownMenuGroup>
-                              </DropdownMenuContent>
-                            </DropdownMenu>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    );
-                  })}
-                </TableBody>
-              </Table>
-            </div>
-          </CardContent>
-        </Card>
       </div>
+    </div>
+  );
+
+  return (
+    <>
+      <DataTable
+        columns={columns}
+        data={users}
+        getRowId={(row) => row.id}
+        sorting={sorting}
+        onSortingChange={handleSortingChange}
+        rowSelection={rowSelection}
+        onRowSelectionChange={setRowSelection}
+        enableRowSelection={(row) => row.original.id !== currentUserId}
+        toolbar={toolbar}
+        emptyTitle="No users found"
+        emptyDescription="Try adjusting your search or filters."
+        minWidthClass="min-w-[720px]"
+      />
 
       <AlertDialog
         open={deactivateTarget !== null}

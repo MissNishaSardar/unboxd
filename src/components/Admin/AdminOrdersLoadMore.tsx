@@ -11,9 +11,11 @@ import type { AdminOrderRow } from "@/server/admin/orders";
 const AdminOrdersLoadMore = ({
   initialOrders,
   total,
+  statusCounts,
 }: {
   initialOrders: AdminOrderRow[];
   total: number;
+  statusCounts: Record<string, number>;
 }) => {
   const searchParams = useSearchParams();
   const [orders, setOrders] = useState(initialOrders);
@@ -55,7 +57,11 @@ const AdminOrdersLoadMore = ({
 
   return (
     <>
-      <OrdersTable orders={orders} />
+      <OrdersTable
+        orders={orders}
+        total={total}
+        statusCounts={statusCounts}
+      />
       {canLoadMore && (
         <div className="flex flex-col items-center gap-2 pt-2">
           <p className="text-muted-foreground text-xs tabular-nums">

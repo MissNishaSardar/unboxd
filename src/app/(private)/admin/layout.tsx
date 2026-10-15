@@ -28,7 +28,7 @@ const AdminLayout = async ({ children }: LayoutProps) => {
             <ImpersonationBanner name={session.user.name} />
           )}
           <main className="flex-1 py-6">
-            <Container>{children}</Container>
+            <Container className="max-w-none">{children}</Container>
           </main>
         </SidebarInset>
       </SidebarProvider>
