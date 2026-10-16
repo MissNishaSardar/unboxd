@@ -18,8 +18,7 @@ const CartItemRow = ({ item, size = "md", onNavigate }: CartItemRowProps) => {
   const imageSize = size === "sm" ? "size-16" : "size-24";
   const iconSize = size === "sm" ? "icon-xs" : "icon-sm";
 
-  // legacy cart entries may lack slug, fallback to productId for placeholder seed, avoid 404-prone name-derived slug
-  if (!item.slug) console.warn("CartItem missing slug", item.productId);
+  // Fallback keeps old cart entries visible when slug is missing.
   const placeholderSeed = item.slug || item.productId;
 
   return (

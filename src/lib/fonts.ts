@@ -1,9 +1,10 @@
-import { Geist, Geist_Mono, Inter } from "next/font/google";
+import { Fraunces, Geist, Geist_Mono } from "next/font/google";
 
-export const interHeading = Inter({
+export const displayHeading = Fraunces({
   subsets: ["latin"],
   display: "swap",
   variable: "--font-heading",
+  weight: ["500", "600", "700"],
 });
 
 export const geistSans = Geist({

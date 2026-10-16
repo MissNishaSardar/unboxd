@@ -4,6 +4,7 @@ import { SearchIcon } from "lucide-react";
 import type { Route } from "next";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
+import { DEBOUNCE_MS } from "@/lib/constants";
 import {
   InputGroup,
   InputGroupAddon,
@@ -62,7 +63,7 @@ const UserFilters = () => {
       if (search) params.set("search", search);
       else params.delete("search");
       push(params);
-    }, 300);
+    }, DEBOUNCE_MS);
     return () => clearTimeout(timeout);
   }, [search, searchParams, push]);
 
@@ -78,7 +79,7 @@ const UserFilters = () => {
         <InputGroupInput
           value={search}
           onChange={(event) => setSearch(event.target.value)}
-          placeholder="Search users..."
+          placeholder="Search users"
         />
       </InputGroup>
       <Select

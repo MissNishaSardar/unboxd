@@ -85,7 +85,7 @@ const ProductLoadMoreGrid = ({
             onClick={handleLoadMore}
             disabled={isLoading}
             className="w-full rounded-full px-8 sm:w-auto">
-            {isLoading ? "Loading..." : "Load more"}
+            {isLoading ? "Loading" : "Load more"}
           </Button>
         </div>
       )}

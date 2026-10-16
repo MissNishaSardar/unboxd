@@ -52,7 +52,7 @@ const DangerZone = () => {
 
       toast.add({
         title: "Account deleted",
-        description: "Your account has been deactivated. Signing out…",
+        description: "Your account has been deactivated. Signing out.",
         type: "success",
       });
 
@@ -139,7 +139,7 @@ const DangerZone = () => {
                   aria-hidden="true"
                 />
               )}
-              {loading ? "Deleting…" : "Yes, delete my account"}
+              {loading ? "Deleting" : "Yes, delete my account"}
             </Button>
           </AlertDialogFooter>
         </AlertDialogContent>

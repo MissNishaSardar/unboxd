@@ -9,7 +9,6 @@ import {
   mrp,
 } from "@/lib/pricing";
 import { getActiveSalePercent } from "@/server/deals";
-import { getRatingSummary, getReviewsForProduct } from "@/lib/reviews";
 import { productSortSchema } from "@/lib/zodSchema";
 
 export const PRODUCTS_PER_PAGE = 12;
@@ -347,10 +346,8 @@ async function getProductRows(params: ProductListParams) {
       if (realAvg != null) {
         effectiveRating.set(m.id, Math.round(realAvg * 10) / 10);
       } else {
-        const mock = getReviewsForProduct(m.slug);
-        const summary = getRatingSummary(mock);
-        effectiveRating.set(m.id, summary.average);
-        effectiveCount.set(m.id, summary.count);
+        effectiveRating.set(m.id, 0);
+        effectiveCount.set(m.id, 0);
       }
     }
     const sortedIds = [...ids].sort((a, b) => {

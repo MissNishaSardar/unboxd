@@ -16,6 +16,7 @@ import {
   resolveProductImageUrl,
 } from "@/lib/placeholder";
 import type { CartItem } from "@/lib/cart/atoms";
+import { DAY_MS } from "@/lib/constants";
 import { getActiveSalePercent } from "@/server/deals";
 
 export const metadata: Metadata = {
@@ -37,7 +38,7 @@ const CheckoutPage = async ({
   }
   const now = new Date();
   const deliveryDate = new Date(
-    now.getTime() + settings.deliveryDays * 86400000,
+    now.getTime() + settings.deliveryDays * DAY_MS,
   ).toLocaleDateString("en-IN", {
     weekday: "short",
     day: "numeric",

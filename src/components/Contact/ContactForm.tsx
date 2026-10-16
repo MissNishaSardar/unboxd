@@ -105,7 +105,7 @@ const ContactForm = () => {
               {...field}
               id={field.name}
               aria-invalid={fieldState.invalid}
-              placeholder="Tell us about your order, product, or question..."
+              placeholder="Tell us about your order, product, or question."
               rows={5}
               className="min-h-28"
             />
@@ -125,7 +125,7 @@ const ContactForm = () => {
             className="animate-spin"
           />
         : <SendIcon aria-hidden="true" />}
-        {isSubmitting ? "Sending..." : "Send message"}
+        {isSubmitting ? "Sending" : "Send message"}
       </Button>
       <p className="text-muted-foreground text-xs">
         We read every message and reply within 24 hours, Monday through

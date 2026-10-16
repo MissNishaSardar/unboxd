@@ -1,9 +1,24 @@
 import { expect, test, type Page } from "@playwright/test";
 import fs from "node:fs";
 
+// Seed owned defaults. Override with env when seed changes.
+const PRODUCT_SLUG = process.env.E2E_PRODUCT_SLUG ?? "iphone-15-pro";
+const CATEGORY_SLUG = process.env.E2E_CATEGORY_SLUG ?? "smartphones";
+const SEARCH_QUERY = process.env.E2E_SEARCH_QUERY ?? "phone";
+const CUSTOMER_EMAIL = process.env.E2E_CUSTOMER_EMAIL ?? "customer1@unboxd.com";
+const CUSTOMER_PASSWORD = process.env.E2E_CUSTOMER_PASSWORD ?? "Customer@123";
+const ADMIN_EMAIL = process.env.E2E_ADMIN_EMAIL ?? "admin@unboxd.com";
+const ADMIN_PASSWORD = process.env.E2E_ADMIN_PASSWORD ?? "Admin@123";
+const ORDER_NAME = process.env.E2E_ORDER_NAME ?? "Priya Sharma";
+const ORDER_PHONE = process.env.E2E_ORDER_PHONE ?? "9876543210";
+const ORDER_ADDRESS = process.env.E2E_ORDER_ADDRESS ?? "221 MG Road";
+const ORDER_CITY = process.env.E2E_ORDER_CITY ?? "Bengaluru";
+const ORDER_STATE = process.env.E2E_ORDER_STATE ?? "Karnataka";
+const ORDER_PINCODE = process.env.E2E_ORDER_PINCODE ?? "560001";
+
 const shot = async (page: Page, name: string, url: string) => {
   await page.goto(url, { waitUntil: "domcontentloaded" });
-  await page.waitForTimeout(1200);
+  await expect(page.locator("body")).toBeVisible();
   await page.screenshot({
     path: `screenshots/review/${name}.png`,
     fullPage: true,
@@ -14,9 +29,9 @@ test.describe("review public", () => {
   const pages: Array<[string, string]> = [
     ["01-home", "/"],
     ["02-products", "/products"],
-    ["03-product-detail", "/products/iphone-15-pro"],
-    ["04-category", "/categories/smartphones"],
-    ["05-search-query", "/search?q=phone"],
+    ["03-product-detail", `/products/${PRODUCT_SLUG}`],
+    ["04-category", `/categories/${CATEGORY_SLUG}`],
+    ["05-search-query", `/search?q=${SEARCH_QUERY}`],
     ["06-search-empty", "/search"],
     ["07-about", "/about"],
     ["08-contact", "/contact"],
@@ -59,11 +74,7 @@ test.describe("review customer", () => {
     await page.goto("/auth/login", {
       waitUntil: "domcontentloaded",
     });
-    await loginAs(
-      page,
-      process.env.E2E_CUSTOMER_EMAIL ?? "customer1@unboxd.com",
-      process.env.E2E_CUSTOMER_PASSWORD ?? "Customer@123",
-    );
+    await loginAs(page, CUSTOMER_EMAIL, CUSTOMER_PASSWORD);
     await page.getByRole("button", { name: "Sign in" }).click();
     await page.waitForURL(/\/dashboard/, { timeout: 20000 });
     await page.screenshot({
@@ -90,11 +101,7 @@ test.describe("review admin", () => {
     await page.goto("/auth/login", {
       waitUntil: "domcontentloaded",
     });
-    await loginAs(
-      page,
-      process.env.E2E_ADMIN_EMAIL ?? "admin@unboxd.com",
-      process.env.E2E_ADMIN_PASSWORD ?? "Admin@123",
-    );
+    await loginAs(page, ADMIN_EMAIL, ADMIN_PASSWORD);
     await page.getByRole("button", { name: "Sign in" }).click();
     await page.waitForURL(/\/admin/, { timeout: 20000 });
     await page.screenshot({
@@ -123,11 +130,7 @@ test.describe("review order flow", () => {
     await page.goto("/auth/login", {
       waitUntil: "domcontentloaded",
     });
-    await loginAs(
-      page,
-      process.env.E2E_CUSTOMER_EMAIL ?? "customer1@unboxd.com",
-      process.env.E2E_CUSTOMER_PASSWORD ?? "Customer@123",
-    );
+    await loginAs(page, CUSTOMER_EMAIL, CUSTOMER_PASSWORD);
     await page.getByRole("button", { name: "Sign in" }).click();
     await page.waitForURL(/\/dashboard/, { timeout: 20000 });
 
@@ -136,29 +139,32 @@ test.describe("review order flow", () => {
       .getByRole("button", { name: "Add", exact: true })
       .first()
       .click();
+    await expect(page.getByText("Added to cart")).toBeVisible({
+      timeout: 15000,
+    });
     await page.keyboard.press("Escape");
-    await page.waitForTimeout(500);
 
     await shot(page, "40-cart-full", "/cart");
 
     await page.goto("/checkout", { waitUntil: "domcontentloaded" });
     if ((await page.locator("#name").count()) > 0) {
-      await page.locator("#name").fill("Priya Sharma");
-      await page.locator("#phone").fill("9876543210");
-      await page.locator("#addressLine").fill("221 MG Road");
-      await page.locator("#city").fill("Bengaluru");
+      await page.locator("#name").fill(ORDER_NAME);
+      await page.locator("#phone").fill(ORDER_PHONE);
+      await page.locator("#addressLine").fill(ORDER_ADDRESS);
+      await page.locator("#city").fill(ORDER_CITY);
       await page.locator("#state").click();
-      await page.getByRole("option", { name: "Karnataka" }).click();
-      await page.locator("#pincode").fill("560001");
+      await page.getByRole("option", { name: ORDER_STATE }).click();
+      await page.locator("#pincode").fill(ORDER_PINCODE);
     }
-    await page.waitForTimeout(1200);
+    await expect(page.getByRole("button", { name: "Place order" })).toBeVisible(
+      { timeout: 15000 },
+    );
     await page.screenshot({
       path: "screenshots/review/41-checkout-full.png",
       fullPage: true,
     });
     await page.getByRole("button", { name: "Place order" }).click();
     await page.getByText("Order placed").waitFor({ timeout: 20000 });
-    await page.waitForTimeout(1200);
     await page.screenshot({
       path: "screenshots/review/42-order-success.png",
       fullPage: true,
@@ -167,7 +173,7 @@ test.describe("review order flow", () => {
       .locator("a[href^='/orders/']", { hasText: "View order" })
       .click();
     await page.waitForURL(/\/orders\/[^/]+$/, { timeout: 20000 });
-    await page.waitForTimeout(1200);
+    await expect(page.locator("body")).toBeVisible();
     await page.screenshot({
       path: "screenshots/review/43-order-detail.png",
       fullPage: true,

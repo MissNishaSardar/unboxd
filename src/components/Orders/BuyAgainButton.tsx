@@ -26,7 +26,7 @@ const BuyAgainButton = ({ orderId }: { orderId: string }) => {
         data-icon="inline-start"
         aria-hidden="true"
       />
-      {isPending ? "Adding..." : "Buy again"}
+      {isPending ? "Adding" : "Buy again"}
     </Button>
   );
 };

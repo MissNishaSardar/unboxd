@@ -178,7 +178,7 @@ const CancelOrderButton = ({
               type="submit"
               variant="destructive"
               disabled={formState.isSubmitting}>
-              {formState.isSubmitting ? "Cancelling..." : "Cancel order"}
+              {formState.isSubmitting ? "Cancelling" : "Cancel order"}
             </Button>
           </AlertDialogFooter>
         </form>

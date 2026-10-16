@@ -138,11 +138,11 @@ const AboutPage = () => {
             About Unboxd
           </Badge>
           <h1 className="font-heading max-w-2xl text-4xl font-semibold tracking-tight text-white md:text-5xl">
-            Delivering Tomorrow&apos;s Tech, Today
+            Electronics with cash on delivery
           </h1>
           <p className="max-w-xl text-lg leading-relaxed text-zinc-200">
-            Curated phones, laptops, audio, and accessories with live variant
-            stock and cash on delivery. The future, ready to unbox.
+            Phones, laptops, audio, and accessories with live variant stock and
+            cash on delivery.
           </p>
           <div className="flex flex-wrap gap-3">
             <Button
@@ -246,13 +246,13 @@ const AboutPage = () => {
             What we believe
           </h2>
           <p className="text-muted-foreground leading-relaxed">
-            Too many stores sell everything. We sell fewer things, better
-            chosen. Each product has variants with real stock counts and
-            snapshot pricing on orders, so what you buy is what we have.
+            We keep a narrow catalog. Each product lists variants with live
+            stock counts, and each order freezes the price charged at purchase.
           </p>
           <p className="text-muted-foreground leading-relaxed">
-            COD keeps it honest. You inspect on delivery, then you pay. Free
-            shipping over threshold, atomically decremented stock, no oversell.
+            Cash on delivery means you pay after inspection. Shipping is free
+            over the threshold. Stock updates in a single step, so items cannot
+            oversell.
           </p>
         </div>
         <Card
@@ -265,13 +265,12 @@ const AboutPage = () => {
                 className="size-5"
               />
             </div>
-            <CardTitle>Built for the transaction that matters</CardTitle>
+            <CardTitle>Checkout that guards stock</CardTitle>
           </CardHeader>
           <CardContent className="px-0">
             <p className="text-muted-foreground text-sm leading-relaxed">
-              From product detail with variant switching to COD checkout inside
-              a transaction, the store is built to be correct before it is
-              clever.
+              Product pages switch variants with live stock. Checkout runs
+              inside a transaction, so payment and stock stay consistent.
             </p>
           </CardContent>
         </Card>

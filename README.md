@@ -15,7 +15,7 @@ An electronics e-commerce storefront built with the Next.js App Router. It inclu
 | Forms     | react-hook-form + `@hookform/resolvers/zod` + Zod 4                                                 |
 | UI        | [shadcn/ui](https://ui.shadcn.com) (base-vega style) + Tailwind CSS 4 + Base UI React               |
 | Env       | `@t3-oss/env-nextjs` (server/client split)                                                          |
-| Runtime   | Bun (scripts, `bunx --bun prisma ...` for all Prisma CLI)                                           |
+| Runtime   | Bun (scripts, `bunx --bun prisma` with command name for all Prisma CLI)                             |
 
 ## Getting started
 

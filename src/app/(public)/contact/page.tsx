@@ -84,9 +84,9 @@ const ContactPage = async () => {
             We are here to help
           </h1>
           <p className="max-w-xl text-lg leading-relaxed text-zinc-200">
-            Cash on delivery questions, order issues, or picking the right
-            variant. Real people, no bot queue. We read every message and reply
-            within a day.
+            Questions on cash on delivery, orders, or variant choice. Our team
+            reads every message and replies within 24 hours, Monday through
+            Saturday.
           </p>
           <div className="flex flex-wrap gap-3">
             <Button

@@ -996,7 +996,7 @@ const CheckoutClient = ({
                   className="animate-spin"
                 />
               )}
-              {placing ? "Placing order..." : "Confirm order"}
+              {placing ? "Placing order" : "Confirm order"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

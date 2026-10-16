@@ -27,7 +27,7 @@ const HomePage = async () => {
 
   return (
     <div className="-mt-8 flex flex-col gap-10 lg:gap-16">
-      <div className="flex flex-col gap-3">
+      <div className="reveal flex flex-col gap-3">
         <CategoryPillsRow
           categories={categories}
           navigateBasePath="/products"
@@ -38,9 +38,11 @@ const HomePage = async () => {
         </div>
       </div>
 
-      <PerksRow />
+      <div className="reveal reveal-1">
+        <PerksRow />
+      </div>
 
-      <section className="flex flex-col gap-6">
+      <section className="reveal reveal-2 flex flex-col gap-6">
         <div className="flex items-end justify-between">
           <h2 className="font-heading text-2xl font-semibold tracking-tight">
             Featured
@@ -67,19 +69,27 @@ const HomePage = async () => {
         : <ProductGrid products={featured} />}
       </section>
 
-      <section className="border-border bg-card relative grid overflow-hidden rounded-3xl border p-6 md:p-10 lg:grid-cols-2 lg:gap-6">
+      <section className="reveal reveal-3 border-border bg-card relative grid overflow-hidden rounded-3xl border p-6 md:p-10 lg:grid-cols-2 lg:gap-6">
         <div
-          className="bg-primary/20 pointer-events-none absolute -bottom-32 left-1/2 hidden size-96 -translate-x-1/2 rounded-full blur-3xl md:block"
+          aria-hidden="true"
+          className="texture-grid pointer-events-none absolute inset-0 [mask-image:radial-gradient(70%_80%_at_50%_20%,black,transparent)] opacity-60"
+        />
+        <div
+          className="bg-primary/15 pointer-events-none absolute -bottom-32 left-1/4 hidden size-96 rounded-full blur-3xl md:block"
+          aria-hidden="true"
+        />
+        <div
+          className="pointer-events-none absolute -top-24 right-1/4 hidden size-64 rounded-full bg-amber-500/10 blur-3xl md:block"
           aria-hidden="true"
         />
         <div className="relative flex flex-col items-start gap-4 lg:justify-center">
           <Badge variant="secondary">Shop the full catalog</Badge>
           <h2 className="font-heading text-3xl font-semibold tracking-tight md:text-4xl">
-            Ready to unbox?
+            Browse the catalog
           </h2>
           <p className="text-muted-foreground max-w-md">
-            Browse the full catalog and find your next favorite gadget. Cash on
-            delivery and tracked delivery across India.
+            The full catalog is open. Cash on delivery with tracked shipping
+            across India.
           </p>
           <Button
             size="lg"

@@ -285,7 +285,7 @@ const AddressForm = ({
               className="animate-spin"
             />
           )}
-          {disabled && !isSubmitting ? "Placing order..." : submitLabel}
+          {disabled && !isSubmitting ? "Placing order" : submitLabel}
         </Button>
       </div>
     </form>

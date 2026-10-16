@@ -129,7 +129,7 @@ const ProductToolbar = ({ categories, brands }: Props) => {
   const removeCategory = (slug: string) => {
     const nextCategories = activeCategories.filter((item) => item !== slug);
     // nuqs stores singular ?category and plural ?categories separately,
-    // keep both in sync when hero lands with ?category=...
+    // keep both in sync when hero lands with a category query value
     const nextCategory =
       singleCategory === slug ? null : (singleCategory ?? null);
     // if we removed the singular alias and kept the array, write both

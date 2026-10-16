@@ -5,7 +5,6 @@ import { revalidateTag } from "next/cache";
 import prisma from "@/lib/dbClient/prisma";
 import { auth } from "@/lib/auth";
 import { reviewCreateSchema, reviewHelpfulSchema } from "@/lib/zodSchema";
-import { getReviewsForProduct, type Review as MockReview } from "@/lib/reviews";
 
 export type ReviewDTO = {
   id: string;
@@ -52,24 +51,6 @@ function toDTO(row: {
   };
 }
 
-function mockToDTO(m: MockReview): ReviewDTO {
-  return {
-    id: m.id,
-    productId: "",
-    userId: "",
-    author: m.author,
-    authorImage: null,
-    rating: m.rating,
-    title: m.title,
-    body: m.body,
-    date: m.date,
-    verified: m.verified,
-    helpful: m.helpful,
-    hasVoted: false,
-    isMock: true,
-  };
-}
-
 export async function getReviewsBySlug(slug: string): Promise<ReviewDTO[]> {
   const product = await prisma.product.findUnique({
     where: { slug },
@@ -90,20 +71,6 @@ export async function getReviewsBySlug(slug: string): Promise<ReviewDTO[]> {
     include: { user: { select: { name: true, image: true } } },
     orderBy: { createdAt: "desc" },
   });
-
-  if (rows.length === 0) {
-    return getReviewsForProduct(slug).map(mockToDTO);
-  }
-  // keep social proof until real reviews reach threshold, avoid 9 to 1 drop
-  if (rows.length < 6) {
-    const mocks = getReviewsForProduct(slug).map(mockToDTO);
-    const need = Math.min(mocks.length, 6 - rows.length);
-    // avoid id collision with real (mocks use "rvw-..." prefix, real are cuid)
-    return [
-      ...rows.map((r) => toDTO({ ...r, hasVoted: votedSet.has(r.id) })),
-      ...mocks.slice(0, need),
-    ];
-  }
 
   let votedSet = new Set<string>();
   if (userId) {

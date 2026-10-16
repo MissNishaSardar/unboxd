@@ -20,7 +20,7 @@ import { displayProductName } from "@/lib/brand";
 import { formatPrice } from "@/lib/format";
 import { discountBadge, hasDiscount } from "@/lib/pricing";
 import { resolveProductImageUrl } from "@/lib/placeholder";
-import { getRatingSummary, getReviewsForProduct } from "@/lib/reviews";
+import { LOW_STOCK_FALLBACK } from "@/lib/constants";
 import { cn } from "@/lib/utils";
 
 export type ProductCardData = {
@@ -62,10 +62,11 @@ const ProductCard = ({
   const price = product.price;
   const discounted = hasDiscount(product.discountPercent);
   const outOfStock = !variant || variant.stock === 0;
-  const lowStock = variant && variant.stock > 0 && variant.stock < 5;
+  const lowStock =
+    variant && variant.stock > 0 && variant.stock < LOW_STOCK_FALLBACK;
   const { data: session, isPending } = authClient.useSession();
   const router = useRouter();
-  const rating = getRatingSummary(getReviewsForProduct(product.slug));
+  const rating = { average: 0, count: 0 };
   const displayName = displayProductName(product.name, product.brand);
 
   const handleAddToCart = () => {

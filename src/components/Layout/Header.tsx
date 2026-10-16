@@ -280,7 +280,7 @@ const Header = ({ brands }: { brands?: BrandWithCount[] }) => {
                 className="size-[18px]"
               />
               {mounted && cartCount > 0 && (
-                <span className="border-background absolute -top-1 -right-1 flex h-[18px] min-w-[18px] items-center justify-center rounded-full border-2 bg-violet-600 px-1 text-[11px] leading-none font-semibold text-white tabular-nums shadow-sm">
+                <span className="border-background bg-primary text-primary-foreground absolute -top-1 -right-1 flex h-[18px] min-w-[18px] items-center justify-center rounded-full border-2 px-1 text-[11px] leading-none font-semibold tabular-nums shadow-sm">
                   {cartCount > 99 ? "99+" : cartCount}
                 </span>
               )}

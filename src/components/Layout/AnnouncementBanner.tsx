@@ -7,7 +7,7 @@ import { getActiveBanner } from "@/server/deals";
 import { getStoreSettings } from "@/server/admin/settings";
 
 const STRIP_CLASS =
-  "bg-gradient-to-r from-primary via-chart-3 to-chart-4 text-primary-foreground shadow-[inset_0_1px_0_rgb(255_255_255/0.15)]";
+  "bg-primary text-primary-foreground shadow-[inset_0_1px_0_rgb(255_255_255/0.15)]";
 const INNER_CLASS =
   "mx-auto flex w-full max-w-7xl flex-wrap items-center justify-center gap-x-3 gap-y-1.5 px-4 py-2 text-xs font-medium";
 

@@ -297,7 +297,7 @@ const ProductDetailsFields = ({
                     {...field}
                     id={field.name}
                     aria-invalid={fieldState.invalid}
-                    placeholder="Apple, Samsung, Sony..."
+                    placeholder="Apple, Samsung, Sony"
                   />
                   {fieldState.invalid && (
                     <FieldError errors={[fieldState.error]} />

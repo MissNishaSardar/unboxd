@@ -1,8 +1,10 @@
-// Keeps action buttons in their pending state for at least `ms`, so fast
+import { MIN_ACTION_DELAY_MS } from "@/lib/constants";
+
+// Keeps action buttons in pending state briefly so fast
 // responses do not flash the spinner. Resolves with the wrapped promise.
 export async function withMinDelay<T>(
   promise: Promise<T>,
-  ms = 1500,
+  ms = MIN_ACTION_DELAY_MS,
 ): Promise<T> {
   const [result] = await Promise.all([
     promise,

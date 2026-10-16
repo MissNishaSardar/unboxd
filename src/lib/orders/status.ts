@@ -1,4 +1,5 @@
 import type { LucideIcon } from "lucide-react";
+import { DAY_MS } from "@/lib/constants";
 import {
   CheckCircle2Icon,
   ClockIcon,
@@ -43,7 +44,7 @@ export const orderStatusConfig: Record<OrderStatus, StatusConfig> = {
   SHIPPED: {
     label: "Shipped",
     badgeVariant: "secondary",
-    badgeClass: "bg-purple-500/15 text-purple-600 dark:text-purple-400",
+    badgeClass: "bg-sky-500/15 text-sky-600 dark:text-sky-400",
     icon: TruckIcon,
   },
   DELIVERED: {
@@ -117,5 +118,5 @@ export function isWithinReturnWindow(
   returnWindowDays: number,
   now: Date = new Date(),
 ): boolean {
-  return now.getTime() - deliveredAt.getTime() <= returnWindowDays * 86400000;
+  return now.getTime() - deliveredAt.getTime() <= returnWindowDays * DAY_MS;
 }

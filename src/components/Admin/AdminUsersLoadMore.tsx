@@ -84,7 +84,7 @@ const AdminUsersLoadMore = ({
             onClick={handleLoadMore}
             disabled={loading}
             className="w-full rounded-full px-8 sm:w-auto">
-            {loading ? "Loading..." : "Load more"}
+            {loading ? "Loading" : "Load more"}
           </Button>
           {error && (
             <p

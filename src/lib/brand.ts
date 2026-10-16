@@ -36,6 +36,7 @@ export const BRAND_MAP: Record<string, { brand: string; brandSlug: string }> = {
   "samsung-25w-charger": { brand: "Samsung", brandSlug: "samsung" },
 };
 
+// Seed owned. Runtime reads brand from DB. Keep here so seed and admin share one map.
 export const displayProductName = (name: string, brand: string): string => {
   const cleanName = name.trim();
   const cleanBrand = brand.trim();

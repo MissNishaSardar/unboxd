@@ -214,3 +214,14 @@ git commit -m @"
 ```
 
 Line endings are `* text=auto` with LF in the repo and CRLF in the worktree. Bulk mtime touches leave stat dirty entries that `git status` flags with zero content diff. CRLF warnings on stderr inflate piped line counts, so always recount with `2>$null` and confirm with `git diff --name-only` before staging. Never use `git add --renormalize` when deleted files are pending. It aborts with unable to stat. Use `git add -A` instead.
+
+## Hardened conventions 2026-10-16
+
+- **Speech safe text.** Never use three dots or the ellipsis char in UI strings, placeholders, toasts, or comments. Speech readers fail on them. Use `Loading`, `Sending`, `Deleting` with no dots.
+- **No mock data in runtime.** Server returns real review rows only. `getReviewsBySlug` never mixes fakes. Fetch the vote set before mapping rows. Card rating shows zero until real ratings flow through card data.
+- **Shared numbers.** Use `src/lib/constants.ts` for `DAY_MS`, `DEBOUNCE_MS`, `MOBILE_BREAKPOINT`, `LOW_STOCK_FALLBACK`, `MIN_ACTION_DELAY_MS`. Never hardcode `86400000`, `300`, or `768` in new code.
+- **Seed owns brand map.** `BRAND_MAP` in `src/lib/brand.ts` exists for seed accuracy. Runtime reads brand from DB. Do not delete the map.
+- **Placeholder map is load bearing.** `resolveProductImageUrl` plus `getPlaceholderPhotoUrl` cover seed placeholder images until the upload pipeline lands. Do not delete.
+- **Action delay.** `withMinDelay` defaults to `MIN_ACTION_DELAY_MS` so fast actions keep a brief pending state without long waits.
+- **Review shots.** The spec reads `E2E_*` env with seed tied fallbacks. Never use `waitForTimeout`. Assert with web first checks such as visible text and URL.
+- **Look tokens.** Headings use Fraunces through `--font-heading`. The banner strip and cart badge use solid `bg-primary`. The shipped badge uses sky. Page motion uses `reveal` plus delay steps in `globals.css` with a reduced motion guard. Texture helpers are `texture-grid` and `texture-dots`.

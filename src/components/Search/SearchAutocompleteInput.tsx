@@ -16,6 +16,7 @@ import {
   InputGroupInput,
 } from "@/components/shadcnui/input-group";
 import { useDebouncedValue } from "@/hooks/use-debounced-value";
+import { DEBOUNCE_MS } from "@/lib/constants";
 import type {
   SearchSuggestionBrand,
   SearchSuggestionProduct,
@@ -38,7 +39,7 @@ const SearchAutocompleteInput = ({
   onValueChange,
   onSubmit,
   variant,
-  placeholder = "Search for products, brands...",
+  placeholder = "Search for products, brands",
   autoFocus,
   onNavigate,
 }: Props) => {
@@ -78,7 +79,7 @@ const SearchAutocompleteInput = ({
       router.push(`/products${qs}` as never);
     }
   };
-  const debounced = useDebouncedValue(value, 300);
+  const debounced = useDebouncedValue(value, DEBOUNCE_MS);
   const [brands, setBrands] = useState<SearchSuggestionBrand[]>([]);
   const [products, setProducts] = useState<SearchSuggestionProduct[]>([]);
   const [isLoading, setIsLoading] = useState(false);

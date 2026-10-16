@@ -1,3 +1,5 @@
+import { DAY_MS } from "@/lib/constants";
+
 const inrFormatter = new Intl.NumberFormat("en-IN", {
   style: "currency",
   currency: "INR",
@@ -37,7 +39,7 @@ export function formatEndsIn(
   const end = new Date(endsAt).getTime();
   if (!Number.isFinite(end)) return null;
   const nowTime = now instanceof Date ? now.getTime() : now;
-  const days = Math.ceil((end - nowTime) / 86400000);
+  const days = Math.ceil((end - nowTime) / DAY_MS);
   if (days <= 0) return "Ends today";
   if (days === 1) return "Ends tomorrow";
   if (days <= 30) return `Ends in ${days} days`;

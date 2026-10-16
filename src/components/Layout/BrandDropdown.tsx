@@ -162,10 +162,10 @@ const BrandDropdown = ({ brands }: { brands: BrandWithCount[] }) => {
                 );
               })}
             </div>
-            <div className="relative hidden w-[180px] shrink-0 overflow-hidden rounded-xl bg-gradient-to-br from-violet-600 to-indigo-700 p-5 lg:flex lg:flex-col lg:justify-between">
+            <div className="relative hidden w-[180px] shrink-0 overflow-hidden rounded-xl bg-zinc-950 p-5 text-white lg:flex lg:flex-col lg:justify-between">
               <div
                 aria-hidden="true"
-                className="pointer-events-none absolute -top-20 -right-20 size-64 rounded-full bg-violet-500/30 blur-3xl"
+                className="pointer-events-none absolute -top-20 -right-20 size-64 rounded-full bg-white/10 blur-3xl"
               />
               <div className="relative flex flex-col gap-2">
                 <span className="inline-flex items-center gap-1.5 text-xs font-semibold tracking-widest text-white/80 uppercase">

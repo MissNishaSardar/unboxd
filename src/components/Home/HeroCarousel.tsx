@@ -181,7 +181,15 @@ const HeroCarousel = ({ products }: { products?: ProductCardData[] }) => {
       onKeyDown={onKeyDown}
       className="bg-card relative overflow-hidden">
       <div
-        className="bg-primary/20 pointer-events-none absolute -top-32 right-0 hidden size-96 rounded-full blur-3xl md:block"
+        aria-hidden="true"
+        className="texture-dots pointer-events-none absolute inset-0 [mask-image:radial-gradient(60%_70%_at_70%_20%,black,transparent)] opacity-50"
+      />
+      <div
+        className="bg-primary/15 pointer-events-none absolute -top-32 right-0 hidden size-96 rounded-full blur-3xl md:block"
+        aria-hidden="true"
+      />
+      <div
+        className="pointer-events-none absolute -bottom-24 left-1/3 hidden size-72 rounded-full bg-teal-500/10 blur-3xl md:block"
         aria-hidden="true"
       />
       <div className="overflow-hidden">
@@ -285,7 +293,7 @@ const HeroCarousel = ({ products }: { products?: ProductCardData[] }) => {
                           className="pointer-events-none absolute inset-0 rounded-2xl ring-1 ring-white/10"
                         />
                       </div>
-                    : <div className="relative flex size-[260px] items-center justify-center overflow-hidden rounded-2xl bg-[radial-gradient(circle_at_30%_30%,oklch(0.65_0.18_277/0.9),oklch(0.35_0.15_277/0.6)_70%,oklch(0.2_0.05_285/1)_100%)] shadow-lg md:size-[300px] lg:size-[340px]">
+                    : <div className="bg-muted relative flex size-[260px] items-center justify-center overflow-hidden rounded-2xl shadow-lg ring-1 ring-black/10 md:size-[300px] lg:size-[340px] dark:ring-white/10">
                         {imageUrl ?
                           <Image
                             src={imageUrl}
@@ -297,7 +305,7 @@ const HeroCarousel = ({ products }: { products?: ProductCardData[] }) => {
                           />
                         : <DiscIcon
                             aria-hidden="true"
-                            className="size-20 text-white drop-shadow md:size-24"
+                            className="text-muted-foreground size-20 md:size-24"
                           />
                         }
                         <div

@@ -157,21 +157,6 @@ const ProductReviews = ({
             );
             return merged;
           }
-          // preserve local helpful increments for mock reviews (no DB row)
-          const isMockFresh = fresh.length > 0 && fresh.every((r) => r.isMock);
-          if (isMockFresh) {
-            if (prev.length === 0) return fresh;
-            if (prev.every((p) => p.isMock)) {
-              const prevById = new Map(prev.map((p) => [p.id, p]));
-              return fresh.map((f) => {
-                const p = prevById.get(f.id);
-                return p ?
-                    { ...f, helpful: p.helpful, hasVoted: p.hasVoted }
-                  : f;
-              });
-            }
-            return prev;
-          }
           return fresh;
         });
       } catch {
@@ -280,21 +265,6 @@ const ProductReviews = ({
   };
 
   const handleHelpful = async (review: ReviewDTO) => {
-    if (review.isMock) {
-      setReviews((prev) =>
-        prev.map((r) =>
-          r.id === review.id ?
-            {
-              ...r,
-              helpful: r.hasVoted ? r.helpful - 1 : r.helpful + 1,
-              hasVoted: !r.hasVoted,
-            }
-          : r,
-        ),
-      );
-      toast.add({ title: "Thanks for your feedback", type: "success" });
-      return;
-    }
     if (!session) {
       toast.add({ title: "Sign in to vote", type: "error" });
       return;
@@ -321,9 +291,7 @@ const ProductReviews = ({
           : r,
         ),
       );
-      if (res.error === "MOCK_REVIEW")
-        toast.add({ title: "Thanks for your feedback", type: "success" });
-      else if (res.error === "UNAUTHENTICATED")
+      if (res.error === "UNAUTHENTICATED")
         toast.add({ title: "Sign in to vote", type: "error" });
       else toast.add({ title: "Something went wrong", type: "error" });
       return;
@@ -451,7 +419,7 @@ const ProductReviews = ({
                       {...field}
                       id={field.name}
                       aria-invalid={fieldState.invalid}
-                      placeholder="Amazing quality"
+                      placeholder="Summarize your experience"
                     />
                     {fieldState.invalid && (
                       <FieldError errors={[fieldState.error]} />
@@ -469,7 +437,7 @@ const ProductReviews = ({
                       {...field}
                       id={field.name}
                       aria-invalid={fieldState.invalid}
-                      placeholder="Share your delivery and product experience..."
+                      placeholder="Share your delivery and product experience."
                       rows={4}
                     />
                     {fieldState.invalid && (
@@ -611,7 +579,7 @@ const ProductReviews = ({
                       </Badge>
                     )}
                     {review.id.startsWith("temp-") && (
-                      <Badge variant="outline">Publishing…</Badge>
+                      <Badge variant="outline">Publishing</Badge>
                     )}
                   </div>
                   <div className="flex items-center gap-2 pt-1">

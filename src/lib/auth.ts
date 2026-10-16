@@ -22,36 +22,19 @@ export const auth = betterAuth({
   },
   emailAndPassword: {
     enabled: true,
-    sendResetPassword: async ({ user, url, token }) => {
+    sendResetPassword: async ({ user, token }) => {
       const base = serverEnv.BETTER_AUTH_URL.replace(/\/$/, "");
       const pageUrl = `${base}/auth/reset-password?token=${token}`;
-      // Dev: formatted clickable link in the dev server terminal.
-      // Prod has no email provider wired yet, so fail loudly instead of
-      // pretending the email was sent. Wire a provider here later.
-      // Better Auth's `url` is the API route that redirects to `redirectTo` with ?token
+      // Dev only. Prod has no email provider yet, so fail loudly.
+      // Better Auth url redirects with token. Page url opens directly.
       if (process.env.NODE_ENV === "production") {
         throw new Error(
           `Password reset email is not configured, cannot send reset to ${user.email}`,
         );
       }
-      void console.log(
-        `\n` +
-          `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n` +
-          `  🔑  Password reset requested\n` +
-          `  Email: ${user.email}\n` +
-          `  Click to reset (via API → redirects to page):\n` +
-          `  ${url}\n` +
-          `  Or open directly:\n` +
-          `  ${pageUrl}\n` +
-          `  Token: ${token}\n` +
-          `  Expires in 1 hour\n` +
-          `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n`,
-      );
+      void console.log(`Password reset link for ${user.email}: ${pageUrl}`);
     },
     resetPasswordTokenExpiresIn: 3600,
-    onPasswordReset: async ({ user }) => {
-      console.log(`[auth] ✅ password reset completed for ${user.email}`);
-    },
   },
   user: {
     additionalFields: {

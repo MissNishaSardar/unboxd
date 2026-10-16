@@ -166,7 +166,7 @@ const CategoryActions = ({
             not deleted, just hidden.
           </AlertDialogDescription>
           {subtreeLoading ?
-            <p className="text-muted-foreground text-sm">Loading…</p>
+            <p className="text-muted-foreground text-sm">Loading</p>
           : subtree ?
             <div className="max-h-64 overflow-y-auto rounded-md border p-3">
               {renderTree(subtree, 0)}

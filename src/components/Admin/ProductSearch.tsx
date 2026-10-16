@@ -6,6 +6,7 @@ import { SearchIcon } from "lucide-react";
 import type { Route } from "next";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
+import { DEBOUNCE_MS } from "@/lib/constants";
 import {
   InputGroup,
   InputGroupAddon,
@@ -40,7 +41,7 @@ const ProductSearch = () => {
       const next = params.toString();
       if (next === searchParams.toString()) return;
       router.replace(`/admin/products${next ? `?${next}` : ""}` as Route);
-    }, 300);
+    }, DEBOUNCE_MS);
     return () => clearTimeout(timeout);
   }, [value, urlSearch, searchParams, router]);
 
@@ -52,7 +53,7 @@ const ProductSearch = () => {
       <InputGroupInput
         value={value}
         onChange={(event) => setValue(event.target.value)}
-        placeholder="Search products..."
+        placeholder="Search products"
         aria-label="Search products"
       />
     </InputGroup>

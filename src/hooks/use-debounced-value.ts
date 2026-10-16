@@ -1,8 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { DEBOUNCE_MS } from "@/lib/constants";
 
-export function useDebouncedValue<T>(value: T, delay = 300) {
+export function useDebouncedValue<T>(value: T, delay = DEBOUNCE_MS) {
   const [debounced, setDebounced] = useState(value);
 
   useEffect(() => {

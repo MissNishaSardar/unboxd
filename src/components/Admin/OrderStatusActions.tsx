@@ -248,7 +248,7 @@ const OrderStatusActions = ({
                   type="submit"
                   variant="destructive"
                   disabled={isPending}>
-                  {isPending ? "Cancelling..." : "Cancel order"}
+                  {isPending ? "Cancelling" : "Cancel order"}
                 </Button>
               </AlertDialogFooter>
             </form>

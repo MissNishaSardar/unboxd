@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import ThemeProvider from "@/components/Providers/ThemeProvider";
-import { geistMono, geistSans, interHeading } from "@/lib/fonts";
+import { displayHeading, geistMono, geistSans } from "@/lib/fonts";
 import { LayoutProps } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { NuqsAdapter } from "nuqs/adapters/next/app";
@@ -23,7 +23,7 @@ const RootLayout = ({ children }: LayoutProps) => {
         "antialiased",
         geistSans.variable,
         geistMono.variable,
-        interHeading.variable,
+        displayHeading.variable,
       )}
       suppressHydrationWarning>
       <body>

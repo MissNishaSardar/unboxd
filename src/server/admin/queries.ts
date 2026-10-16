@@ -1,4 +1,5 @@
 import prisma from "@/lib/dbClient/prisma";
+import { DAY_MS } from "@/lib/constants";
 import {
   getPlaceholderPhotoUrl,
   resolveProductImageUrl,
@@ -247,7 +248,7 @@ export async function getSalesSummary() {
 
 export async function getAdminAttention() {
   const { lowStockThreshold, returnWindowDays } = await getStoreSettings();
-  const returnCutoff = new Date(Date.now() - returnWindowDays * 86400000);
+  const returnCutoff = new Date(Date.now() - returnWindowDays * DAY_MS);
   const [awaitingShipment, inTransit, returned, deliveredEligible, lowStock] =
     await Promise.all([
       prisma.order.count({ where: { status: "CONFIRMED" } }),
