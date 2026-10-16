@@ -51,7 +51,7 @@ const loginAs = async (page: Page, email: string, password: string) => {
   await passBox.pressSequentially(password, { delay: 15 });
   await passBox.press("Tab");
   await submit.waitFor({ state: "visible" });
-  await page.waitForTimeout(800);
+  await expect(submit).toBeEnabled({ timeout: 15000 });
 };
 
 test.describe("review customer", () => {
@@ -65,7 +65,7 @@ test.describe("review customer", () => {
       process.env.E2E_CUSTOMER_PASSWORD ?? "Customer@123",
     );
     await page.getByRole("button", { name: "Sign in" }).click();
-    await page.waitForTimeout(5000);
+    await page.waitForURL(/\/dashboard/, { timeout: 20000 });
     await page.screenshot({
       path: "screenshots/review/19-after-customer-login.png",
       fullPage: true,
@@ -96,7 +96,7 @@ test.describe("review admin", () => {
       process.env.E2E_ADMIN_PASSWORD ?? "Admin@123",
     );
     await page.getByRole("button", { name: "Sign in" }).click();
-    await page.waitForTimeout(5000);
+    await page.waitForURL(/\/admin/, { timeout: 20000 });
     await page.screenshot({
       path: "screenshots/review/29-after-admin-login.png",
       fullPage: true,
@@ -108,10 +108,70 @@ test.describe("review admin", () => {
       ["33-admin-categories", "/admin/categories"],
       ["34-admin-users", "/admin/users"],
       ["35-admin-settings", "/admin/settings"],
+      ["36-admin-deals", "/admin/deals"],
     ];
     for (const [name, url] of pages) {
       await shot(page, name, url);
     }
     expect(fs.existsSync("screenshots/review/30-admin.png")).toBe(true);
+  });
+});
+
+test.describe("review order flow", () => {
+  test("customer places an order", async ({ page }) => {
+    test.slow();
+    await page.goto("/auth/login", {
+      waitUntil: "domcontentloaded",
+    });
+    await loginAs(
+      page,
+      process.env.E2E_CUSTOMER_EMAIL ?? "customer1@unboxd.com",
+      process.env.E2E_CUSTOMER_PASSWORD ?? "Customer@123",
+    );
+    await page.getByRole("button", { name: "Sign in" }).click();
+    await page.waitForURL(/\/dashboard/, { timeout: 20000 });
+
+    await page.goto("/products", { waitUntil: "domcontentloaded" });
+    await page
+      .getByRole("button", { name: "Add", exact: true })
+      .first()
+      .click();
+    await page.keyboard.press("Escape");
+    await page.waitForTimeout(500);
+
+    await shot(page, "40-cart-full", "/cart");
+
+    await page.goto("/checkout", { waitUntil: "domcontentloaded" });
+    if ((await page.locator("#name").count()) > 0) {
+      await page.locator("#name").fill("Priya Sharma");
+      await page.locator("#phone").fill("9876543210");
+      await page.locator("#addressLine").fill("221 MG Road");
+      await page.locator("#city").fill("Bengaluru");
+      await page.locator("#state").click();
+      await page.getByRole("option", { name: "Karnataka" }).click();
+      await page.locator("#pincode").fill("560001");
+    }
+    await page.waitForTimeout(1200);
+    await page.screenshot({
+      path: "screenshots/review/41-checkout-full.png",
+      fullPage: true,
+    });
+    await page.getByRole("button", { name: "Place order" }).click();
+    await page.getByText("Order placed").waitFor({ timeout: 20000 });
+    await page.waitForTimeout(1200);
+    await page.screenshot({
+      path: "screenshots/review/42-order-success.png",
+      fullPage: true,
+    });
+    await page
+      .locator("a[href^='/orders/']", { hasText: "View order" })
+      .click();
+    await page.waitForURL(/\/orders\/[^/]+$/, { timeout: 20000 });
+    await page.waitForTimeout(1200);
+    await page.screenshot({
+      path: "screenshots/review/43-order-detail.png",
+      fullPage: true,
+    });
+    await shot(page, "44-dashboard-full", "/dashboard");
   });
 });

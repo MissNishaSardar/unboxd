@@ -12,9 +12,15 @@ const RecentOrders = ({ orders }: RecentOrdersProps) => {
         <OrderRowCard
           key={order.id}
           order={{
-            ...order,
+            id: order.id,
+            orderNumber: order.orderNumber,
+            status: order.status,
             total: String(order.total),
             createdAt: order.createdAt.toISOString(),
+            items: order.items.map((item) => ({
+              quantity: item.quantity,
+            })),
+            previews: order.previews,
           }}
         />
       ))}

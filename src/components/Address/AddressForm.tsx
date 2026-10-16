@@ -205,6 +205,10 @@ const AddressForm = ({
                 <FieldLabel htmlFor={field.name}>State</FieldLabel>
                 <Select
                   value={field.value || ""}
+                  items={INDIAN_STATES.map((state) => ({
+                    value: state,
+                    label: state,
+                  }))}
                   onValueChange={field.onChange}>
                   <SelectTrigger
                     id={field.name}

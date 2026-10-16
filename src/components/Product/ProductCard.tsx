@@ -99,28 +99,19 @@ const ProductCard = ({
 
   const handleBuyNow = () => {
     if (isPending) return;
+    if (!variant) return;
     if (!session) {
       toast.add({ title: "Sign in to buy now", type: "error" });
-      router.push(`/auth/login?callbackUrl=/checkout`);
+      router.push(
+        `/auth/login?callbackUrl=/checkout?buyNow=${encodeURIComponent(variant.sku)}` as never,
+      );
       return;
     }
-    if (!variant) return;
-    addToCart({
-      productId: product.id,
-      sku: variant.sku,
-      slug: product.slug,
-      name: displayName,
-      variantName: variant.name,
-      price,
-      mrp: product.mrp,
-      image: thumbnailUrl,
-      maxStock: variant.stock,
-    });
-    router.push("/checkout");
+    router.push(`/checkout?buyNow=${encodeURIComponent(variant.sku)}` as never);
   };
 
   return (
-    <Card className="group flex flex-col gap-0 overflow-hidden p-0 py-0 [--card-spacing:0px]">
+    <Card className="group flex h-full flex-col gap-0 overflow-hidden p-0 py-0 [--card-spacing:0px]">
       <div
         className={cn(
           "bg-muted relative w-full overflow-hidden",
@@ -182,7 +173,7 @@ const ProductCard = ({
           )}>
           {displayName}
         </Link>
-        <div className="flex items-center justify-between gap-2 pt-1">
+        <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 pt-1">
           <span
             className={cn(
               "font-semibold tabular-nums",
@@ -190,29 +181,27 @@ const ProductCard = ({
             )}>
             {formatPrice(price)}
           </span>
-          {lowStock && (
-            <span className="text-[11px] font-medium text-amber-600 dark:text-amber-400">
-              Low stock
-            </span>
-          )}
-          {outOfStock && (
-            <span className="text-muted-foreground text-[11px] font-medium">
-              Out of stock
-            </span>
-          )}
-        </div>
-        {/* Fixed-height discount slot. Empty on full-price cards so every
-            card in a row measures the same with or without a discount. */}
-        <div className="flex h-5 items-center gap-1.5">
           {discounted && (
             <>
-              <span className="text-muted-foreground text-[11px] tabular-nums line-through">
-                {formatPrice(product.mrp)}
-              </span>
+              {!compact && (
+                <span className="text-muted-foreground text-[11px] tabular-nums line-through">
+                  {formatPrice(product.mrp)}
+                </span>
+              )}
               <span className="rounded-full bg-green-600/10 px-1.5 py-0.5 text-[11px] font-semibold text-green-700 dark:text-green-400">
                 {discountBadge(product.discountPercent)}
               </span>
             </>
+          )}
+          {lowStock && (
+            <span className="ml-auto text-[11px] font-medium text-amber-600 dark:text-amber-400">
+              Low stock
+            </span>
+          )}
+          {outOfStock && (
+            <span className="text-muted-foreground ml-auto text-[11px] font-medium">
+              Out of stock
+            </span>
           )}
         </div>
         {variant && !compact && (

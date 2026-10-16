@@ -1,14 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import AuthCard from "@/components/Auth/AuthCard";
 import ResetPasswordForm from "@/components/Auth/ResetPasswordForm";
 import { Button } from "@/components/shadcnui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/shadcnui/card";
 
 export const metadata: Metadata = {
   title: "Reset password",
@@ -24,16 +18,14 @@ const ResetPasswordPage = async ({ searchParams }: ResetPasswordPageProps) => {
 
   if (error) {
     return (
-      <Card className="w-full max-w-md border-white/[0.08] bg-[rgba(255,255,255,0.03)] backdrop-blur-xl">
-        <CardHeader className="items-center justify-items-center text-center">
-          <CardTitle className="text-lg">Reset link invalid</CardTitle>
-          <CardDescription>
-            {error === "INVALID_TOKEN" ?
-              "This reset link is invalid or has expired. Please request a new one."
-            : "Something went wrong with this reset link."}
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="flex flex-col gap-4">
+      <AuthCard
+        title="Reset link invalid"
+        description={
+          error === "INVALID_TOKEN" ?
+            "This reset link is invalid or has expired. Please request a new one."
+          : "Something went wrong with this reset link."
+        }>
+        <div className="flex flex-col gap-4">
           <Button
             render={<Link href="/auth/forgot-password" />}
             nativeButton={false}>
@@ -45,41 +37,33 @@ const ResetPasswordPage = async ({ searchParams }: ResetPasswordPageProps) => {
             nativeButton={false}>
             Back to sign in
           </Button>
-        </CardContent>
-      </Card>
+        </div>
+      </AuthCard>
     );
   }
 
   if (!token) {
     return (
-      <Card className="w-full max-w-md border-white/[0.08] bg-[rgba(255,255,255,0.03)] backdrop-blur-xl">
-        <CardHeader className="items-center justify-items-center text-center">
-          <CardTitle className="text-lg">Reset password</CardTitle>
-          <CardDescription>
-            No reset token found. Please use the link from your email.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="flex flex-col gap-4">
+      <AuthCard
+        title="Reset password"
+        description="No reset token found. Please use the link from your email.">
+        <div className="flex flex-col gap-4">
           <Button
             render={<Link href="/auth/forgot-password" />}
             nativeButton={false}>
             Forgot password
           </Button>
-        </CardContent>
-      </Card>
+        </div>
+      </AuthCard>
     );
   }
 
   return (
-    <Card className="w-full max-w-md border-white/[0.08] bg-[rgba(255,255,255,0.03)] backdrop-blur-xl">
-      <CardHeader className="items-center justify-items-center text-center">
-        <CardTitle className="text-lg">Set new password</CardTitle>
-        <CardDescription>Enter your new password below.</CardDescription>
-      </CardHeader>
-      <CardContent>
-        <ResetPasswordForm token={token} />
-      </CardContent>
-    </Card>
+    <AuthCard
+      title="Set new password"
+      description="Enter your new password below.">
+      <ResetPasswordForm token={token} />
+    </AuthCard>
   );
 };
 

@@ -1,6 +1,7 @@
 "use client";
 
 import ThemeToggleButton from "@/components/Layout/ThemeToggleButton";
+import UserMenu from "@/components/Layout/UserMenu";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -9,26 +10,11 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@/components/shadcnui/breadcrumb";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuGroup,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/shadcnui/dropdown-menu";
 import { Separator } from "@/components/shadcnui/separator";
 import { SidebarTrigger } from "@/components/shadcnui/sidebar";
-import { authClient } from "@/lib/auth-client";
-import { clearCart } from "@/lib/cart/atoms";
 import { iconButtonClass } from "@/components/Layout/Header";
-import { LogOutIcon, StoreIcon, UserRoundIcon } from "lucide-react";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
-import { useState } from "react";
-import { stopImpersonating } from "@/server/admin/user-actions";
-import { toast } from "@/components/shadcnui/toast";
+import { usePathname } from "next/navigation";
 
 const LABELS: Record<string, string> = {
   admin: "Admin",
@@ -53,24 +39,12 @@ function toLabel(segment: string): string {
 
 const AdminHeader = () => {
   const pathname = usePathname();
-  const router = useRouter();
-  const { data: session } = authClient.useSession();
-  const [isPending, setIsPending] = useState(false);
   const segments = pathname.split("/").filter(Boolean);
 
   const crumbs = segments.map((seg, idx) => {
     const href = `/${segments.slice(0, idx + 1).join("/")}`;
     return { segment: seg, href, label: toLabel(seg) };
   });
-
-  const handleStopImpersonating = async () => {
-    setIsPending(true);
-    const result = await stopImpersonating();
-    setIsPending(false);
-    if (!result.ok) {
-      toast.add({ title: "Something went wrong", type: "error" });
-    }
-  };
 
   return (
     <header className="flex h-14 shrink-0 items-center gap-2 border-b px-4">
@@ -105,79 +79,7 @@ const AdminHeader = () => {
       </Breadcrumb>
       <div className="ml-auto flex items-center gap-1">
         <ThemeToggleButton className={iconButtonClass} />
-        {session && (
-          <DropdownMenu>
-            <DropdownMenuTrigger
-              className="border-border bg-muted hover:bg-accent focus-visible:ring-ring flex size-[38px] shrink-0 items-center justify-center overflow-hidden rounded-full border transition-colors focus-visible:ring-2 focus-visible:outline-none"
-              aria-label="User menu">
-              {session.user.image ?
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
-                  src={session.user.image}
-                  alt=""
-                  aria-hidden="true"
-                  width={38}
-                  height={38}
-                  className="size-full object-cover"
-                />
-              : <span className="bg-muted text-foreground flex size-full items-center justify-center text-xs font-semibold">
-                  {session.user.name
-                    .trim()
-                    .split(/\s+/)
-                    .slice(0, 2)
-                    .map((p) => p[0]?.toUpperCase() ?? "")
-                    .join("") || "?"}
-                </span>
-              }
-            </DropdownMenuTrigger>
-            <DropdownMenuContent
-              align="end"
-              className="w-56">
-              <DropdownMenuGroup>
-                <DropdownMenuLabel>
-                  <span className="block truncate text-sm font-medium">
-                    {session.user.name}
-                  </span>
-                  <span className="text-muted-foreground block truncate text-xs font-normal">
-                    {session.user.email}
-                  </span>
-                </DropdownMenuLabel>
-              </DropdownMenuGroup>
-              <DropdownMenuSeparator />
-              <DropdownMenuGroup>
-                <DropdownMenuItem onClick={() => router.push("/" as never)}>
-                  <StoreIcon aria-hidden="true" />
-                  Storefront
-                </DropdownMenuItem>
-                {session.session.impersonatedBy && (
-                  <DropdownMenuItem
-                    onClick={handleStopImpersonating}
-                    disabled={isPending}>
-                    <UserRoundIcon aria-hidden="true" />
-                    Stop impersonating
-                  </DropdownMenuItem>
-                )}
-              </DropdownMenuGroup>
-              <DropdownMenuSeparator />
-              <DropdownMenuGroup>
-                <DropdownMenuItem
-                  onClick={async () => {
-                    try {
-                      await authClient.signOut();
-                    } catch {
-                      // ignore server unexpected response, still clear local state
-                    }
-                    clearCart();
-                    router.push("/");
-                    router.refresh();
-                  }}>
-                  <LogOutIcon aria-hidden="true" />
-                  Log out
-                </DropdownMenuItem>
-              </DropdownMenuGroup>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        )}
+        <UserMenu />
       </div>
     </header>
   );

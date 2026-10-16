@@ -1,18 +1,10 @@
 import type { Metadata } from "next";
 import type { Route } from "next";
 import { headers } from "next/headers";
-import Link from "next/link";
 import { redirect } from "next/navigation";
+import AuthCard from "@/components/Auth/AuthCard";
 import SignInForm from "@/components/Auth/SignInForm";
-import UnboxdLogo from "@/components/Brand/UnboxdLogo";
 import { auth } from "@/lib/auth";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/shadcnui/card";
 
 export const metadata: Metadata = {
   title: "Sign in",
@@ -38,25 +30,11 @@ const LoginPage = async ({
   }
 
   return (
-    <Card
-      withGradient
-      className="w-full max-w-md shadow-lg">
-      <CardHeader className="items-center justify-items-center text-center">
-        <Link
-          href="/"
-          className="flex items-center gap-2">
-          <UnboxdLogo size={32} />
-          <span className="font-heading text-[17px] font-semibold tracking-tight">
-            Unboxd
-          </span>
-        </Link>
-        <CardTitle className="text-lg">Sign in</CardTitle>
-        <CardDescription>Welcome back to Unboxd.</CardDescription>
-      </CardHeader>
-      <CardContent>
-        <SignInForm />
-      </CardContent>
-    </Card>
+    <AuthCard
+      title="Sign in"
+      description="Welcome back to Unboxd.">
+      <SignInForm />
+    </AuthCard>
   );
 };
 

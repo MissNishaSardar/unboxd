@@ -530,7 +530,7 @@ const CheckoutClient = ({
         <p className="text-muted-foreground text-sm">
           {isReorder ?
             "Reordering only these items. Your saved cart stays untouched."
-          : "Cash on delivery, no prepayment needed."}
+          : "Cash on delivery. Pay in cash when your order arrives."}
         </p>
       </header>
 

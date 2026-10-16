@@ -210,7 +210,7 @@ const HeroCarousel = ({ products }: { products?: ProductCardData[] }) => {
             return (
               <div
                 key={slide.heading}
-                className="flex min-w-full flex-none justify-center px-6 py-10 md:px-10 md:py-14">
+                className="flex min-w-full flex-none justify-center px-6 py-10 md:px-16 md:py-14">
                 <div className="flex w-full max-w-7xl flex-col gap-6 lg:grid lg:grid-cols-2 lg:items-center lg:gap-8">
                   <div className="flex flex-col items-start gap-4">
                     <span className="border-border bg-muted inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-medium">
@@ -349,7 +349,7 @@ const HeroCarousel = ({ products }: { products?: ProductCardData[] }) => {
         aria-label="Previous slide"
         aria-controls="hero-carousel-track"
         onClick={() => goTo(index - 1)}
-        className="absolute top-1/2 left-4 flex size-9 -translate-y-1/2 items-center justify-center rounded-full border border-white/20 bg-white/10 backdrop-blur-md transition-colors hover:bg-white/20 focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none">
+        className="absolute top-1/2 left-4 hidden size-9 -translate-y-1/2 items-center justify-center rounded-full border border-white/20 bg-white/10 backdrop-blur-md transition-colors hover:bg-white/20 focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none md:flex">
         <ChevronLeftIcon
           aria-hidden="true"
           className="size-5"
@@ -360,7 +360,7 @@ const HeroCarousel = ({ products }: { products?: ProductCardData[] }) => {
         aria-label="Next slide"
         aria-controls="hero-carousel-track"
         onClick={() => goTo(index + 1)}
-        className="absolute top-1/2 right-4 flex size-9 -translate-y-1/2 items-center justify-center rounded-full border border-white/20 bg-white/10 backdrop-blur-md transition-colors hover:bg-white/20 focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none">
+        className="absolute top-1/2 right-4 hidden size-9 -translate-y-1/2 items-center justify-center rounded-full border border-white/20 bg-white/10 backdrop-blur-md transition-colors hover:bg-white/20 focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none md:flex">
         <ChevronRightIcon
           aria-hidden="true"
           className="size-5"

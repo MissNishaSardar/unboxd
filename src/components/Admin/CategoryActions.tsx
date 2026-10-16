@@ -206,6 +206,10 @@ const CategoryActions = ({
           </AlertDialogDescription>
           <Select
             value={targetCategoryId}
+            items={reassignTargets.map((category) => ({
+              value: category.id,
+              label: category.name,
+            }))}
             onValueChange={(value) => setTargetCategoryId(value ?? "")}>
             <SelectTrigger>
               <SelectValue placeholder="Choose a category" />

@@ -18,6 +18,12 @@ import {
   SelectValue,
 } from "@/components/shadcnui/select";
 
+const ROLE_OPTIONS = [
+  { value: "all", label: "All roles" },
+  { value: "admin", label: "Admin" },
+  { value: "user", label: "User" },
+];
+
 const SORT_OPTIONS = [
   { value: "joined_desc", label: "Newest first" },
   { value: "joined_asc", label: "Oldest first" },
@@ -77,6 +83,7 @@ const UserFilters = () => {
       </InputGroup>
       <Select
         value={role}
+        items={ROLE_OPTIONS}
         onValueChange={(value) =>
           update("role", value === "all" || value === null ? "" : value)
         }>
@@ -93,6 +100,7 @@ const UserFilters = () => {
       </Select>
       <Select
         value={sort}
+        items={SORT_OPTIONS}
         onValueChange={(value) =>
           update("sort", value === "joined_desc" || value === null ? "" : value)
         }>

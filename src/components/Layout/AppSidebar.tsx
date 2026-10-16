@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { Heart, LayoutDashboard, Package, Settings, Store } from "lucide-react";
 
 import SidebarBrand from "@/components/Brand/SidebarBrand";
+import { authClient } from "@/lib/auth-client";
 import {
   Sidebar,
   SidebarContent,
@@ -28,6 +29,14 @@ const NAV_ITEMS = [
 
 const AppSidebar = () => {
   const pathname = usePathname();
+  const { data: session } = authClient.useSession();
+  // Admins reach the store through the avatar menu Storefront entry,
+  // so the account sidebar skips the Shop link for the admin role.
+  // The full list stays while the session loads to avoid flicker.
+  const isAdmin = session?.user?.role === "admin";
+  const items = NAV_ITEMS.filter(
+    (item) => !(isAdmin && item.href === "/products"),
+  );
 
   return (
     <Sidebar collapsible="icon">
@@ -39,7 +48,7 @@ const AppSidebar = () => {
           <SidebarGroupLabel>Navigation</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {NAV_ITEMS.map((item) => {
+              {items.map((item) => {
                 const isActive =
                   item.href === "/dashboard" ?
                     pathname === item.href

@@ -99,10 +99,15 @@ export async function placeOrder(input: unknown): Promise<PlaceOrderResult> {
   const freeShippingThreshold = Number(settings.freeShippingThreshold);
   const shippingFlatRate = Number(settings.shippingFlatRate);
 
+  // Read outside the write transaction. This keeps the interactive
+  // transaction short: only the stock decrement, counter claim, and order
+  // insert run under lock, so the transaction cannot starve behind other
+  // connections on SQLite (P2028 expired transaction).
+  const salePercent = await getActiveSalePercent();
+
   try {
     const order = await prisma.$transaction(
       async (tx) => {
-        const salePercent = await getActiveSalePercent();
         const skus = cart.map((line) => line.sku);
         const found = await tx.productVariant.findMany({
           where: { sku: { in: skus } },

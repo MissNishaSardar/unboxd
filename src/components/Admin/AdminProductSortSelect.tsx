@@ -40,6 +40,7 @@ const AdminProductSortSelect = () => {
   return (
     <Select
       value={sort}
+      items={[...SORT_OPTIONS]}
       onValueChange={handleChange}>
       <SelectTrigger
         size="sm"

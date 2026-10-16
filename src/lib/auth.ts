@@ -9,7 +9,12 @@ import { serverEnv } from "@/lib/env/serverEnv";
 export const auth = betterAuth({
   database: prismaAdapter(prisma, { provider: "sqlite" }),
   baseURL: serverEnv.BETTER_AUTH_URL,
-  trustedOrigins: [serverEnv.BETTER_AUTH_URL],
+  trustedOrigins: [
+    serverEnv.BETTER_AUTH_URL,
+    ...(serverEnv.BETTER_AUTH_URL.includes("localhost") ?
+      [serverEnv.BETTER_AUTH_URL.replace("localhost", "127.0.0.1")]
+    : []),
+  ],
   rateLimit: {
     window: 60,
     max: 100,

@@ -1,6 +1,7 @@
 "use client";
 
 import ThemeToggleButton from "@/components/Layout/ThemeToggleButton";
+import UserMenu from "@/components/Layout/UserMenu";
 import { Button } from "@/components/shadcnui/button";
 import {
   Breadcrumb,
@@ -10,26 +11,16 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@/components/shadcnui/breadcrumb";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuGroup,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/shadcnui/dropdown-menu";
 import { Separator } from "@/components/shadcnui/separator";
 import { SidebarTrigger } from "@/components/shadcnui/sidebar";
 import { useAtomValue, useSetAtom } from "jotai";
 import { useMounted } from "@/hooks/use-mounted";
-import { authClient } from "@/lib/auth-client";
-import { cartCountAtom, cartDrawerOpenAtom, clearCart } from "@/lib/cart/atoms";
+import { cartCountAtom, cartDrawerOpenAtom } from "@/lib/cart/atoms";
 import { cn } from "@/lib/utils";
 import { iconButtonClass } from "@/components/Layout/Header";
-import { LogOutIcon, ShoppingBagIcon } from "lucide-react";
+import { ShoppingBagIcon } from "lucide-react";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 
 const LABELS: Record<string, string> = {
   dashboard: "Dashboard",
@@ -52,8 +43,6 @@ function toLabel(segment: string): string {
 
 const PrivateHeader = () => {
   const pathname = usePathname();
-  const router = useRouter();
-  const { data: session } = authClient.useSession();
   const mounted = useMounted();
   const cartCount = useAtomValue(cartCountAtom);
   const setCartOpen = useSetAtom(cartDrawerOpenAtom);
@@ -120,64 +109,7 @@ const PrivateHeader = () => {
           )}
         </Button>
         <ThemeToggleButton className={iconButtonClass} />
-        {session && (
-          <DropdownMenu>
-            <DropdownMenuTrigger
-              className="border-border bg-muted hover:bg-accent focus-visible:ring-ring flex size-[38px] shrink-0 items-center justify-center overflow-hidden rounded-full border transition-colors focus-visible:ring-2 focus-visible:outline-none"
-              aria-label="User menu">
-              {session.user.image ?
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
-                  src={session.user.image}
-                  alt=""
-                  aria-hidden="true"
-                  width={38}
-                  height={38}
-                  className="size-full object-cover"
-                />
-              : <span className="bg-muted text-foreground flex size-full items-center justify-center text-xs font-semibold">
-                  {session.user.name
-                    .trim()
-                    .split(/\s+/)
-                    .slice(0, 2)
-                    .map((p) => p[0]?.toUpperCase() ?? "")
-                    .join("") || "?"}
-                </span>
-              }
-            </DropdownMenuTrigger>
-            <DropdownMenuContent
-              align="end"
-              className="w-56">
-              <DropdownMenuGroup>
-                <DropdownMenuLabel>
-                  <span className="block truncate text-sm font-medium">
-                    {session.user.name}
-                  </span>
-                  <span className="text-muted-foreground block truncate text-xs font-normal">
-                    {session.user.email}
-                  </span>
-                </DropdownMenuLabel>
-              </DropdownMenuGroup>
-              <DropdownMenuSeparator />
-              <DropdownMenuGroup>
-                <DropdownMenuItem
-                  onClick={async () => {
-                    try {
-                      await authClient.signOut();
-                    } catch {
-                      // ignore server unexpected response, still clear local state
-                    }
-                    clearCart();
-                    router.push("/");
-                    router.refresh();
-                  }}>
-                  <LogOutIcon aria-hidden="true" />
-                  Log out
-                </DropdownMenuItem>
-              </DropdownMenuGroup>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        )}
+        <UserMenu />
       </div>
     </header>
   );
