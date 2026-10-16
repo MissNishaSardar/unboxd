@@ -139,6 +139,7 @@ async function findOverlap(
   const rows = await prisma.flashSale.findMany({
     where: {
       isActive: true,
+      discountPercent: { gt: 0 },
       ...(excludeId ? { id: { not: excludeId } } : {}),
     },
   });
@@ -171,7 +172,7 @@ export async function createSale(input: unknown): Promise<FlashSaleResult> {
   if (parsed.data.discountPercent > maxDiscountPercent) {
     return { ok: false, error: "INVALID_INPUT" };
   }
-  if (parsed.data.isActive) {
+  if (parsed.data.isActive && parsed.data.discountPercent > 0) {
     const clash = await findOverlap({
       startsAt: parsed.data.startsAt,
       endsAt: parsed.data.endsAt,
@@ -180,16 +181,18 @@ export async function createSale(input: unknown): Promise<FlashSaleResult> {
   }
   try {
     const row = await prisma.$transaction(async (tx) => {
-      const rivals = await tx.flashSale.findMany({
-        where: { isActive: true },
-      });
-      const clash = rivals.find((r) =>
-        windowsOverlap(
-          { startsAt: parsed.data.startsAt, endsAt: parsed.data.endsAt },
-          r,
-        ),
-      );
-      if (clash) throw new Error("OVERLAP_GUARD");
+      if (parsed.data.isActive && parsed.data.discountPercent > 0) {
+        const rivals = await tx.flashSale.findMany({
+          where: { isActive: true, discountPercent: { gt: 0 } },
+        });
+        const clash = rivals.find((r) =>
+          windowsOverlap(
+            { startsAt: parsed.data.startsAt, endsAt: parsed.data.endsAt },
+            r,
+          ),
+        );
+        if (clash) throw new Error("OVERLAP_GUARD");
+      }
       return tx.flashSale.create({ data: { ...parsed.data } });
     });
     refreshStorefront();
@@ -220,7 +223,7 @@ export async function updateSale(
   if (parsed.data.discountPercent > maxDiscountPercent) {
     return { ok: false, error: "INVALID_INPUT" };
   }
-  if (parsed.data.isActive) {
+  if (parsed.data.isActive && parsed.data.discountPercent > 0) {
     const clash = await findOverlap(
       { startsAt: parsed.data.startsAt, endsAt: parsed.data.endsAt },
       id,
@@ -231,16 +234,22 @@ export async function updateSale(
     await prisma.$transaction(async (tx) => {
       const existing = await tx.flashSale.findUnique({ where: { id } });
       if (!existing) throw new Error("NOT_FOUND_GUARD");
-      const rivals = await tx.flashSale.findMany({
-        where: { isActive: true, id: { not: id } },
-      });
-      const clash = rivals.find((r) =>
-        windowsOverlap(
-          { startsAt: parsed.data.startsAt, endsAt: parsed.data.endsAt },
-          r,
-        ),
-      );
-      if (clash) throw new Error("OVERLAP_GUARD");
+      if (parsed.data.isActive && parsed.data.discountPercent > 0) {
+        const rivals = await tx.flashSale.findMany({
+          where: {
+            isActive: true,
+            discountPercent: { gt: 0 },
+            id: { not: id },
+          },
+        });
+        const clash = rivals.find((r) =>
+          windowsOverlap(
+            { startsAt: parsed.data.startsAt, endsAt: parsed.data.endsAt },
+            r,
+          ),
+        );
+        if (clash) throw new Error("OVERLAP_GUARD");
+      }
       await tx.flashSale.update({
         where: { id },
         data: {
@@ -294,9 +303,24 @@ export async function duplicateSale(id: string): Promise<FlashSaleResult> {
   try {
     const existing = await prisma.flashSale.findUnique({ where: { id } });
     if (!existing) return { ok: false, error: "NOT_FOUND" };
+    const root =
+      existing.name.replace(/ copy( \d+)?$/, "").trim() || existing.name;
+    const siblings = await prisma.flashSale.findMany({
+      where: { name: { startsWith: root.slice(0, 70) } },
+      select: { name: true },
+    });
+    const taken = new Set(siblings.map((sibling) => sibling.name));
+    let count = 1;
+    let name = "";
+    while (count <= 999) {
+      const suffix = count === 1 ? " copy" : ` copy ${count}`;
+      name = `${root.slice(0, 80 - suffix.length)}${suffix}`;
+      if (!taken.has(name)) break;
+      count += 1;
+    }
     const row = await prisma.flashSale.create({
       data: {
-        name: `${existing.name} copy`.slice(0, 80),
+        name,
         discountPercent: existing.discountPercent,
         startsAt: existing.startsAt,
         endsAt: existing.endsAt,

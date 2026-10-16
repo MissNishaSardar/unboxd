@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import type { Route } from "next";
+import { CircleStopIcon, CopyIcon, PencilIcon, Trash2Icon } from "lucide-react";
 import { Button } from "@/components/shadcnui/button";
 import {
   AlertDialog,
@@ -49,6 +50,10 @@ const SaleRowActions = ({ id, name }: { id: string; name: string }) => {
           variant="ghost"
           size="sm"
           aria-label={`Edit ${name}`}>
+          <PencilIcon
+            data-icon="inline-start"
+            aria-hidden="true"
+          />
           Edit
         </Button>
         <Button
@@ -56,6 +61,10 @@ const SaleRowActions = ({ id, name }: { id: string; name: string }) => {
           size="sm"
           disabled={busy}
           onClick={() => void run(() => endSaleNow(id), "Sale ended")}>
+          <CircleStopIcon
+            data-icon="inline-start"
+            aria-hidden="true"
+          />
           End now
         </Button>
         <Button
@@ -63,14 +72,22 @@ const SaleRowActions = ({ id, name }: { id: string; name: string }) => {
           size="sm"
           disabled={busy}
           onClick={() => void run(() => duplicateSale(id), "Sale duplicated")}>
+          <CopyIcon
+            data-icon="inline-start"
+            aria-hidden="true"
+          />
           Duplicate
         </Button>
         <Button
           variant="ghost"
           size="sm"
           disabled={busy}
-          className="hover:text-destructive"
+          className="text-destructive hover:text-destructive hover:bg-destructive/10"
           onClick={() => setDeleteOpen(true)}>
+          <Trash2Icon
+            data-icon="inline-start"
+            aria-hidden="true"
+          />
           Delete
         </Button>
       </div>

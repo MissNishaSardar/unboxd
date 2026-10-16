@@ -9,13 +9,19 @@ import type {
   SortingState,
 } from "@tanstack/react-table";
 import type { RowSelectionState } from "@tanstack/react-table";
-import { ArrowDownIcon, ArrowUpDownIcon, ArrowUpIcon } from "lucide-react";
+import {
+  ArrowDownIcon,
+  ArrowUpDownIcon,
+  ArrowUpIcon,
+  MegaphoneIcon,
+  TriangleAlertIcon,
+} from "lucide-react";
 import SaleRowActions from "@/components/Admin/SaleRowActions";
 import DataTable from "@/components/Admin/DataTable";
 import { Badge } from "@/components/shadcnui/badge";
 import { Button } from "@/components/shadcnui/button";
 import { dealStatus } from "@/lib/pricing";
-import { formatISTRange } from "@/lib/deals";
+import { formatISTRange, saleWindowsOverlap } from "@/lib/deals";
 import type { FlashSaleData } from "@/server/deals";
 
 const SortHeaderButton = ({
@@ -69,6 +75,33 @@ const statusChip = (sale: {
   return <Badge variant="secondary">Expired</Badge>;
 };
 
+type SaleStatusFilter =
+  "all" | "active" | "scheduled" | "paused" | "ended" | "info";
+
+const FILTER_OPTIONS: { value: SaleStatusFilter; label: string }[] = [
+  { value: "all", label: "All" },
+  { value: "active", label: "Active" },
+  { value: "scheduled", label: "Scheduled" },
+  { value: "paused", label: "Paused" },
+  { value: "ended", label: "Ended" },
+  { value: "info", label: "Info" },
+];
+
+const getFilterKey = (
+  sale: FlashSaleData,
+): Exclude<SaleStatusFilter, "all"> => {
+  if (!sale.isActive) return "paused";
+  if (sale.discountPercent <= 0) return "info";
+  const state = dealStatus({
+    discountPercent: sale.discountPercent,
+    discountStartsAt: sale.startsAt,
+    discountEndsAt: sale.endsAt,
+  });
+  if (state === "live") return "active";
+  if (state === "scheduled") return "scheduled";
+  return "ended";
+};
+
 const sortSales = (
   sales: FlashSaleData[],
   sorting: SortingState,
@@ -110,6 +143,7 @@ const DealsTable = ({ sales }: { sales: FlashSaleData[] }) => {
   const [sorting, setSorting] = useState<SortingState>([
     { id: "window", desc: true },
   ]);
+  const [statusFilter, setStatusFilter] = useState<SaleStatusFilter>("all");
 
   const handleSortingChange: OnChangeFn<SortingState> = (updater) => {
     const next = typeof updater === "function" ? updater(sorting) : updater;
@@ -117,7 +151,43 @@ const DealsTable = ({ sales }: { sales: FlashSaleData[] }) => {
     setSorting(next);
   };
 
-  const data = useMemo(() => sortSales(sales, sorting), [sales, sorting]);
+  const counts = useMemo(() => {
+    const result: Record<SaleStatusFilter, number> = {
+      all: sales.length,
+      active: 0,
+      scheduled: 0,
+      paused: 0,
+      ended: 0,
+      info: 0,
+    };
+    for (const sale of sales) {
+      result[getFilterKey(sale)] += 1;
+    }
+    return result;
+  }, [sales]);
+
+  const conflicts = useMemo(() => {
+    const result = new Map<string, FlashSaleData[]>();
+    const discountSales = sales.filter((sale) => sale.discountPercent > 0);
+    for (const sale of discountSales) {
+      const rivals = discountSales.filter(
+        (other) =>
+          other.id !== sale.id &&
+          other.isActive &&
+          saleWindowsOverlap(sale, other),
+      );
+      if (rivals.length > 0) result.set(sale.id, rivals);
+    }
+    return result;
+  }, [sales]);
+
+  const data = useMemo(() => {
+    const filtered =
+      statusFilter === "all" ? sales : (
+        sales.filter((sale) => getFilterKey(sale) === statusFilter)
+      );
+    return sortSales(filtered, sorting);
+  }, [sales, sorting, statusFilter]);
 
   const columns = useMemo<ColumnDef<FlashSaleData>[]>(
     () => [
@@ -133,22 +203,32 @@ const DealsTable = ({ sales }: { sales: FlashSaleData[] }) => {
             }
           />
         ),
-        cell: ({ row }) => (
-          <div className="min-w-0">
-            <p className="truncate text-sm font-medium">
-              <Link
-                href={`/admin/deals/${row.original.id}/edit` as Route}
-                className="hover:underline">
-                {row.original.name}
-              </Link>
-            </p>
-            {row.original.bannerText !== "" && (
-              <p className="text-muted-foreground truncate text-xs">
-                Banner on
+        cell: ({ row }) => {
+          const sale = row.original;
+          const hasBanner = sale.bannerText.trim() !== "";
+          return (
+            <div className="flex min-w-0 flex-col items-start gap-1">
+              <p className="truncate text-sm font-medium">
+                <Link
+                  href={`/admin/deals/${sale.id}/edit` as Route}
+                  className="hover:underline">
+                  {sale.name}
+                </Link>
               </p>
-            )}
-          </div>
-        ),
+              {hasBanner && (
+                <Badge
+                  variant={sale.bannerEnabled ? "outline" : "secondary"}
+                  title={sale.bannerText}>
+                  <MegaphoneIcon
+                    data-icon="inline-start"
+                    aria-hidden="true"
+                  />
+                  {sale.bannerEnabled ? "Banner on" : "Banner off"}
+                </Badge>
+              )}
+            </div>
+          );
+        },
       },
       {
         id: "discount",
@@ -199,7 +279,38 @@ const DealsTable = ({ sales }: { sales: FlashSaleData[] }) => {
             }
           />
         ),
-        cell: ({ row }) => statusChip(row.original),
+        cell: ({ row }) => {
+          const sale = row.original;
+          const rivals = conflicts.get(sale.id) ?? [];
+          return (
+            <span className="inline-flex items-center gap-1.5">
+              {statusChip(sale)}
+              {rivals.length > 0 && (
+                <span
+                  title={
+                    sale.isActive ?
+                      `Overlaps ${rivals.map((rival) => rival.name).join(", ")}. Only one discount sale can cover a window.`
+                    : `Would overlap ${rivals.map((rival) => rival.name).join(", ")} if enabled.`
+                  }
+                  aria-label={
+                    sale.isActive ?
+                      `Overlaps ${rivals.map((rival) => rival.name).join(", ")}`
+                    : `Would overlap ${rivals.map((rival) => rival.name).join(", ")} if enabled`
+                  }
+                  role="img">
+                  <TriangleAlertIcon
+                    aria-hidden="true"
+                    className={
+                      sale.isActive ?
+                        "text-destructive size-4"
+                      : "text-muted-foreground size-4"
+                    }
+                  />
+                </span>
+              )}
+            </span>
+          );
+        },
       },
       {
         id: "actions",
@@ -214,13 +325,38 @@ const DealsTable = ({ sales }: { sales: FlashSaleData[] }) => {
         ),
       },
     ],
-    [],
+    [conflicts],
   );
 
   const toolbar = (
-    <div className="flex items-center justify-between gap-2">
+    <div className="flex flex-col gap-2">
+      <div
+        role="group"
+        aria-label="Filter by status"
+        className="flex flex-wrap items-center gap-1.5">
+        <span className="text-muted-foreground text-xs font-medium">
+          Status:
+        </span>
+        {FILTER_OPTIONS.map((option) => (
+          <Button
+            key={option.value}
+            type="button"
+            variant={statusFilter === option.value ? "default" : "outline"}
+            size="sm"
+            onClick={() => setStatusFilter(option.value)}
+            aria-pressed={statusFilter === option.value}>
+            {option.label}
+            <span className="tabular-nums opacity-70">
+              {counts[option.value]}
+            </span>
+          </Button>
+        ))}
+      </div>
       <p className="text-muted-foreground text-xs tabular-nums">
-        {sales.length} sale{sales.length === 1 ? "" : "s"}
+        {statusFilter === "all" ?
+          `${sales.length} sale${sales.length === 1 ? "" : "s"}`
+        : `${data.length} of ${sales.length} sale${sales.length === 1 ? "" : "s"}`
+        }
       </p>
     </div>
   );
@@ -236,8 +372,14 @@ const DealsTable = ({ sales }: { sales: FlashSaleData[] }) => {
       onRowSelectionChange={() => {}}
       enableRowSelection={false}
       toolbar={toolbar}
-      emptyTitle="No sales yet"
-      emptyDescription="Create one for the next festival rush."
+      emptyTitle={
+        statusFilter === "all" ? "No sales yet" : "No sales match this filter"
+      }
+      emptyDescription={
+        statusFilter === "all" ?
+          "Create one for the next festival rush."
+        : "Try a different status filter."
+      }
       minWidthClass="min-w-[720px]"
     />
   );

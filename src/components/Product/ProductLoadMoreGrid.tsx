@@ -13,12 +13,14 @@ type Props = {
   initialProducts: ProductCardData[];
   total: number;
   baseCategories?: string[];
+  query?: string;
 };
 
 const ProductLoadMoreGrid = ({
   initialProducts,
   total,
   baseCategories,
+  query,
 }: Props) => {
   const searchParams = useSearchParams();
   const [products, setProducts] = useState(initialProducts);
@@ -68,7 +70,10 @@ const ProductLoadMoreGrid = ({
 
   return (
     <>
-      <ProductGrid products={products} />
+      <ProductGrid
+        products={products}
+        query={query}
+      />
       {canLoadMore && (
         <div className="flex flex-col items-center gap-2 pt-2">
           <p className="text-muted-foreground text-xs tabular-nums">

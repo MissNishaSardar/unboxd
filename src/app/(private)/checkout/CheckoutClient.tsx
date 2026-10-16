@@ -40,6 +40,15 @@ import {
 } from "@/server/user/addresses";
 import AddressCard from "@/components/Address/AddressCard";
 import AddressForm from "@/components/Address/AddressForm";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogTitle,
+} from "@/components/shadcnui/alert-dialog";
 import { Button } from "@/components/shadcnui/button";
 import {
   Empty,
@@ -147,6 +156,10 @@ const CheckoutClient = ({
   );
   const [editingId, setEditingId] = useState<string | null>(null);
   const [placing, setPlacing] = useState(false);
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [pendingAddress, setPendingAddress] = useState<checkoutType | null>(
+    null,
+  );
   const [placedOrder, setPlacedOrder] = useState<{
     orderId: string;
     orderNumber: number;
@@ -306,6 +319,8 @@ const CheckoutClient = ({
     } finally {
       placingRef.current = false;
       setPlacing(false);
+      setConfirmOpen(false);
+      setPendingAddress(null);
     }
   };
 
@@ -413,8 +428,27 @@ const CheckoutClient = ({
     state: string;
     pincode: string;
   }) => {
-    void doPlaceOrder({ address: values });
+    setPendingAddress(values);
+    setConfirmOpen(true);
   };
+
+  const openConfirmForSavedAddress = () => {
+    if (!selectedAddress || placing || !codEnabled) return;
+    setPendingAddress(null);
+    setConfirmOpen(true);
+  };
+
+  const handleConfirmPlaceOrder = () => {
+    if (pendingAddress) {
+      void doPlaceOrder({ address: pendingAddress });
+      return;
+    }
+    if (selectedAddress) {
+      void doPlaceOrder({ addressId: selectedAddress.id });
+    }
+  };
+
+  const confirmAddress = pendingAddress ?? selectedAddress;
 
   const setLineQuantity = (sku: string, quantity: number) => {
     const clamp = (item: CartItem) => ({
@@ -446,7 +480,7 @@ const CheckoutClient = ({
 
   if (visiblePlacedOrder) {
     return (
-      <div className="mx-auto flex max-w-md flex-col items-center gap-4 py-10 text-center">
+      <div className="mx-auto flex min-h-[60vh] w-full max-w-md flex-col items-center justify-center gap-4 py-10 text-center">
         <svg
           viewBox="0 0 52 52"
           aria-hidden="true"
@@ -832,20 +866,14 @@ const CheckoutClient = ({
                 <Button
                   type="button"
                   size="lg"
-                  disabled={placing || !codEnabled || items.length === 0}
-                  data-icon={placing ? "inline-start" : undefined}
-                  onClick={() => {
-                    if (selectedAddress) {
-                      void doPlaceOrder({ addressId: selectedAddress.id });
-                    }
-                  }}>
-                  {placing && (
-                    <Loader2Icon
-                      aria-hidden="true"
-                      className="animate-spin"
-                    />
-                  )}
-                  {placing ? "Placing order..." : "Place order"}
+                  disabled={
+                    placing ||
+                    !codEnabled ||
+                    items.length === 0 ||
+                    !selectedAddress
+                  }
+                  onClick={openConfirmForSavedAddress}>
+                  Place order
                 </Button>
 
                 <p className="text-muted-foreground text-center text-xs">
@@ -888,6 +916,91 @@ const CheckoutClient = ({
           </aside>
         </div>
       }
+      <AlertDialog
+        open={confirmOpen}
+        onOpenChange={(open) => {
+          if (!open && placing) return;
+          setConfirmOpen(open);
+          if (!open) setPendingAddress(null);
+        }}>
+        <AlertDialogContent>
+          <AlertDialogTitle>Confirm your order?</AlertDialogTitle>
+          <AlertDialogDescription>
+            Review items, total and delivery address before placing this cash on
+            delivery order. COD orders cannot be edited after placement.
+          </AlertDialogDescription>
+          <div className="flex max-h-72 flex-col gap-4 overflow-y-auto rounded-md border p-3">
+            <ul className="flex flex-col gap-2">
+              {items.map((item) => (
+                <li
+                  key={`${item.productId}-${item.sku}`}
+                  className="flex items-start justify-between gap-3 text-sm">
+                  <div className="min-w-0 flex-1">
+                    <p className="line-clamp-2 font-medium">{item.name}</p>
+                    <p className="text-muted-foreground text-xs">
+                      {item.variantName} · Qty {item.quantity}
+                    </p>
+                  </div>
+                  <span className="shrink-0 tabular-nums">
+                    {formatPrice(item.price * item.quantity)}
+                  </span>
+                </li>
+              ))}
+            </ul>
+            <div className="border-border flex flex-col gap-1 border-t pt-3 text-sm">
+              <div className="flex items-center justify-between">
+                <span className="text-muted-foreground">Subtotal</span>
+                <span className="tabular-nums">{formatPrice(total)}</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-muted-foreground">Shipping</span>
+                <span className="tabular-nums">
+                  {shipping === 0 ? "Free" : formatPrice(shipping)}
+                </span>
+              </div>
+              <div className="flex items-center justify-between font-semibold">
+                <span>Total</span>
+                <span className="tabular-nums">
+                  {formatPrice(total + shipping)}
+                </span>
+              </div>
+            </div>
+            {confirmAddress && (
+              <div className="border-border border-t pt-3 text-sm">
+                <p className="font-medium">Deliver to</p>
+                <p className="mt-1 font-semibold">{confirmAddress.name}</p>
+                <p className="text-muted-foreground">
+                  {confirmAddress.addressLine}, {confirmAddress.city},{" "}
+                  {confirmAddress.state} {confirmAddress.pincode}
+                </p>
+                <p className="text-muted-foreground tabular-nums">
+                  +91 {confirmAddress.phone}
+                </p>
+              </div>
+            )}
+            <p className="text-muted-foreground text-xs">
+              Cash on delivery, arriving by {deliveryDate}. Free returns within{" "}
+              {returnWindowDays} days.
+            </p>
+          </div>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={placing}>
+              Review order
+            </AlertDialogCancel>
+            <AlertDialogAction
+              disabled={placing || !confirmAddress || items.length === 0}
+              onClick={handleConfirmPlaceOrder}>
+              {placing && (
+                <Loader2Icon
+                  aria-hidden="true"
+                  className="animate-spin"
+                />
+              )}
+              {placing ? "Placing order..." : "Confirm order"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };

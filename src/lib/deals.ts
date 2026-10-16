@@ -88,3 +88,35 @@ export const formatISTRange = (
   if (end) return `Until ${formatISTDay(end)}, ${formatISTTime(end)} IST`;
   return "";
 };
+
+type SaleWindowInput = {
+  startsAt?: Date | string | null;
+  endsAt?: Date | string | null;
+};
+
+const toWindowTime = (
+  value: Date | string | null | undefined,
+): number | null => {
+  if (value === null || value === undefined) return null;
+  if (value instanceof Date) {
+    const time = value.getTime();
+    return Number.isNaN(time) ? null : time;
+  }
+  if (typeof value === "string") {
+    if (value.trim() === "") return null;
+    const time = Date.parse(value);
+    return Number.isFinite(time) ? time : null;
+  }
+  return null;
+};
+
+export const saleWindowsOverlap = (
+  a: SaleWindowInput,
+  b: SaleWindowInput,
+): boolean => {
+  const startA = toWindowTime(a.startsAt) ?? -Infinity;
+  const endA = toWindowTime(a.endsAt) ?? Infinity;
+  const startB = toWindowTime(b.startsAt) ?? -Infinity;
+  const endB = toWindowTime(b.endsAt) ?? Infinity;
+  return startA < endB && startB < endA;
+};

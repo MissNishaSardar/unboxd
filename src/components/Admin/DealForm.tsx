@@ -1,7 +1,7 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Loader2Icon } from "lucide-react";
+import { Loader2Icon, TriangleAlertIcon } from "lucide-react";
 import type { Route } from "next";
 import { useRouter } from "next/navigation";
 import { Controller, useForm } from "react-hook-form";
@@ -27,6 +27,7 @@ import { dealStatus } from "@/lib/pricing";
 import {
   formatISTRange,
   fromDateTimeLocalIST,
+  saleWindowsOverlap,
   toDateTimeLocalIST,
 } from "@/lib/deals";
 import { flashSaleSchema, type flashSaleType } from "@/lib/zodSchema";
@@ -46,11 +47,13 @@ const DealForm = ({
   saleId,
   initialData,
   maxDiscountPercent,
+  otherSales = [],
 }: {
   mode: "create" | "edit";
   saleId?: string;
   initialData?: FlashSaleData;
   maxDiscountPercent: number;
+  otherSales?: FlashSaleData[];
 }) => {
   const router = useRouter();
   const {
@@ -89,6 +92,7 @@ const DealForm = ({
   const startRaw = watch("startsAt");
   const endRaw = watch("endsAt");
   const bannerOn = watch("bannerEnabled");
+  const saleEnabled = watch("isActive");
   const percent = Number(discountValue) || 0;
   const start = toISTDate(startRaw);
   const end = toISTDate(endRaw);
@@ -98,6 +102,19 @@ const DealForm = ({
     discountEndsAt: end,
   });
   const range = formatISTRange(start, end);
+  const clashes = (saleEnabled && percent > 0 ? otherSales : []).filter(
+    (other) =>
+      other.isActive &&
+      other.discountPercent > 0 &&
+      saleWindowsOverlap({ startsAt: start, endsAt: end }, other),
+  );
+  const clash = clashes[0] ?? null;
+  const clashRange = clash ? formatISTRange(clash.startsAt, clash.endsAt) : "";
+  const clashText =
+    !clash ? null
+    : clashes.length > 1 ?
+      `Overlaps ${clash.name} and ${clashes.length - 1} other${clashes.length - 1 === 1 ? "" : "s"}${clashRange ? ` (${clashRange})` : ""}. Save is blocked while two discount sales cover the same window.`
+    : `Overlaps ${clash.name}${clashRange ? ` (${clashRange})` : ""}. Save is blocked while two discount sales cover the same window.`;
   const summary =
     percent <= 0 ? `Info banner only, no price cut${range ? `, ${range}` : ""}.`
     : state === "live" ?
@@ -271,6 +288,17 @@ const DealForm = ({
                 Clear schedule
               </Button>
             </div>
+            {clashText && (
+              <div
+                role="alert"
+                className="border-destructive/50 bg-destructive/10 text-destructive flex items-start gap-2 rounded-md border px-3 py-2 text-xs">
+                <TriangleAlertIcon
+                  aria-hidden="true"
+                  className="mt-0.5 size-4 shrink-0"
+                />
+                <p>{clashText}</p>
+              </div>
+            )}
             <p className="text-muted-foreground text-xs">{summary}</p>
             <Controller
               name="bannerText"

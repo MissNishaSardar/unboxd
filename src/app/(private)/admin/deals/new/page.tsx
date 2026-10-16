@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import DealForm from "@/components/Admin/DealForm";
 import { requireAdminPage } from "@/lib/guard";
 import { getStoreSettings } from "@/server/admin/settings";
+import { getFlashSales } from "@/server/deals";
 
 export const metadata: Metadata = {
   title: "New Sale",
@@ -10,7 +11,11 @@ export const metadata: Metadata = {
 
 const NewSalePage = async () => {
   await requireAdminPage();
-  const settings = await getStoreSettings();
+  const [settings, salesResult] = await Promise.all([
+    getStoreSettings(),
+    getFlashSales(),
+  ]);
+  const otherSales = salesResult.ok ? salesResult.sales : [];
 
   return (
     <div className="mx-auto flex max-w-3xl flex-col gap-6">
@@ -26,6 +31,7 @@ const NewSalePage = async () => {
       <DealForm
         mode="create"
         maxDiscountPercent={settings.maxDiscountPercent}
+        otherSales={otherSales}
       />
     </div>
   );

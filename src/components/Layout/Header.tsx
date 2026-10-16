@@ -286,6 +286,8 @@ const Header = ({ brands }: { brands?: BrandWithCount[] }) => {
               )}
             </Button>
 
+            <ThemeToggleButton className={iconButtonClass} />
+
             {isPending ?
               null
             : session ?
@@ -371,8 +373,6 @@ const Header = ({ brands }: { brands?: BrandWithCount[] }) => {
                 />
               </Link>
             }
-
-            <ThemeToggleButton className={iconButtonClass} />
           </div>
         </div>
 

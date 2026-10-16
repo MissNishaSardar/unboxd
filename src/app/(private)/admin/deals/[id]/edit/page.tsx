@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import DealForm from "@/components/Admin/DealForm";
 import { requireAdminPage } from "@/lib/guard";
 import { getStoreSettings } from "@/server/admin/settings";
+import { getFlashSales } from "@/server/deals";
 import prisma from "@/lib/dbClient/prisma";
 
 export const metadata: Metadata = {
@@ -17,11 +18,14 @@ const EditSalePage = async ({
 }) => {
   await requireAdminPage();
   const { id } = await params;
-  const [row, settings] = await Promise.all([
+  const [row, settings, salesResult] = await Promise.all([
     prisma.flashSale.findUnique({ where: { id } }),
     getStoreSettings(),
+    getFlashSales(),
   ]);
   if (!row) notFound();
+  const otherSales =
+    salesResult.ok ? salesResult.sales.filter((sale) => sale.id !== id) : [];
 
   return (
     <div className="mx-auto flex max-w-3xl flex-col gap-6">
@@ -47,6 +51,7 @@ const EditSalePage = async ({
           updatedAt: row.updatedAt.toISOString(),
         }}
         maxDiscountPercent={settings.maxDiscountPercent}
+        otherSales={otherSales}
       />
     </div>
   );
