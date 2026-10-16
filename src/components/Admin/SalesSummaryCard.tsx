@@ -1,42 +1,45 @@
 import { TrendingUpIcon } from "lucide-react";
+import AdminEmptyState from "@/components/Admin/AdminEmptyState";
 import {
   Card,
   CardContent,
+  CardDescription,
   CardHeader,
   CardTitle,
 } from "@/components/shadcnui/card";
 import { Separator } from "@/components/shadcnui/separator";
 import { formatPrice } from "@/lib/format";
+import { cn } from "@/lib/utils";
 import { getSalesSummary } from "@/server/admin/queries";
 
-const SalesSummaryCard = async () => {
+const SalesSummaryCard = async ({ className }: { className?: string }) => {
   const summary = await getSalesSummary();
   const hasSales = summary.totalOrders > 0;
 
   if (!hasSales) {
     return (
-      <Card>
+      <Card className={cn("flex h-full flex-col", className)}>
         <CardHeader>
           <CardTitle>Sales this week</CardTitle>
+          <CardDescription>Orders and revenue since Monday</CardDescription>
         </CardHeader>
-        <CardContent>
-          <div className="flex flex-col items-start gap-1">
-            <p className="text-sm font-medium">No sales yet</p>
-            <p className="text-muted-foreground text-sm">
-              Share your store to get the first order in.
-            </p>
-          </div>
+        <CardContent className="flex flex-1 flex-col">
+          <AdminEmptyState
+            title="No sales yet"
+            message="Share your store to get the first order in."
+          />
         </CardContent>
       </Card>
     );
   }
 
   return (
-    <Card>
+    <Card className={cn("flex h-full flex-col", className)}>
       <CardHeader>
         <CardTitle>Sales this week</CardTitle>
+        <CardDescription>Orders and revenue since Monday</CardDescription>
       </CardHeader>
-      <CardContent>
+      <CardContent className="flex flex-1 flex-col">
         <div className="flex flex-col gap-2">
           <div className="flex items-center justify-between">
             <span className="text-muted-foreground text-sm">Orders</span>
@@ -60,7 +63,7 @@ const SalesSummaryCard = async () => {
             </span>
           </div>
         </div>
-        <div className="text-primary mt-3 flex items-center gap-1.5 text-xs [&_svg]:size-3.5">
+        <div className="text-primary mt-auto flex items-center gap-1.5 pt-3 text-xs [&_svg]:size-3.5">
           <TrendingUpIcon aria-hidden="true" />
           {summary.weekOrders} this week
         </div>
