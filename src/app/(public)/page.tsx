@@ -13,7 +13,7 @@ import { resolveProductImageUrl } from "@/lib/placeholder";
 
 export const metadata: Metadata = {
   title: {
-    absolute: "Unboxd | Electronics, Unboxed",
+    absolute: "unboxd | Electronics, Unboxed",
   },
   description:
     "Shop smartphones, laptops, audio, and accessories with fast COD delivery.",
@@ -70,10 +70,6 @@ const HomePage = async () => {
       </section>
 
       <section className="reveal reveal-3 border-border bg-card relative grid overflow-hidden rounded-3xl border p-6 md:p-10 lg:grid-cols-2 lg:gap-6">
-        <div
-          aria-hidden="true"
-          className="texture-grid pointer-events-none absolute inset-0 [mask-image:radial-gradient(70%_80%_at_50%_20%,black,transparent)] opacity-60"
-        />
         <div
           className="bg-primary/15 pointer-events-none absolute -bottom-32 left-1/4 hidden size-96 rounded-full blur-3xl md:block"
           aria-hidden="true"

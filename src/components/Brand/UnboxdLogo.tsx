@@ -13,7 +13,7 @@ const UnboxdLogo = ({
   className,
   size = 48,
   "aria-hidden": ariaHidden,
-  "aria-label": ariaLabel = "Unboxd logo",
+  "aria-label": ariaLabel = "unboxd logo",
   role = "img",
 }: UnboxdLogoProps) => {
   const rawId = useId();
@@ -44,11 +44,11 @@ const UnboxdLogo = ({
           y2="1">
           <stop
             offset="0"
-            stopColor="#a5b4fc"
+            stopColor="#7dd3f8"
           />
           <stop
             offset="1"
-            stopColor="#6366f1"
+            stopColor="#0ea5e9"
           />
         </linearGradient>
         <linearGradient
@@ -59,11 +59,11 @@ const UnboxdLogo = ({
           y2="1">
           <stop
             offset="0"
-            stopColor="#a78bfa"
+            stopColor="#38bdf8"
           />
           <stop
             offset="1"
-            stopColor="#8b5cf6"
+            stopColor="#0f89c0"
           />
         </linearGradient>
         <linearGradient
@@ -74,11 +74,11 @@ const UnboxdLogo = ({
           y2="1">
           <stop
             offset="0"
-            stopColor="#6366f1"
+            stopColor="#0ea5e9"
           />
           <stop
             offset="1"
-            stopColor="#4338ca"
+            stopColor="#0b5a82"
           />
         </linearGradient>
         <linearGradient
@@ -89,11 +89,11 @@ const UnboxdLogo = ({
           y2="1">
           <stop
             offset="0"
-            stopColor="#8b5cf6"
+            stopColor="#0f89c0"
           />
           <stop
             offset="1"
-            stopColor="#5b21b6"
+            stopColor="#084f70"
           />
         </linearGradient>
       </defs>
@@ -101,8 +101,8 @@ const UnboxdLogo = ({
       {/* dark interior (the open part) */}
       <path
         d="M24 13 L39 20.5 L24 28 L9 20.5 Z"
-        fill="#171233"
-        stroke="#a5b4fc"
+        fill="#0a1d2e"
+        stroke="#7dd3f8"
         strokeOpacity="0.25"
       />
 
@@ -129,15 +129,15 @@ const UnboxdLogo = ({
       {/* sparkle coming out */}
       <path
         d="M24 1.5 Q25.1 5.4 29 6.5 Q25.1 7.6 24 11.5 Q22.9 7.6 19 6.5 Q22.9 5.4 24 1.5 Z"
-        fill="#e0e7ff"
+        fill="#e0f6ff"
       />
       <path
         d="M33.5 2 Q34 3.5 35.5 4 Q34 4.5 33.5 6 Q33 4.5 31.5 4 Q33 3.5 33.5 2 Z"
-        fill="#a5b4fc"
+        fill="#a5dff7"
       />
       <path
         d="M14 3.5 Q14.5 5 16 5.5 Q14.5 6 14 7.5 Q13.5 6 12 5.5 Q13.5 5 14 3.5 Z"
-        fill="#a5b4fc"
+        fill="#a5dff7"
       />
     </svg>
   );

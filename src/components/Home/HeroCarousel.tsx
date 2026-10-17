@@ -181,10 +181,6 @@ const HeroCarousel = ({ products }: { products?: ProductCardData[] }) => {
       onKeyDown={onKeyDown}
       className="bg-card relative overflow-hidden">
       <div
-        aria-hidden="true"
-        className="texture-dots pointer-events-none absolute inset-0 [mask-image:radial-gradient(60%_70%_at_70%_20%,black,transparent)] opacity-50"
-      />
-      <div
         className="bg-primary/15 pointer-events-none absolute -top-32 right-0 hidden size-96 rounded-full blur-3xl md:block"
         aria-hidden="true"
       />

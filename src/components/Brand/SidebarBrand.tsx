@@ -16,8 +16,8 @@ const SidebarBrand = ({ href, subtitle }: SidebarBrandProps) => {
         aria-hidden="true"
       />
       <div className="flex min-w-0 flex-col group-data-[collapsible=icon]:hidden">
-        <span className="truncate text-sm leading-none font-medium">
-          Unboxd
+        <span className="truncate bg-gradient-to-b from-[#0f89c0] to-[#0b5a82] bg-clip-text text-sm leading-none font-medium text-transparent dark:from-[#7dd3f8] dark:to-[#0ea5e9]">
+          unboxd
         </span>
         {subtitle && (
           <span className="text-muted-foreground truncate text-xs">

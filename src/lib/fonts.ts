@@ -1,6 +1,6 @@
-import { Fraunces, Geist, Geist_Mono } from "next/font/google";
+import { Geist, Geist_Mono, Urbanist } from "next/font/google";
 
-export const displayHeading = Fraunces({
+export const displayHeading = Urbanist({
   subsets: ["latin"],
   display: "swap",
   variable: "--font-heading",

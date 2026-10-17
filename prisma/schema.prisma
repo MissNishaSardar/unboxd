@@ -245,7 +245,7 @@ model FlashSale {
 // Single-row store configuration edited from /admin/settings.
 model StoreSettings {
   id                    String @id @default("store")
-  storeName             String @default("Unboxd")
+  storeName             String @default("unboxd")
   supportEmail          String @default("support@unboxd.com")
   supportPhone          String @default("")
   codEnabled            Boolean @default(true)

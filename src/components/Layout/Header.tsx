@@ -143,7 +143,9 @@ const Header = ({ brands }: { brands?: BrandWithCount[] }) => {
                       className="size-6"
                       aria-hidden="true"
                     />
-                    Unboxd
+                    <span className="bg-gradient-to-b from-[#0f89c0] to-[#0b5a82] bg-clip-text text-transparent dark:from-[#7dd3f8] dark:to-[#0ea5e9]">
+                      unboxd
+                    </span>
                   </SheetTitle>
                 </SheetHeader>
                 <div className="px-4">
@@ -228,8 +230,8 @@ const Header = ({ brands }: { brands?: BrandWithCount[] }) => {
                 className="size-7 shrink-0"
                 aria-hidden="true"
               />
-              <span className="font-heading text-foreground text-[17px] font-semibold tracking-tight">
-                Unboxd
+              <span className="font-heading bg-gradient-to-b from-[#0f89c0] to-[#0b5a82] bg-clip-text text-[21px] font-semibold tracking-tight text-transparent dark:from-[#7dd3f8] dark:to-[#0ea5e9]">
+                unboxd
               </span>
             </Link>
             {brands && brands.length > 0 && <BrandDropdown brands={brands} />}

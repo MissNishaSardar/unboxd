@@ -23,7 +23,7 @@ const shopLinksFallback: FooterCategory[] = [
 
 const Footer = ({
   categories,
-  storeName = "Unboxd",
+  storeName = "unboxd",
 }: {
   categories?: FooterCategory[];
   storeName?: string;
@@ -44,7 +44,7 @@ const Footer = ({
                 className="size-6 shrink-0"
                 aria-hidden="true"
               />
-              <span className="font-heading text-foreground text-[16px] font-semibold tracking-tight">
+              <span className="font-heading bg-gradient-to-b from-[#0f89c0] to-[#0b5a82] bg-clip-text text-[16px] font-semibold tracking-tight text-transparent dark:from-[#7dd3f8] dark:to-[#0ea5e9]">
                 {storeName}
               </span>
             </Link>

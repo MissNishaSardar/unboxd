@@ -55,7 +55,9 @@ const PrivateLayoutShell = ({
                 size={28}
                 aria-hidden="true"
               />
-              <span className="text-sm font-medium">Unboxd</span>
+              <span className="bg-gradient-to-b from-[#0f89c0] to-[#0b5a82] bg-clip-text text-sm font-medium text-transparent dark:from-[#7dd3f8] dark:to-[#0ea5e9]">
+                unboxd
+              </span>
             </Link>
             <span className="text-muted-foreground flex items-center gap-1.5 text-xs">
               <LockIcon

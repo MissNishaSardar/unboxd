@@ -149,31 +149,33 @@ const ProductCard = ({
           "flex flex-col gap-0.5 px-3 pt-3 pb-0",
           compact && "gap-0 px-2.5 pt-2",
         )}>
-        <span className="flex items-center justify-start gap-1">
+        <div className="flex items-start justify-between gap-2">
           <Link
-            href={`/products?brand=${product.brandSlug}`}
+            href={`/products/${product.slug}`}
             className={cn(
-              "text-muted-foreground font-medium tracking-wide uppercase hover:underline",
-              compact ? "text-[10px]" : "text-[11px]",
+              "min-w-0 leading-tight font-medium hover:underline",
+              compact ? "line-clamp-1 text-xs" : "line-clamp-2 text-sm",
             )}>
-            {product.brand}
+            {displayName}
           </Link>
-          <BadgeCheckIcon
-            aria-label="Verified brand"
-            className={cn(
-              "fill-sky-500 text-white",
-              compact ? "size-3" : "size-3.5",
-            )}
-          />
-        </span>
-        <Link
-          href={`/products/${product.slug}`}
-          className={cn(
-            "leading-tight font-medium hover:underline",
-            compact ? "line-clamp-1 text-xs" : "line-clamp-2 text-sm",
-          )}>
-          {displayName}
-        </Link>
+          <span className="flex shrink-0 items-center gap-1">
+            <Link
+              href={`/products?brand=${product.brandSlug}`}
+              className={cn(
+                "text-muted-foreground font-medium tracking-wide uppercase hover:underline",
+                compact ? "text-[10px]" : "text-[11px]",
+              )}>
+              {product.brand}
+            </Link>
+            <BadgeCheckIcon
+              aria-label="Verified brand"
+              className={cn(
+                "fill-sky-500 text-white",
+                compact ? "size-3" : "size-3.5",
+              )}
+            />
+          </span>
+        </div>
         <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 pt-1">
           <span
             className={cn(

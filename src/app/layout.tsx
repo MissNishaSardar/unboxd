@@ -8,8 +8,8 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: {
-    default: "Unboxd | Electronics, Unboxed",
-    template: "%s | Unboxd",
+    default: "unboxd | Electronics, Unboxed",
+    template: "%s | unboxd",
   },
   description:
     "Shop smartphones, laptops, audio, and accessories with fast COD delivery.",
