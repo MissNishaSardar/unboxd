@@ -109,7 +109,6 @@ export async function cancelOrder(
     revalidateTag("products", "max");
     revalidatePath("/orders", "page");
     revalidatePath(`/orders/${orderId}`, "page");
-    revalidatePath("/dashboard", "page");
     revalidatePath("/admin/orders", "page");
     revalidatePath(`/admin/orders/${orderId}`, "page");
     return { ok: true };
@@ -158,7 +157,6 @@ export async function confirmReceipt(
     revalidateTag("products", "max");
     revalidatePath("/orders", "page");
     revalidatePath(`/orders/${orderId}`, "page");
-    revalidatePath("/dashboard", "page");
     revalidatePath("/admin/orders", "page");
     revalidatePath(`/admin/orders/${orderId}`, "page");
     return { ok: true };
@@ -215,7 +213,6 @@ export async function requestReturn(
     revalidateTag("products", "max");
     revalidatePath("/orders", "page");
     revalidatePath(`/orders/${orderId}`, "page");
-    revalidatePath("/dashboard", "page");
     revalidatePath("/admin/orders", "page");
     revalidatePath(`/admin/orders/${orderId}`, "page");
     return { ok: true };

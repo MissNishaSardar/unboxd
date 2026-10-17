@@ -24,7 +24,7 @@ const AddressesPage = async () => {
   const session = await auth.api.getSession({
     headers: await headers(),
   });
-  if (!session) redirect("/auth/login?callbackUrl=/settings/addresses");
+  if (!session) redirect("/auth/login?callbackUrl=/myprofile/addresses");
 
   const addresses = await getUserAddresses();
 
@@ -42,11 +42,11 @@ const AddressesPage = async () => {
         <Button
           variant="ghost"
           size="sm"
-          render={<Link href="/settings" />}
+          render={<Link href="/myprofile" />}
           nativeButton={false}
           data-icon="inline-start">
           <ArrowLeftIcon aria-hidden="true" />
-          Settings
+          Profile
         </Button>
       </div>
       <Card className="border-border bg-card">

@@ -16,7 +16,7 @@ const RegisterPage = async () => {
   });
 
   if (session) {
-    redirect("/dashboard");
+    redirect(session.user.role === "admin" ? "/admin" : "/");
   }
 
   return (

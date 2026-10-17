@@ -1,9 +1,8 @@
-import Link from "next/link";
 import { PackageIcon, ShoppingBagIcon, WalletIcon } from "lucide-react";
 import { Card, CardContent } from "@/components/shadcnui/card";
 import { formatPrice } from "@/lib/format";
 
-type DashboardStatsProps = {
+type OrdersHomeStatsProps = {
   orderCount: number;
   activeCount: number;
   totalSpent: string;
@@ -15,11 +14,11 @@ const STATS = [
   { key: "spent", label: "Total spent", icon: WalletIcon },
 ] as const;
 
-const DashboardStats = ({
+const OrdersHomeStats = ({
   orderCount,
   activeCount,
   totalSpent,
-}: DashboardStatsProps) => {
+}: OrdersHomeStatsProps) => {
   const values = {
     orders: orderCount,
     active: activeCount,
@@ -31,9 +30,9 @@ const DashboardStats = ({
       {STATS.map((stat) => {
         const Icon = stat.icon;
         return (
-          <Link
+          <a
             key={stat.key}
-            href="/orders"
+            href="#history"
             className="transition-opacity hover:opacity-80">
             <Card className="border-border bg-card">
               <CardContent className="flex items-center justify-between">
@@ -49,11 +48,11 @@ const DashboardStats = ({
                 />
               </CardContent>
             </Card>
-          </Link>
+          </a>
         );
       })}
     </div>
   );
 };
 
-export default DashboardStats;
+export default OrdersHomeStats;

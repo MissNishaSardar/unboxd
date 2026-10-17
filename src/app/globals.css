@@ -212,9 +212,6 @@
 .reveal-3 {
   animation-delay: 220ms;
 }
-.reveal-4 {
-  animation-delay: 300ms;
-}
 @keyframes rise-in {
   from {
     opacity: 0;
@@ -229,8 +226,7 @@
   .reveal,
   .reveal-1,
   .reveal-2,
-  .reveal-3,
-  .reveal-4 {
+  .reveal-3 {
     animation: none;
   }
 }

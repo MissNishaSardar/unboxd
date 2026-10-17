@@ -1,19 +1,14 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { EyeIcon, EyeOffIcon, Loader2Icon } from "lucide-react";
+import { EyeIcon, EyeOffIcon, Loader2Icon, LockIcon } from "lucide-react";
 import { useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { authClient } from "@/lib/auth-client";
 import { withMinDelay } from "@/lib/minDelay";
 import { changePasswordSchema, changePasswordType } from "@/lib/zodSchema";
 import { Button } from "@/components/shadcnui/button";
-import {
-  Field,
-  FieldError,
-  FieldGroup,
-  FieldLabel,
-} from "@/components/shadcnui/field";
+import { Field, FieldError, FieldLabel } from "@/components/shadcnui/field";
 import {
   InputGroup,
   InputGroupAddon,
@@ -22,6 +17,11 @@ import {
 } from "@/components/shadcnui/input-group";
 import { toast } from "@/components/shadcnui/toast";
 
+const EYEBROW =
+  "text-[10.5px] font-semibold uppercase tracking-[0.12em] text-muted-foreground";
+
+// Security panel for the merged account card. Three password fields in a
+// row on desktop, the submit action rides in the section header.
 const ChangePasswordForm = () => {
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
@@ -61,7 +61,29 @@ const ChangePasswordForm = () => {
     <form
       onSubmit={handleSubmit(onSubmit)}
       noValidate>
-      <FieldGroup>
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+        <span className={`flex items-center gap-2 ${EYEBROW}`}>
+          <LockIcon
+            className="text-primary size-3.5"
+            aria-hidden
+          />
+          Reset your password
+        </span>
+        <Button
+          type="submit"
+          size="sm"
+          className="rounded-full px-4"
+          disabled={formState.isSubmitting}>
+          {formState.isSubmitting && (
+            <Loader2Icon
+              data-icon="inline-start"
+              className="animate-spin"
+            />
+          )}
+          Update password
+        </Button>
+      </div>
+      <div className="grid gap-3 md:grid-cols-3">
         <Controller
           name="currentPassword"
           control={control}
@@ -161,18 +183,7 @@ const ChangePasswordForm = () => {
             </Field>
           )}
         />
-        <Button
-          type="submit"
-          disabled={formState.isSubmitting}>
-          {formState.isSubmitting && (
-            <Loader2Icon
-              data-icon="inline-start"
-              className="animate-spin"
-            />
-          )}
-          Update password
-        </Button>
-      </FieldGroup>
+      </div>
     </form>
   );
 };

@@ -76,7 +76,7 @@ export async function createUserAddress(
         isDefault: existingCount === 0,
       },
     });
-    revalidatePath("/settings/addresses", "page");
+    revalidatePath("/myprofile/addresses", "page");
     revalidatePath("/checkout", "page");
     return { ok: true, id: row.id };
   } catch (e) {
@@ -107,7 +107,7 @@ export async function updateUserAddress(
       where: { id },
       data: { label: label?.trim() ? label.trim() : null, ...fields },
     });
-    revalidatePath("/settings/addresses", "page");
+    revalidatePath("/myprofile/addresses", "page");
     revalidatePath("/checkout", "page");
     return { ok: true, id };
   } catch (e) {
@@ -145,7 +145,7 @@ export async function deleteUserAddress(
         }
       }
     });
-    revalidatePath("/settings/addresses", "page");
+    revalidatePath("/myprofile/addresses", "page");
     revalidatePath("/checkout", "page");
     return { ok: true, id };
   } catch (e) {
@@ -175,7 +175,7 @@ export async function setDefaultUserAddress(
       }),
       prisma.userAddress.update({ where: { id }, data: { isDefault: true } }),
     ]);
-    revalidatePath("/settings/addresses", "page");
+    revalidatePath("/myprofile/addresses", "page");
     revalidatePath("/checkout", "page");
     return { ok: true, id };
   } catch (e) {

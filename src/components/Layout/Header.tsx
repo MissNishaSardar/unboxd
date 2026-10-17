@@ -3,15 +3,6 @@
 import UnboxdLogo from "@/components/Brand/UnboxdLogo";
 import { Button } from "@/components/shadcnui/button";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuGroup,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/shadcnui/dropdown-menu";
-import {
   Sheet,
   SheetContent,
   SheetHeader,
@@ -20,7 +11,7 @@ import {
 } from "@/components/shadcnui/sheet";
 import { useMounted } from "@/hooks/use-mounted";
 import { authClient } from "@/lib/auth-client";
-import { cartCountAtom, cartDrawerOpenAtom, clearCart } from "@/lib/cart/atoms";
+import { cartCountAtom, cartDrawerOpenAtom } from "@/lib/cart/atoms";
 import { PUBLIC_NAV } from "@/lib/nav";
 import { cn } from "@/lib/utils";
 import {
@@ -30,15 +21,7 @@ import {
   useQueryStates,
 } from "nuqs";
 import { useAtomValue, useSetAtom } from "jotai";
-import {
-  LayoutDashboardIcon,
-  LogOutIcon,
-  MenuIcon,
-  SearchIcon,
-  ShieldIcon,
-  ShoppingBagIcon,
-  UserIcon,
-} from "lucide-react";
+import { MenuIcon, SearchIcon, ShoppingBagIcon, UserIcon } from "lucide-react";
 import BrandDropdown from "@/components/Layout/BrandDropdown";
 import ThemeToggleButton from "@/components/Layout/ThemeToggleButton";
 import type { BrandWithCount } from "@/server/brands";
@@ -47,6 +30,7 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
 import HeaderSearch from "@/components/Search/HeaderSearch";
 import SearchAutocompleteInput from "@/components/Search/SearchAutocompleteInput";
+import UserMenu from "@/components/Layout/UserMenu";
 
 export const iconButtonClass =
   "size-[38px] shrink-0 rounded-full border border-border bg-background text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors";
@@ -293,78 +277,7 @@ const Header = ({ brands }: { brands?: BrandWithCount[] }) => {
             {isPending ?
               null
             : session ?
-              <DropdownMenu>
-                <DropdownMenuTrigger
-                  className="border-border bg-muted hover:bg-accent focus-visible:ring-ring flex size-[38px] shrink-0 items-center justify-center overflow-hidden rounded-full border transition-colors focus-visible:ring-2 focus-visible:outline-none"
-                  aria-label="User menu">
-                  {session.user.image ?
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img
-                      src={session.user.image}
-                      alt=""
-                      aria-hidden="true"
-                      width={38}
-                      height={38}
-                      className="size-full object-cover"
-                    />
-                  : <span className="bg-muted text-foreground flex size-full items-center justify-center text-xs font-semibold">
-                      {session.user.name
-                        .trim()
-                        .split(/\s+/)
-                        .slice(0, 2)
-                        .map((p) => p[0]?.toUpperCase() ?? "")
-                        .join("") || "?"}
-                    </span>
-                  }
-                </DropdownMenuTrigger>
-                <DropdownMenuContent
-                  align="end"
-                  className="w-56">
-                  <DropdownMenuGroup>
-                    <DropdownMenuLabel>
-                      <span className="block truncate text-sm font-medium">
-                        {session.user.name}
-                      </span>
-                      <span className="text-muted-foreground block truncate text-xs font-normal">
-                        {session.user.email}
-                      </span>
-                    </DropdownMenuLabel>
-                  </DropdownMenuGroup>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuGroup>
-                    <DropdownMenuItem
-                      onClick={() =>
-                        router.push(
-                          (session.user.role === "admin" ?
-                            "/admin"
-                          : "/dashboard") as never,
-                        )
-                      }>
-                      {session.user.role === "admin" ?
-                        <ShieldIcon aria-hidden="true" />
-                      : <LayoutDashboardIcon aria-hidden="true" />}
-                      {session.user.role === "admin" ?
-                        "Admin Dashboard"
-                      : "Dashboard"}
-                    </DropdownMenuItem>
-                  </DropdownMenuGroup>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuGroup>
-                    <DropdownMenuItem
-                      onClick={async () => {
-                        try {
-                          await authClient.signOut();
-                        } catch {}
-                        clearCart();
-                        router.push("/");
-                        router.refresh();
-                      }}>
-                      <LogOutIcon aria-hidden="true" />
-                      Log out
-                    </DropdownMenuItem>
-                  </DropdownMenuGroup>
-                </DropdownMenuContent>
-              </DropdownMenu>
+              <UserMenu showStorefront={false} />
             : <Link
                 href="/auth/login"
                 aria-label="Sign in"

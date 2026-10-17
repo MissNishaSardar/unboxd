@@ -1,6 +1,8 @@
 "use client";
 
 import type { ColumnDef } from "@tanstack/react-table";
+import type { Route } from "next";
+import Link from "next/link";
 import {
   ArrowDownIcon,
   ArrowUpDownIcon,
@@ -129,12 +131,11 @@ export const getUsersColumns = ({
       />
     ),
     cell: ({ row }) => (
-      <div className="min-w-0">
-        <p className="truncate text-sm font-medium">{row.original.name}</p>
-        <p className="text-muted-foreground truncate text-xs">
-          {row.original.email}
-        </p>
-      </div>
+      <Link
+        href={`/admin/users/${row.original.id}` as Route}
+        className="hover:text-primary block truncate text-sm font-medium underline-offset-4 hover:underline">
+        {row.original.name}
+      </Link>
     ),
   },
   {

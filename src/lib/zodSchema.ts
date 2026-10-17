@@ -509,6 +509,28 @@ export const userRoleSchema = z.enum(["admin", "user"]);
 
 export type userRoleType = z.infer<typeof userRoleSchema>;
 
+export const banUserSchema = z.object({
+  reason: z
+    .string()
+    .trim()
+    .max(200, { error: "Reason must be at most 200 characters" })
+    .optional(),
+  expiryDays: z.preprocess(
+    (value) =>
+      value === "" || value === null || value === undefined ? undefined : value,
+    z.coerce
+      .number()
+      .int({ error: "Expiry must be whole days" })
+      .min(1, { error: "Expiry must be at least 1 day" })
+      .max(30, { error: "Expiry must be at most 30 days" })
+      .optional(),
+  ),
+});
+
+export type banUserType = z.infer<typeof banUserSchema>;
+
+export type banUserInputType = z.input<typeof banUserSchema>;
+
 export const bulkUserIdsSchema = z.object({
   userIds: z.array(z.string().min(1)).min(1),
 });

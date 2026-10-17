@@ -22,10 +22,13 @@ const LoginPage = async ({
 
   if (session) {
     const sp = await searchParams;
+    // "/" is the no-callback sentinel, matching the SignInForm client guard,
+    // so admins keep the /admin fallback instead of the storefront.
     const callbackUrl =
-      typeof sp.callbackUrl === "string" ? sp.callbackUrl
+      typeof sp.callbackUrl === "string" && sp.callbackUrl !== "/" ?
+        sp.callbackUrl
       : session.user.role === "admin" ? "/admin"
-      : "/dashboard";
+      : "/";
     redirect(callbackUrl as Route);
   }
 

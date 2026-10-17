@@ -23,10 +23,9 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 const LABELS: Record<string, string> = {
-  dashboard: "Dashboard",
   orders: "Orders",
   wishlist: "Wishlist",
-  settings: "Settings",
+  myprofile: "Profile",
   cart: "Cart",
   checkout: "Checkout",
   admin: "Admin",
@@ -54,11 +53,11 @@ const PrivateHeader = () => {
     return { segment: seg, href, label: toLabel(seg) };
   });
 
-  // Empty or root -> Dashboard
+  // Empty or root -> Orders
   const showCrumbs =
     crumbs.length > 0 ?
       crumbs
-    : [{ segment: "dashboard", href: "/dashboard", label: "Dashboard" }];
+    : [{ segment: "orders", href: "/orders", label: "Orders" }];
 
   return (
     <header className="flex h-14 shrink-0 items-center gap-2 border-b px-4">
@@ -109,7 +108,7 @@ const PrivateHeader = () => {
           )}
         </Button>
         <ThemeToggleButton className={iconButtonClass} />
-        <UserMenu />
+        <UserMenu showStorefront />
       </div>
     </header>
   );

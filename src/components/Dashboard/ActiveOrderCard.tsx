@@ -11,11 +11,11 @@ import OrderStatusBadge from "@/components/Orders/OrderStatusBadge";
 import OrderTimeline from "@/components/Orders/OrderTimeline";
 import { formatDate } from "@/lib/format";
 import { getEstimatedDelivery } from "@/lib/orders/status";
-import { getDashboardData } from "@/server/dashboard";
+import { getOrdersHomeData } from "@/server/orders-home";
 
 type ActiveOrderCardProps = {
   order: NonNullable<
-    Awaited<ReturnType<typeof getDashboardData>>["activeOrder"]
+    Awaited<ReturnType<typeof getOrdersHomeData>>["activeOrder"]
   >;
   deliveryDays?: number;
 };

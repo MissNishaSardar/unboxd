@@ -79,7 +79,7 @@ const AdminHeader = () => {
       </Breadcrumb>
       <div className="ml-auto flex items-center gap-1">
         <ThemeToggleButton className={iconButtonClass} />
-        <UserMenu />
+        <UserMenu showStorefront />
       </div>
     </header>
   );

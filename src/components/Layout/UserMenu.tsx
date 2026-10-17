@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import {
-  LayoutDashboardIcon,
+  ArrowLeftRightIcon,
   LogOutIcon,
   ShieldIcon,
   StoreIcon,
@@ -24,10 +24,11 @@ import {
 } from "@/components/shadcnui/dropdown-menu";
 import { toast } from "@/components/shadcnui/toast";
 
-// Single avatar menu for the admin shell and the account shell.
-// Admin-only entries stay gated on session role, so shoppers keep
-// a working menu with zero admin leaks.
-const UserMenu = () => {
+// Single avatar menu shared by the storefront header, the admin shell, and
+// the account shell. The showStorefront prop is true for the private and
+// admin shells and false for the storefront header, where the logo already
+// points home.
+const UserMenu = ({ showStorefront = true }: { showStorefront?: boolean }) => {
   const router = useRouter();
   const { data: session } = authClient.useSession();
   const [isPending, setIsPending] = useState(false);
@@ -103,13 +104,15 @@ const UserMenu = () => {
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
         <DropdownMenuGroup>
-          <DropdownMenuItem onClick={() => router.push("/" as never)}>
-            <StoreIcon aria-hidden="true" />
-            Storefront
-          </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => router.push("/dashboard" as never)}>
-            <LayoutDashboardIcon aria-hidden="true" />
-            My dashboard
+          {showStorefront && (
+            <DropdownMenuItem onClick={() => router.push("/" as never)}>
+              <StoreIcon aria-hidden="true" />
+              Storefront
+            </DropdownMenuItem>
+          )}
+          <DropdownMenuItem onClick={() => router.push("/myprofile" as never)}>
+            <UserRoundIcon aria-hidden="true" />
+            My profile
           </DropdownMenuItem>
           {isAdmin && (
             <DropdownMenuItem onClick={() => router.push("/admin" as never)}>
@@ -121,7 +124,7 @@ const UserMenu = () => {
             <DropdownMenuItem
               onClick={handleStopImpersonating}
               disabled={isPending}>
-              <UserRoundIcon aria-hidden="true" />
+              <ArrowLeftRightIcon aria-hidden="true" />
               Stop impersonating
             </DropdownMenuItem>
           )}

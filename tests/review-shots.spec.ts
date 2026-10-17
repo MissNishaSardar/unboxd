@@ -76,18 +76,18 @@ test.describe("review customer", () => {
     });
     await loginAs(page, CUSTOMER_EMAIL, CUSTOMER_PASSWORD);
     await page.getByRole("button", { name: "Sign in" }).click();
-    await page.waitForURL(/\/dashboard/, { timeout: 20000 });
+    await page.waitForURL(/\/$/, { timeout: 20000 });
     await page.screenshot({
       path: "screenshots/review/19-after-customer-login.png",
       fullPage: true,
     });
     const pages: Array<[string, string]> = [
-      ["20-dashboard", "/dashboard"],
+      ["20-orders-home", "/orders"],
       ["21-orders", "/orders"],
       ["22-cart", "/cart"],
       ["23-checkout", "/checkout"],
-      ["24-settings", "/settings"],
-      ["25-addresses", "/settings/addresses"],
+      ["24-myprofile", "/myprofile"],
+      ["25-addresses", "/myprofile/addresses"],
       ["26-wishlist", "/wishlist"],
     ];
     for (const [name, url] of pages) {
@@ -120,6 +120,10 @@ test.describe("review admin", () => {
     for (const [name, url] of pages) {
       await shot(page, name, url);
     }
+    const adminUserId = process.env.E2E_ADMIN_USER_ID ?? "";
+    if (adminUserId) {
+      await shot(page, "37-admin-user-detail", `/admin/users/${adminUserId}`);
+    }
     expect(fs.existsSync("screenshots/review/30-admin.png")).toBe(true);
   });
 });
@@ -132,7 +136,7 @@ test.describe("review order flow", () => {
     });
     await loginAs(page, CUSTOMER_EMAIL, CUSTOMER_PASSWORD);
     await page.getByRole("button", { name: "Sign in" }).click();
-    await page.waitForURL(/\/dashboard/, { timeout: 20000 });
+    await page.waitForURL(/\/$/, { timeout: 20000 });
 
     await page.goto("/products", { waitUntil: "domcontentloaded" });
     await page
@@ -164,6 +168,7 @@ test.describe("review order flow", () => {
       fullPage: true,
     });
     await page.getByRole("button", { name: "Place order" }).click();
+    await page.getByRole("button", { name: "Confirm order" }).click();
     await page.getByText("Order placed").waitFor({ timeout: 20000 });
     await page.screenshot({
       path: "screenshots/review/42-order-success.png",
@@ -178,6 +183,6 @@ test.describe("review order flow", () => {
       path: "screenshots/review/43-order-detail.png",
       fullPage: true,
     });
-    await shot(page, "44-dashboard-full", "/dashboard");
+    await shot(page, "44-orders-home-full", "/orders");
   });
 });

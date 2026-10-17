@@ -73,7 +73,7 @@ const SignUpForm = () => {
     }
 
     reset();
-    router.push("/dashboard");
+    router.push("/");
   };
 
   return (

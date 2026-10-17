@@ -14,6 +14,8 @@ import {
   type UserAddressData,
 } from "@/server/user/addresses";
 
+export type AddressMode = "list" | "add" | "edit";
+
 type AddressValues = {
   label?: string;
   name: string;
@@ -24,15 +26,31 @@ type AddressValues = {
   pincode: string;
 };
 
+type AddressesManagerProps = {
+  initialAddresses: UserAddressData[];
+  mode?: AddressMode;
+  onModeChange?: (mode: AddressMode) => void;
+  hideInlineAdd?: boolean;
+};
+
 const AddressesManager = ({
   initialAddresses,
-}: {
-  initialAddresses: UserAddressData[];
-}) => {
+  mode,
+  onModeChange,
+  hideInlineAdd,
+}: AddressesManagerProps) => {
   const [addresses, setAddresses] =
     useState<UserAddressData[]>(initialAddresses);
-  const [mode, setMode] = useState<"list" | "add" | "edit">("list");
+  const [innerMode, setInnerMode] = useState<AddressMode>("list");
   const [editingId, setEditingId] = useState<string | null>(null);
+
+  const isControlled = mode !== undefined;
+  const currentMode = isControlled ? mode : innerMode;
+
+  const changeMode = (next: AddressMode) => {
+    if (!isControlled) setInnerMode(next);
+    onModeChange?.(next);
+  };
 
   const handleAdd = async (values: AddressValues) => {
     const result = await createUserAddress(values);
@@ -58,7 +76,7 @@ const AddressesManager = ({
       },
       ...prev,
     ]);
-    setMode("list");
+    changeMode("list");
     toast.add({ title: "Address saved", type: "success" });
   };
 
@@ -90,7 +108,7 @@ const AddressesManager = ({
       ),
     );
     setEditingId(null);
-    setMode("list");
+    changeMode("list");
     toast.add({ title: "Address updated", type: "success" });
   };
 
@@ -131,17 +149,17 @@ const AddressesManager = ({
     }
   };
 
-  if (mode === "add") {
+  if (currentMode === "add") {
     return (
       <AddressForm
         submitLabel="Save address"
         onSubmit={handleAdd}
-        onCancel={() => setMode("list")}
+        onCancel={() => changeMode("list")}
       />
     );
   }
 
-  if (mode === "edit" && editingId) {
+  if (currentMode === "edit" && editingId) {
     const target = addresses.find((a) => a.id === editingId);
     return (
       <AddressForm
@@ -152,7 +170,7 @@ const AddressesManager = ({
         onSubmit={handleEdit}
         onCancel={() => {
           setEditingId(null);
-          setMode("list");
+          changeMode("list");
         }}
       />
     );
@@ -188,7 +206,7 @@ const AddressesManager = ({
                   data-icon="inline-start"
                   onClick={() => {
                     setEditingId(address.id);
-                    setMode("edit");
+                    changeMode("edit");
                   }}>
                   <PencilIcon aria-hidden="true" />
                   Edit
@@ -208,15 +226,17 @@ const AddressesManager = ({
           />
         ))
       }
-      <Button
-        type="button"
-        variant="outline"
-        data-icon="inline-start"
-        onClick={() => setMode("add")}
-        className="w-fit">
-        <PlusIcon aria-hidden="true" />
-        Add new address
-      </Button>
+      {!hideInlineAdd && (
+        <Button
+          type="button"
+          variant="outline"
+          data-icon="inline-start"
+          onClick={() => changeMode("add")}
+          className="w-fit">
+          <PlusIcon aria-hidden="true" />
+          Add new address
+        </Button>
+      )}
     </div>
   );
 };

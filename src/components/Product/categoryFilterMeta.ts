@@ -12,9 +12,6 @@ import {
 } from "lucide-react";
 
 export const ALL_CATEGORY = "all";
-export const PRICE_MIN = 0;
-export const PRICE_MAX = 250000;
-export const PRICE_STEP = 1000;
 
 export type FilterCategory = {
   slug: string;

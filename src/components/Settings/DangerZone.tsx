@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Loader2Icon, TriangleAlertIcon } from "lucide-react";
+import { TriangleAlertIcon } from "lucide-react";
+import { Loader2Icon } from "lucide-react";
+import { useState } from "react";
 import { authClient } from "@/lib/auth-client";
 import { withMinDelay } from "@/lib/minDelay";
 import { deleteAccount } from "@/server/user/deleteAccount";
@@ -15,13 +16,6 @@ import {
   AlertDialogTitle,
 } from "@/components/shadcnui/alert-dialog";
 import { Button } from "@/components/shadcnui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/shadcnui/card";
 import { toast } from "@/components/shadcnui/toast";
 
 const DangerZone = () => {
@@ -36,7 +30,7 @@ const DangerZone = () => {
       if (!result.ok) {
         const message =
           result.error === "ADMIN_PROTECTED" ?
-            "Admin accounts cannot be deleted from settings."
+            "Admin accounts cannot delete their own account."
           : result.error === "FORBIDDEN" ?
             "You must be signed in to delete your account."
           : result.error === "ALREADY_DELETED" ? "Account already deactivated."
@@ -76,36 +70,26 @@ const DangerZone = () => {
 
   return (
     <>
-      <Card className="border-destructive/40 bg-destructive/[0.03] dark:bg-destructive/10">
-        <CardHeader>
-          <CardTitle className="text-destructive flex items-center gap-2">
-            <TriangleAlertIcon
-              className="size-4"
-              aria-hidden="true"
-            />
-            Danger Zone
-          </CardTitle>
-          <CardDescription>
-            Permanently deactivate your account. This action cannot be undone
-            from settings.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <div className="min-w-0">
-            <p className="text-sm font-medium">Delete account</p>
-            <p className="text-muted-foreground text-sm">
-              Your account will be soft-deleted, sessions revoked, and you will
-              be signed out. Orders are retained.
-            </p>
-          </div>
-          <Button
-            variant="destructive"
-            onClick={() => setOpen(true)}
-            className="shrink-0 self-start sm:self-auto">
-            Delete account
-          </Button>
-        </CardContent>
-      </Card>
+      {/* Slim destructive strip, visually isolated from editable data */}
+      <div className="border-destructive/40 bg-destructive/[0.06] dark:bg-destructive/10 flex flex-wrap items-center gap-3 rounded-2xl border px-4 py-3">
+        <span className="text-destructive flex items-center gap-2">
+          <TriangleAlertIcon
+            className="size-4 shrink-0"
+            aria-hidden
+          />
+          <span className="text-sm font-semibold">Danger Zone</span>
+        </span>
+        <span className="text-muted-foreground min-w-0 flex-1 text-xs">
+          Deactivate permanently, sessions revoke, orders retained
+        </span>
+        <Button
+          variant="destructive"
+          size="sm"
+          onClick={() => setOpen(true)}
+          className="shrink-0 rounded-full px-4">
+          Delete account
+        </Button>
+      </div>
 
       <AlertDialog
         open={open}

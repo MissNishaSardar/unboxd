@@ -11,6 +11,3 @@ export function getReviewsAtom(slug: string) {
   }
   return a;
 }
-
-export const reviewsCountAtom = (slug: string) =>
-  atom((get) => get(getReviewsAtom(slug)).length);

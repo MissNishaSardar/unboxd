@@ -105,46 +105,6 @@ export function addToCart(input: AddToCartInput) {
   openCart();
 }
 
-export function addManyToCart(
-  inputs: (AddToCartInput & { quantity?: number })[],
-) {
-  if (inputs.length === 0) return;
-  store.set(cartAtom, (items) => {
-    const next = [...items];
-    for (const input of inputs) {
-      const quantity = Math.min(
-        Math.max(1, input.quantity ?? 1),
-        input.maxStock,
-      );
-      const index = next.findIndex(
-        (item) => item.productId === input.productId && item.sku === input.sku,
-      );
-      if (index >= 0) {
-        const existing = next[index];
-        next[index] = {
-          ...existing,
-          quantity: Math.min(existing.quantity + quantity, existing.maxStock),
-        };
-      } else {
-        next.push({
-          productId: input.productId,
-          sku: input.sku,
-          slug: input.slug,
-          name: input.name,
-          variantName: input.variantName,
-          price: input.price,
-          mrp: input.mrp,
-          image: input.image,
-          maxStock: input.maxStock,
-          quantity,
-        });
-      }
-    }
-    return next;
-  });
-  openCart();
-}
-
 export function setManyToCart(
   inputs: (AddToCartInput & { quantity?: number })[],
 ) {

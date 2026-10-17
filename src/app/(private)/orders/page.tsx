@@ -6,15 +6,19 @@ import { auth } from "@/lib/auth";
 
 export const metadata: Metadata = {
   title: "Orders",
-  description: "View and track your Unboxd orders.",
+  description:
+    "Your orders home. Track, review, and reorder your Unboxd purchases.",
 };
-import prisma from "@/lib/dbClient/prisma";
 import { headers } from "next/headers";
+import { formatDate } from "@/lib/format";
+import prisma from "@/lib/dbClient/prisma";
 import { orderListSearchParamsSchema } from "@/lib/zodSchema";
 import {
   getPlaceholderPhotoUrl,
   resolveProductImageUrl,
 } from "@/lib/placeholder";
+import { getOrdersHomeData } from "@/server/orders-home";
+import { getStoreSettings } from "@/server/admin/settings";
 import { Button } from "@/components/shadcnui/button";
 import {
   Empty,
@@ -25,6 +29,9 @@ import {
   EmptyTitle,
 } from "@/components/shadcnui/empty";
 import OrdersLoadMore from "@/components/Orders/OrdersLoadMore";
+import ActiveOrderCard from "@/components/Dashboard/ActiveOrderCard";
+import OrdersHomeStats from "@/components/Dashboard/OrdersHomeStats";
+import RecentlyViewedRail from "@/components/Dashboard/RecentlyViewedRail";
 
 const ORDERS_PER_PAGE = 10;
 
@@ -37,6 +44,11 @@ const OrdersPage = async ({
     headers: await headers(),
   });
   if (!session) redirect("/auth/login");
+
+  const [settings, data] = await Promise.all([
+    getStoreSettings(),
+    getOrdersHomeData(session.user.id),
+  ]);
 
   const { page = 1 } = orderListSearchParamsSchema.parse(await searchParams);
 
@@ -89,16 +101,20 @@ const OrdersPage = async ({
       .filter((src): src is string => src !== null),
   }));
 
+  const isEmpty = data.orderCount === 0;
+
   return (
     <div className="mx-auto flex max-w-3xl flex-col gap-6">
       <div>
         <h1 className="font-heading text-2xl font-semibold tracking-tight">
-          Orders
+          Hi {session.user.name}
         </h1>
-        <p className="text-muted-foreground text-sm">Your order history</p>
+        <p className="text-muted-foreground text-sm">
+          Member since {formatDate(session.user.createdAt)}
+        </p>
       </div>
 
-      {orders.length === 0 ?
+      {isEmpty ?
         <Empty>
           <EmptyHeader>
             <EmptyMedia variant="icon">
@@ -118,11 +134,35 @@ const OrdersPage = async ({
             </Button>
           </EmptyContent>
         </Empty>
-      : <OrdersLoadMore
-          initialOrders={serializedOrders}
-          total={total}
-        />
+      : <>
+          <OrdersHomeStats
+            orderCount={data.orderCount}
+            activeCount={data.activeCount}
+            totalSpent={data.totalSpent}
+          />
+
+          {data.activeOrder && (
+            <ActiveOrderCard
+              order={data.activeOrder}
+              deliveryDays={settings.deliveryDays}
+            />
+          )}
+
+          <section
+            id="history"
+            className="flex flex-col gap-3">
+            <h2 className="font-heading text-lg font-semibold tracking-tight">
+              Order history
+            </h2>
+            <OrdersLoadMore
+              initialOrders={serializedOrders}
+              total={total}
+            />
+          </section>
+        </>
       }
+
+      <RecentlyViewedRail />
     </div>
   );
 };

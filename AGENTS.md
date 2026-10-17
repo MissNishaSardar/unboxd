@@ -114,18 +114,23 @@ Get-Content $env:TEMP\opencode\pw-one.log -Tail 60
 src/
   app/ # App Router with layout, page, globals
     public group # Public shell with Header and cart provider for home, products, categories, search, about, contact, forbidden
-    auth group # Auth shell with AuthBackButton only for login and register
-    private group # Authed shell with sidebar and sign out for dashboard, orders, profile, settings
-      admin group # Admin area with its own unboxd Admin layout
+    auth group # Auth shell with AuthCard for login, register, forgot and reset password
+    private group # Authed shell with AppSidebar plus UserMenu sign out for orders home, myprofile, wishlist, admin
+      admin group # Admin area with its own unboxd Admin layout, including /admin/users/[id] detail
       cart and checkout # Minimal shell with logo and secure note and no sidebar via PrivateLayout pathname branch
   components/
-    Auth # AuthBackButton, SignInForm, SignOutButton, SignUpForm
+    Auth # AuthCard, SignInForm, SignUpForm, ForgotPasswordForm, ResetPasswordForm
+    Admin # DataTable, UsersTable, UsersColumns, UserDetailActions
     Cart # CartDrawer, CartItemRow, CartProvider
-    Layout # Header, ThemeToggleButton
-    Orders # OrderStatusBadge, OrderTimeline
+    Dashboard # OrdersHomeStats, ActiveOrderCard, ProductRail, RecentlyViewedRail, RecordProductView
+    Layout # Header, UserMenu, AppSidebar, PrivateHeader, AdminHeader
+    Orders # OrderStatusBadge, OrderTimeline, OrdersLoadMore
     Product # FilterSidebar, Pagination, ProductCard, ProductGallery, ProductGrid, ProductInfo
+    Account # ProfileAccountPanel merged account card with Security and Addresses zones
+    Profile # ProfileSummary hero for user variant, read-only card for admin variant
+    Settings # ProfileForm, ChangePasswordForm, AvatarUploader, DangerZone
     Providers # ThemeProvider with next-themes
-    shadcnui # shadcn primitives like button and toast
+    shadcnui # shadcn primitives like button, dialog, and toast
   hooks # use-mounted.ts
   lib/
     auth.ts # Better Auth server config with email password and admin RBAC and nextCookies
@@ -136,7 +141,7 @@ src/
     fonts.ts # next font with Geist and Inter
     types.ts # LayoutProps
     utils.ts # cn helper with clsx and tailwind-merge
-  server # Server actions for catalog and admin
+  server # Server actions for catalog and admin plus loaders, profile.ts getProfileView and orders-home.ts getOrdersHomeData
   proxy.ts # Route protection for Next 16 middleware replacement with PROTECTED session cookie redirect and ADMIN role check to forbidden and ADMIN sets x-route-shell header for group layout pass through
 prisma/
   schema.prisma # Auth and catalog and orders models
@@ -223,7 +228,13 @@ Line endings are `* text=auto` with LF in the repo and CRLF in the worktree. Bul
 - **Seed owns brand map.** `BRAND_MAP` in `src/lib/brand.ts` exists for seed accuracy. Runtime reads brand from DB. Do not delete the map.
 - **Placeholder map is load bearing.** `resolveProductImageUrl` plus `getPlaceholderPhotoUrl` cover seed placeholder images until the upload pipeline lands. Do not delete.
 - **Action delay.** `withMinDelay` defaults to `MIN_ACTION_DELAY_MS` so fast actions keep a brief pending state without long waits.
-- **Review shots.** The spec reads `E2E_*` env with seed tied fallbacks. Never use `waitForTimeout`. Assert with web first checks such as visible text and URL.
-- **Look tokens.** Headings use Fraunces through `--font-heading`. The banner strip and cart badge use solid `bg-primary`. The shipped badge uses sky. Page motion uses `reveal` plus delay steps in `globals.css` with a reduced motion guard. Texture helpers are `texture-grid` and `texture-dots`.
+- **Review shots.** The spec reads `E2E_*` env with seed tied fallbacks. Never use `waitForTimeout`. Assert with web first checks such as visible text and URL. Order home shots are `20-orders-home` and `44-orders-home-full`. Profile shot is `24-myprofile`. `37-admin-user-detail` only runs when `E2E_ADMIN_USER_ID` is set.
+- **Look tokens.** Headings use Fraunces through `--font-heading`. The banner strip and cart badge use solid `bg-primary`. The shipped badge uses sky. Page motion uses `reveal` plus delay steps in `globals.css` with a reduced motion guard.
 - **dnd-kit DndContext id.** dnd-kit 6.3.1 builds `DndDescribedBy` ids from a module counter, so SSR and client renders never match without one. Every `DndContext` needs a stable explicit `id` prop or the drag handles hydration mismatch. `admin-categories` is set in `CategoriesTable`.
 - **Category ordering contract.** Display order everywhere is `position asc`, then `name asc` in SQLite binary collation, then `id asc` as the final tiebreak. The admin drag table mirrors the binary name compare with JS `<`, never `localeCompare`, so the drop preview matches the landed order while positions tie. Creates append at `max(live sibling positions) + 1`. Manual ties from the edit form resolve through the same tiebreak.
+- **typedRoutes links.** Static href strings type check plain, for example `<Link href="/admin/users" />`. Dynamic hrefs need the cast, `href={`/admin/users/${id}` as Route}` with `import type { Route } from "next"`.
+- **Coerce form generics.** For `z.coerce` or `z.preprocess` fields the resolver binds the input shape while `z.infer` gives the output shape. Type the form as `useForm<XInputType, undefined, XType>` and cast the field value on coerced Inputs, for example `value={(field.value as number | string | undefined) ?? ""}`. DealForm and the ban dialog follow this.
+- **Profile identity.** There is no Avatar primitive in shadcnui. `/myprofile` renders one merged account card through `ProfileAccountPanel`: the `ProfileForm` hero shows a single avatar ring and a single name that swaps between a static Fraunces heading and a dashed input in edit mode, with a tinted save strip pinned below, then Security and Addresses share the card behind a segmented strip, and Danger Zone stays a separate red strip. Variant `admin` of `ProfileSummary` feeds the identity on `/admin/users/[id]` with `bare`, rendered inside `UserDetailActions`. Do not render the avatar or name twice, and keep destructive delete outside the account card.
+- **Admin user detail card.** `UserDetailActions` owns the merged card on `/admin/users/[id]`: identity slot left, Account controls pills right, Deactivate strip pinned at the card bottom, and self view renders the identity alone with no pills or strip. Do not reintroduce the standalone Management actions card or full-width action rows.
+- **Arbitrary grid tracks.** Tailwind arbitrary values use underscores for spaces, never commas. `sm:grid-cols-[auto,1fr]` compiles to invalid CSS and collapses the columns silently. Write `sm:grid-cols-[auto_1fr]`.
+- **AddressesManager controlled mode.** Optional `mode` plus `onModeChange` props let a parent header drive the add flow. Uncontrolled callers like `/myprofile/addresses` keep working. `hideInlineAdd` suppresses the internal outline button when a parent renders its own add button.

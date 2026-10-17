@@ -2,14 +2,7 @@ import { getSessionCookie } from "better-auth/cookies";
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 
-const PROTECTED = [
-  "/dashboard",
-  "/checkout",
-  "/orders",
-  "/settings",
-  "/cart",
-  "/wishlist",
-];
+const PROTECTED = ["/myprofile", "/checkout", "/orders", "/cart", "/wishlist"];
 const ADMIN = ["/admin"];
 
 function getClientIp(request: NextRequest): string | null {
@@ -95,11 +88,10 @@ export async function proxy(request: NextRequest) {
 
 export const config = {
   matcher: [
-    "/dashboard",
+    "/myprofile",
+    "/myprofile/:path*",
     "/checkout",
     "/orders/:path*",
-    "/settings",
-    "/settings/:path*",
     "/cart",
     "/wishlist",
     "/admin",

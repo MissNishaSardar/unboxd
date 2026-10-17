@@ -34,7 +34,7 @@ const SignInForm = () => {
   const callbackUrl =
     rawCallbackUrl?.startsWith("/") && !rawCallbackUrl.startsWith("//") ?
       rawCallbackUrl
-    : "/dashboard";
+    : "/";
   const [showPassword, setShowPassword] = useState(false);
 
   const {
@@ -77,9 +77,8 @@ const SignInForm = () => {
       return;
     }
 
-    const fallback = data?.user.role === "admin" ? "/admin" : "/dashboard";
-    const target =
-      callbackUrl && callbackUrl !== "/dashboard" ? callbackUrl : fallback;
+    const fallback = data?.user.role === "admin" ? "/admin" : "/";
+    const target = callbackUrl && callbackUrl !== "/" ? callbackUrl : fallback;
     reset();
     router.push(target as Route);
   };

@@ -7,6 +7,7 @@ import {
 import { adminProductListSearchParamsType } from "@/lib/zodSchema";
 import { format, startOfWeek, startOfDay, subDays } from "date-fns";
 import { getStoreSettings } from "@/server/admin/settings";
+import { getProfileView } from "@/server/user/profile";
 
 export const ADMIN_PRODUCTS_PER_PAGE = 10;
 export const ADMIN_USERS_PER_PAGE = 10;
@@ -387,6 +388,156 @@ export async function getAdminUsers(params: {
     total,
     page,
     totalPages: Math.max(1, Math.ceil(total / limit)),
+  };
+}
+
+export type AdminUserDetailOrder = {
+  id: string;
+  orderNumber: number;
+  status: string;
+  total: string;
+  itemCount: number;
+  createdAt: string;
+};
+
+export type AdminUserDetailReview = {
+  id: string;
+  productName: string;
+  rating: number;
+  title: string;
+  helpful: number;
+  createdAt: string;
+};
+
+export type AdminUserDetailSession = {
+  id: string;
+  ipAddress: string | null;
+  userAgent: string | null;
+  createdAt: string;
+  expiresAt: string;
+  impersonatedBy: string | null;
+};
+
+export type AdminUserDetailAddress = {
+  id: string;
+  label: string | null;
+  name: string;
+  phone: string;
+  addressLine: string;
+  city: string;
+  state: string;
+  pincode: string;
+  isDefault: boolean;
+};
+
+const LIFETIME_EXCLUDED_STATUSES = ["CANCELLED", "RETURNED"];
+const OPEN_ORDER_STATUSES = ["PENDING", "CONFIRMED", "SHIPPED"];
+
+// One query powering /admin/users/[id]. It never filters on banned or
+// deletedAt so banned and deactivated users stay reachable.
+export async function getAdminUserDetail(userId: string) {
+  const profile = await getProfileView(userId);
+  if (!profile) return null;
+
+  const now = new Date();
+  const [
+    orderCount,
+    lifetimeValue,
+    openOrderCount,
+    reviewCount,
+    wishlistCount,
+    orders,
+    reviews,
+    sessions,
+    addresses,
+  ] = await Promise.all([
+    prisma.order.count({ where: { userId } }),
+    prisma.order.aggregate({
+      where: {
+        userId,
+        status: { notIn: LIFETIME_EXCLUDED_STATUSES },
+      },
+      _sum: { total: true },
+    }),
+    prisma.order.count({
+      where: { userId, status: { in: OPEN_ORDER_STATUSES } },
+    }),
+    prisma.review.count({ where: { userId } }),
+    prisma.wishlistItem.count({ where: { userId } }),
+    prisma.order.findMany({
+      where: { userId },
+      orderBy: { createdAt: "desc" },
+      take: 10,
+      select: {
+        id: true,
+        orderNumber: true,
+        status: true,
+        total: true,
+        createdAt: true,
+        _count: { select: { items: true } },
+      },
+    }),
+    prisma.review.findMany({
+      where: { userId },
+      orderBy: { createdAt: "desc" },
+      take: 5,
+      include: { product: { select: { name: true } } },
+    }),
+    prisma.session.findMany({
+      where: { userId, expiresAt: { gt: now } },
+      orderBy: { createdAt: "desc" },
+      take: 20,
+    }),
+    prisma.userAddress.findMany({
+      where: { userId },
+      orderBy: [{ isDefault: "desc" }, { updatedAt: "desc" }],
+    }),
+  ]);
+
+  return {
+    profile,
+    stats: {
+      orderCount,
+      lifetimeValue: String(lifetimeValue._sum.total ?? 0),
+      openOrderCount,
+      reviewCount,
+      wishlistCount,
+    },
+    orders: orders.map((order): AdminUserDetailOrder => ({
+      id: order.id,
+      orderNumber: order.orderNumber,
+      status: order.status,
+      total: String(order.total),
+      itemCount: order._count.items,
+      createdAt: order.createdAt.toISOString(),
+    })),
+    reviews: reviews.map((review): AdminUserDetailReview => ({
+      id: review.id,
+      productName: review.product.name,
+      rating: review.rating,
+      title: review.title,
+      helpful: review.helpful,
+      createdAt: review.createdAt.toISOString(),
+    })),
+    sessions: sessions.map((session): AdminUserDetailSession => ({
+      id: session.id,
+      ipAddress: session.ipAddress ?? null,
+      userAgent: session.userAgent ?? null,
+      createdAt: session.createdAt.toISOString(),
+      expiresAt: session.expiresAt.toISOString(),
+      impersonatedBy: session.impersonatedBy ?? null,
+    })),
+    addresses: addresses.map((address): AdminUserDetailAddress => ({
+      id: address.id,
+      label: address.label ?? null,
+      name: address.name,
+      phone: address.phone,
+      addressLine: address.addressLine,
+      city: address.city,
+      state: address.state,
+      pincode: address.pincode,
+      isDefault: address.isDefault,
+    })),
   };
 }
 

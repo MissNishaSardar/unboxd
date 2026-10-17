@@ -5,8 +5,13 @@ import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 import prisma from "@/lib/dbClient/prisma";
+import { DAY_MS } from "@/lib/constants";
 import { requireAdmin } from "@/lib/guard";
-import { bulkUserIdsSchema, userRoleSchema } from "@/lib/zodSchema";
+import {
+  banUserSchema,
+  bulkUserIdsSchema,
+  userRoleSchema,
+} from "@/lib/zodSchema";
 
 export type AdminUserActionResult =
   | { ok: true }
@@ -87,7 +92,10 @@ export async function setUserRole(
   }
 }
 
-export async function banUser(userId: string): Promise<AdminUserActionResult> {
+export async function banUser(
+  userId: string,
+  input?: unknown,
+): Promise<AdminUserActionResult> {
   let session;
   try {
     session = await requireAdmin();
@@ -96,6 +104,18 @@ export async function banUser(userId: string): Promise<AdminUserActionResult> {
   }
   if (session.user.id === userId) {
     return { ok: false, error: "SELF_ACTION" };
+  }
+
+  let banReason: string | undefined;
+  let banExpiresIn: number | undefined;
+  if (input !== undefined && input !== null) {
+    const parsed = banUserSchema.safeParse(input);
+    if (!parsed.success) return { ok: false, error: "INVALID_INPUT" };
+    if (parsed.data.reason) banReason = parsed.data.reason;
+    if (parsed.data.expiryDays) {
+      // Better Auth takes ban expiry in seconds.
+      banExpiresIn = (DAY_MS / 1000) * parsed.data.expiryDays;
+    }
   }
 
   try {
@@ -108,7 +128,14 @@ export async function banUser(userId: string): Promise<AdminUserActionResult> {
       const activeCount = await getActiveAdminCount();
       if (activeCount <= 1) return { ok: false, error: "LAST_ADMIN" };
     }
-    await auth.api.banUser({ body: { userId }, headers: await headers() });
+    await auth.api.banUser({
+      body: {
+        userId,
+        ...(banReason && { banReason }),
+        ...(banExpiresIn && { banExpiresIn }),
+      },
+      headers: await headers(),
+    });
     revalidatePath("/admin/users", "page");
     return { ok: true };
   } catch (e) {
@@ -206,13 +233,6 @@ export async function reactivateUser(
     console.error("reactivateUser failed", e);
     return { ok: false, error: "SERVER_ERROR" };
   }
-}
-
-export async function removeUser(
-  userId: string,
-): Promise<AdminUserActionResult> {
-  // Soft-delete alias: never hard-delete, use deactivate
-  return deactivateUser(userId);
 }
 
 export async function impersonateUser(
@@ -337,39 +357,6 @@ export async function bulkDeactivateUsers(
         data: { deletedAt: new Date() },
       });
       await prisma.session.deleteMany({ where: { userId } });
-      updated += 1;
-    } catch {
-      skipped += 1;
-    }
-  }
-  revalidatePath("/admin/users", "page");
-  return { ok: true, updated, skipped };
-}
-
-export async function bulkUnbanUsers(
-  input: unknown,
-): Promise<BulkUserActionResult> {
-  try {
-    await requireAdmin();
-  } catch {
-    return { ok: false, error: "FORBIDDEN" };
-  }
-  const parsed = bulkUserIdsSchema.safeParse(input);
-  if (!parsed.success) return { ok: false, error: "INVALID_INPUT" };
-  const userIds = [...new Set(parsed.data.userIds)];
-  let updated = 0;
-  let skipped = 0;
-  for (const userId of userIds) {
-    const target = await prisma.user.findUnique({
-      where: { id: userId },
-      select: { banned: true },
-    });
-    if (!target || !target.banned) {
-      skipped += 1;
-      continue;
-    }
-    try {
-      await auth.api.unbanUser({ body: { userId }, headers: await headers() });
       updated += 1;
     } catch {
       skipped += 1;

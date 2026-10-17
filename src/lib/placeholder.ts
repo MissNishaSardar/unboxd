@@ -1,5 +1,3 @@
-export const isUploadedImage = (url: string) => url.startsWith("/uploads/");
-
 // Real product images per slug, category-accurate, unique across catalog.
 // Unsplash IDs chosen to match product type, each slug gets a distinct photo.
 const REAL_PRODUCT_IMAGES: Record<string, string> = {
