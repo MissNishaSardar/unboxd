@@ -110,6 +110,22 @@ const CategoryActions = ({
     }
   };
 
+  const countSubtree = (
+    node: CategorySubtreeNode,
+  ): { categories: number; products: number } =>
+    node.children.reduce(
+      (sum, child) => {
+        const counted = countSubtree(child);
+        return {
+          categories: sum.categories + counted.categories,
+          products: sum.products + counted.products,
+        };
+      },
+      { categories: 1, products: node.productCount },
+    );
+  const subtreeTotals = subtree ? countSubtree(subtree) : null;
+  const subtreeChildren = subtreeTotals ? subtreeTotals.categories - 1 : 0;
+
   const loadSubtree = async () => {
     setSubtreeLoading(true);
     const result = await getCategorySubtreeForDelete(categoryId);
@@ -159,11 +175,15 @@ const CategoryActions = ({
         <AlertDialogTrigger render={trigger} />
         <AlertDialogContent>
           <AlertDialogTitle>
-            Delete {categoryName} and its subcategories?
+            {subtreeTotals ?
+              `Delete ${categoryName} and ${subtreeChildren} subcategor${subtreeChildren === 1 ? "y" : "ies"}?`
+            : `Delete ${categoryName} and its subcategories?`}
           </AlertDialogTitle>
           <AlertDialogDescription>
-            The whole subtree will be hidden from the storefront. Products are
-            not deleted, just hidden.
+            {subtreeTotals ?
+              `${subtreeTotals.categories} categor${subtreeTotals.categories === 1 ? "y" : "ies"} will be hidden from the storefront. ${subtreeTotals.products} product${subtreeTotals.products === 1 ? "" : "s"} will be hidden, not deleted.`
+            : `The whole subtree will be hidden from the storefront. Products are not deleted, just hidden.`
+            }
           </AlertDialogDescription>
           {subtreeLoading ?
             <p className="text-muted-foreground text-sm">Loading</p>

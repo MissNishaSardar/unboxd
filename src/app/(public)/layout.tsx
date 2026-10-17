@@ -1,6 +1,6 @@
 import CartProvider from "@/components/Cart/CartProvider";
 import ImpersonationBanner from "@/components/Admin/ImpersonationBanner";
-import AnnouncementBanner from "@/components/Layout/AnnouncementBanner";
+import SaleBanner from "@/components/Layout/SaleBanner";
 import Container from "@/components/Layout/Container";
 import Header from "@/components/Layout/Header";
 import Footer from "@/components/Layout/Footer";
@@ -29,7 +29,7 @@ const PublicLayout = async ({ children }: LayoutProps) => {
       {session?.session.impersonatedBy && (
         <ImpersonationBanner name={session.user.name} />
       )}
-      <AnnouncementBanner />
+      <SaleBanner />
       <Header brands={brands} />
       <main className="flex-1 overflow-x-clip">
         <Container className="py-10">{children}</Container>

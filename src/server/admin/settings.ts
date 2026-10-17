@@ -15,8 +15,6 @@ export type StoreSettingsData = {
   deliveryDays: number;
   lowStockThreshold: number;
   returnWindowDays: number;
-  announcementEnabled: boolean;
-  announcementText: string;
   freeShippingThreshold: string;
   shippingFlatRate: string;
   maxDiscountPercent: number;
@@ -30,8 +28,6 @@ const toData = (row: {
   deliveryDays: number;
   lowStockThreshold: number;
   returnWindowDays: number;
-  announcementEnabled: boolean;
-  announcementText: string;
   freeShippingThreshold: unknown;
   shippingFlatRate: unknown;
   maxDiscountPercent: number;
@@ -43,8 +39,6 @@ const toData = (row: {
   deliveryDays: row.deliveryDays,
   lowStockThreshold: row.lowStockThreshold,
   returnWindowDays: row.returnWindowDays,
-  announcementEnabled: row.announcementEnabled,
-  announcementText: row.announcementText,
   freeShippingThreshold: String(row.freeShippingThreshold),
   shippingFlatRate: String(row.shippingFlatRate),
   maxDiscountPercent: row.maxDiscountPercent,

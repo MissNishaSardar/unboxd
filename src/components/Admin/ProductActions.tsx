@@ -1,6 +1,6 @@
 "use client";
 
-import { RotateCcwIcon, Trash2Icon } from "lucide-react";
+import { EyeOffIcon, RotateCcwIcon } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import {
@@ -27,12 +27,12 @@ const ProductActions = ({
   const router = useRouter();
   const [isPending, setIsPending] = useState(false);
 
-  const handleDelete = async () => {
+  const handleDeactivate = async () => {
     setIsPending(true);
     const result = await deleteProduct(id);
     setIsPending(false);
     if (result.ok) {
-      toast.add({ title: "Product deleted", type: "success" });
+      toast.add({ title: "Product deactivated", type: "success" });
       router.refresh();
     } else {
       toast.add({ title: "Something went wrong", type: "error" });
@@ -74,27 +74,25 @@ const ProductActions = ({
           <Button
             variant="ghost"
             size="sm"
-            disabled={isPending}
-            className="hover:text-destructive">
-            <Trash2Icon
+            disabled={isPending}>
+            <EyeOffIcon
               data-icon="inline-start"
               aria-hidden="true"
             />
-            Delete
+            Deactivate
           </Button>
         }
       />
       <AlertDialogContent>
-        <AlertDialogTitle>Delete product?</AlertDialogTitle>
+        <AlertDialogTitle>Deactivate product?</AlertDialogTitle>
         <AlertDialogDescription>
-          It will be hidden from the storefront. You can restore it later.
+          It will be inactive and hidden from the storefront. You can restore it
+          later.
         </AlertDialogDescription>
         <AlertDialogFooter>
           <AlertDialogCancel>Cancel</AlertDialogCancel>
-          <AlertDialogAction
-            variant="destructive"
-            onClick={handleDelete}>
-            Delete
+          <AlertDialogAction onClick={handleDeactivate}>
+            Deactivate
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

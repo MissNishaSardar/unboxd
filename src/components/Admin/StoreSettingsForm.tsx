@@ -4,6 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader2Icon } from "lucide-react";
 import { useState } from "react";
 import { Controller, useForm } from "react-hook-form";
+import useNavigationGuard from "@/hooks/use-navigation-guard";
 import { updateStoreSettings } from "@/server/admin/settings";
 import { storeSettingsSchema, storeSettingsType } from "@/lib/zodSchema";
 import {
@@ -56,6 +57,9 @@ const StoreSettingsForm = ({
     mode: "all",
   });
 
+  const { guard, isOpen, confirmLeave, cancelLeave } =
+    useNavigationGuard(isDirty);
+
   const onSubmit = async (values: storeSettingsType) => {
     const result = await updateStoreSettings(values);
     if (result.ok) {
@@ -66,12 +70,88 @@ const StoreSettingsForm = ({
     }
   };
 
+  const onInvalid = () => {
+    toast.add({ title: "Fix the highlighted fields", type: "error" });
+  };
+
+  const saveBar = (
+    <div className="bg-background sticky top-0 z-20 -mx-1 px-1 pt-2 pb-3">
+      <div className="border-border bg-card rounded-xl border px-4 py-2 shadow-sm">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <p
+            role="status"
+            aria-live="polite"
+            className="text-muted-foreground text-xs">
+            {isDirty ? "You have unsaved changes" : "All changes saved"}
+          </p>
+          <div className="flex items-center gap-2">
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={() => guard(() => reset())}
+              disabled={isSubmitting || !isDirty}>
+              Reset
+            </Button>
+            <Button
+              type="submit"
+              size="sm"
+              disabled={isSubmitting || !isDirty}>
+              {isSubmitting && (
+                <Loader2Icon
+                  data-icon="inline-start"
+                  className="animate-spin"
+                />
+              )}
+              Save settings
+            </Button>
+          </div>
+        </div>
+        <nav
+          aria-label="Settings sections"
+          className="border-border mt-2 flex flex-wrap gap-1.5 border-t pt-2">
+          <Button
+            variant="ghost"
+            size="sm"
+            render={<a href="#settings-store" />}
+            nativeButton={false}>
+            Store
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            render={<a href="#settings-ordering" />}
+            nativeButton={false}>
+            Ordering
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            render={<a href="#settings-discounts" />}
+            nativeButton={false}>
+            Discounts
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            render={<a href="#settings-inventory" />}
+            nativeButton={false}>
+            Inventory
+          </Button>
+        </nav>
+      </div>
+    </div>
+  );
+
   return (
     <form
-      onSubmit={handleSubmit(onSubmit)}
+      onSubmit={handleSubmit(onSubmit, onInvalid)}
       noValidate>
-      <div className="flex flex-col gap-6">
-        <Card>
+      <div className="flex flex-col gap-6 scroll-smooth motion-reduce:scroll-auto">
+        {saveBar}
+        <Card
+          id="settings-store"
+          className="scroll-mt-40">
           <CardHeader>
             <CardTitle>Store</CardTitle>
             <CardDescription>
@@ -142,7 +222,9 @@ const StoreSettingsForm = ({
           </CardContent>
         </Card>
 
-        <Card>
+        <Card
+          id="settings-ordering"
+          className="scroll-mt-40">
           <CardHeader>
             <CardTitle>Ordering</CardTitle>
             <CardDescription>
@@ -217,8 +299,14 @@ const StoreSettingsForm = ({
                       value={field.value as number}
                       min={1}
                       max={30}
+                      step={1}
+                      inputMode="numeric"
                       aria-invalid={fieldState.invalid}
+                      aria-describedby={`${field.name}-hint`}
                     />
+                    <FieldDescription id={`${field.name}-hint`}>
+                      Whole days from 1 to 30.
+                    </FieldDescription>
                     {fieldState.invalid && (
                       <FieldError errors={[fieldState.error]} />
                     )}
@@ -245,9 +333,17 @@ const StoreSettingsForm = ({
                         type="number"
                         value={field.value as number}
                         min={0}
+                        max={1000000}
+                        step={1}
+                        inputMode="numeric"
                         aria-invalid={fieldState.invalid}
+                        aria-describedby={`${field.name}-hint`}
                       />
                     </InputGroup>
+                    <FieldDescription id={`${field.name}-hint`}>
+                      Rs amount from 0 to 1000000. Use 0 to always apply the
+                      flat rate.
+                    </FieldDescription>
                     {fieldState.invalid && (
                       <FieldError errors={[fieldState.error]} />
                     )}
@@ -274,9 +370,16 @@ const StoreSettingsForm = ({
                         type="number"
                         value={field.value as number}
                         min={0}
+                        max={100000}
+                        step={1}
+                        inputMode="numeric"
                         aria-invalid={fieldState.invalid}
+                        aria-describedby={`${field.name}-hint`}
                       />
                     </InputGroup>
+                    <FieldDescription id={`${field.name}-hint`}>
+                      Rs amount from 0 to 100000.
+                    </FieldDescription>
                     {fieldState.invalid && (
                       <FieldError errors={[fieldState.error]} />
                     )}
@@ -287,7 +390,9 @@ const StoreSettingsForm = ({
           </CardContent>
         </Card>
 
-        <Card>
+        <Card
+          id="settings-discounts"
+          className="scroll-mt-40">
           <CardHeader>
             <CardTitle>Discounts</CardTitle>
             <CardDescription>
@@ -311,11 +416,14 @@ const StoreSettingsForm = ({
                       value={field.value as number}
                       min={0}
                       max={90}
+                      step={1}
+                      inputMode="numeric"
                       aria-invalid={fieldState.invalid}
                     />
                     <FieldDescription>
-                      No product discount can exceed this. Existing products
-                      above a lowered cap keep their price until edited.
+                      Whole percent from 0 to 90. No product discount can exceed
+                      this. Existing products above a lowered cap keep their
+                      price until edited.
                     </FieldDescription>
                     {fieldState.invalid && (
                       <FieldError errors={[fieldState.error]} />
@@ -327,7 +435,9 @@ const StoreSettingsForm = ({
           </CardContent>
         </Card>
 
-        <Card>
+        <Card
+          id="settings-inventory"
+          className="scroll-mt-40">
           <CardHeader>
             <CardTitle>Inventory and returns</CardTitle>
             <CardDescription>
@@ -351,10 +461,14 @@ const StoreSettingsForm = ({
                       value={field.value as number}
                       min={2}
                       max={50}
+                      step={1}
+                      inputMode="numeric"
                       aria-invalid={fieldState.invalid}
+                      aria-describedby={`${field.name}-hint`}
                     />
-                    <FieldDescription>
-                      Variants below this with stock remaining are flagged low.
+                    <FieldDescription id={`${field.name}-hint`}>
+                      Whole units from 2 to 50. Variants below this with stock
+                      remaining are flagged low.
                     </FieldDescription>
                     {fieldState.invalid && (
                       <FieldError errors={[fieldState.error]} />
@@ -377,8 +491,14 @@ const StoreSettingsForm = ({
                       value={field.value as number}
                       min={1}
                       max={90}
+                      step={1}
+                      inputMode="numeric"
                       aria-invalid={fieldState.invalid}
+                      aria-describedby={`${field.name}-hint`}
                     />
+                    <FieldDescription id={`${field.name}-hint`}>
+                      Whole days from 1 to 90.
+                    </FieldDescription>
                     {fieldState.invalid && (
                       <FieldError errors={[fieldState.error]} />
                     )}
@@ -388,21 +508,27 @@ const StoreSettingsForm = ({
             </FieldGroup>
           </CardContent>
         </Card>
-
-        <div className="flex justify-end">
-          <Button
-            type="submit"
-            disabled={isSubmitting || !isDirty}>
-            {isSubmitting && (
-              <Loader2Icon
-                data-icon="inline-start"
-                className="animate-spin"
-              />
-            )}
-            Save settings
-          </Button>
-        </div>
       </div>
+      <AlertDialog
+        open={isOpen}
+        onOpenChange={(open) => {
+          if (!open) cancelLeave();
+        }}>
+        <AlertDialogContent>
+          <AlertDialogTitle>Discard unsaved changes?</AlertDialogTitle>
+          <AlertDialogDescription>
+            Reset clears every edit on this page. This cannot be undone.
+          </AlertDialogDescription>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Keep editing</AlertDialogCancel>
+            <AlertDialogAction
+              variant="destructive"
+              onClick={confirmLeave}>
+              Discard
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </form>
   );
 };

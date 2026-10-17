@@ -354,39 +354,3 @@ export async function deleteSale(id: string): Promise<FlashSaleResult> {
     return { ok: false, error: "SERVER_ERROR" };
   }
 }
-
-export async function importLegacyBanner(): Promise<FlashSaleResult> {
-  try {
-    await requireAdmin();
-  } catch {
-    return { ok: false, error: "FORBIDDEN" };
-  }
-  try {
-    const count = await prisma.flashSale.count();
-    if (count > 0) return { ok: false, error: "INVALID_INPUT" };
-    const settings = await getStoreSettings();
-    if (!settings.announcementText) {
-      return { ok: false, error: "INVALID_INPUT" };
-    }
-    const row = await prisma.flashSale.create({
-      data: {
-        name: "Store announcement",
-        discountPercent: 0,
-        startsAt: null,
-        endsAt: null,
-        bannerText: settings.announcementText,
-        bannerEnabled: settings.announcementEnabled,
-        isActive: true,
-      },
-    });
-    await prisma.storeSettings.update({
-      where: { id: "store" },
-      data: { announcementEnabled: false },
-    });
-    refreshStorefront();
-    return { ok: true, id: row.id };
-  } catch (e) {
-    console.error("importLegacyBanner failed", e);
-    return { ok: false, error: "SERVER_ERROR" };
-  }
-}

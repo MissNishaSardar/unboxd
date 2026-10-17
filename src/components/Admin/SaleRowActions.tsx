@@ -15,12 +15,7 @@ import {
   AlertDialogTitle,
 } from "@/components/shadcnui/alert-dialog";
 import { toast } from "@/components/shadcnui/toast";
-import {
-  deleteSale,
-  duplicateSale,
-  endSaleNow,
-  importLegacyBanner,
-} from "@/server/deals";
+import { deleteSale, duplicateSale, endSaleNow } from "@/server/deals";
 
 const SaleRowActions = ({ id, name }: { id: string; name: string }) => {
   const [deleteOpen, setDeleteOpen] = useState(false);
@@ -113,32 +108,6 @@ const SaleRowActions = ({ id, name }: { id: string; name: string }) => {
         </AlertDialogContent>
       </AlertDialog>
     </>
-  );
-};
-
-export const ImportLegacyButton = () => {
-  const [busy, setBusy] = useState(false);
-  return (
-    <Button
-      variant="outline"
-      size="sm"
-      disabled={busy}
-      onClick={() => {
-        setBusy(true);
-        importLegacyBanner()
-          .then((result) => {
-            toast.add({
-              title: result.ok ? "Banner moved to deals" : "Nothing to move",
-              type: result.ok ? "success" : "error",
-            });
-          })
-          .catch(() => {
-            toast.add({ title: "Something went wrong", type: "error" });
-          })
-          .finally(() => setBusy(false));
-      }}>
-      Move current banner here
-    </Button>
   );
 };
 

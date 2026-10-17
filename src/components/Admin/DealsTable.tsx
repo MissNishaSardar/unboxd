@@ -72,7 +72,16 @@ const statusChip = (sale: {
   });
   if (state === "live") return <Badge>Live deal</Badge>;
   if (state === "scheduled") return <Badge variant="outline">Scheduled</Badge>;
-  return <Badge variant="secondary">Expired</Badge>;
+  const range = formatISTRange(sale.startsAt, sale.endsAt);
+  const endedLabel = range ? `Deal ended, ${range}` : "Deal ended";
+  return (
+    <Badge
+      variant="secondary"
+      title={endedLabel}
+      aria-label={endedLabel}>
+      Deal ended
+    </Badge>
+  );
 };
 
 type SaleStatusFilter =
@@ -83,7 +92,7 @@ const FILTER_OPTIONS: { value: SaleStatusFilter; label: string }[] = [
   { value: "active", label: "Active" },
   { value: "scheduled", label: "Scheduled" },
   { value: "paused", label: "Paused" },
-  { value: "ended", label: "Ended" },
+  { value: "ended", label: "Deal ended" },
   { value: "info", label: "Info" },
 ];
 

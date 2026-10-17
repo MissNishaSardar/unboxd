@@ -16,7 +16,7 @@ import { cn } from "@/lib/utils";
 import { getRecentOrders } from "@/server/admin/queries";
 
 const RecentOrdersCard = async ({ className }: { className?: string }) => {
-  const orders = await getRecentOrders(7);
+  const orders = await getRecentOrders(5);
 
   return (
     <Card className={cn("flex h-full flex-col", className)}>

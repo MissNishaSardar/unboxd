@@ -1,6 +1,6 @@
 "use client";
 
-import type { ReactNode } from "react";
+import type { HTMLAttributes, ReactNode } from "react";
 import {
   flexRender,
   getCoreRowModel,
@@ -35,6 +35,7 @@ type DataTableProps<TData, TValue> = {
   emptyTitle: string;
   emptyDescription: string;
   minWidthClass?: string;
+  getRowProps?: (row: Row<TData>) => HTMLAttributes<HTMLTableRowElement>;
 };
 
 const DataTable = <TData, TValue>({
@@ -50,6 +51,7 @@ const DataTable = <TData, TValue>({
   emptyTitle,
   emptyDescription,
   minWidthClass = "min-w-[720px]",
+  getRowProps,
 }: DataTableProps<TData, TValue>) => {
   const table = useReactTable({
     data,
@@ -98,7 +100,8 @@ const DataTable = <TData, TValue>({
                 table.getRowModel().rows.map((row) => (
                   <TableRow
                     key={row.id}
-                    data-state={row.getIsSelected() ? "selected" : undefined}>
+                    data-state={row.getIsSelected() ? "selected" : undefined}
+                    {...getRowProps?.(row)}>
                     {row.getVisibleCells().map((cell) => (
                       <TableCell key={cell.id}>
                         {flexRender(

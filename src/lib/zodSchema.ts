@@ -485,13 +485,23 @@ export const categoryFormSchema = z.object({
     .min(2, { error: "Name must be at least 2 characters" })
     .max(80, { error: "Name must be at most 80 characters" }),
   parentId: z.string().min(1).optional().or(z.literal("")),
+  position: z.coerce.number().int().min(0).max(9999).default(0),
 });
 
 export type categoryFormType = z.infer<typeof categoryFormSchema>;
 
+export type categoryFormInputType = z.input<typeof categoryFormSchema>;
+
 export const reassignCategorySchema = z.object({
   targetCategoryId: z.string().min(1),
 });
+
+export const moveCategoryToSchema = z.object({
+  parentId: z.string().min(1).nullable(),
+  index: z.number().int().min(0).max(9999),
+});
+
+export type moveCategoryToType = z.infer<typeof moveCategoryToSchema>;
 
 export type reassignCategoryType = z.infer<typeof reassignCategorySchema>;
 
@@ -639,11 +649,6 @@ export const storeSettingsSchema = z.object({
     .int()
     .min(1, { error: "Must be at least 1 day" })
     .max(90, { error: "Must be at most 90 days" }),
-  announcementEnabled: z.boolean(),
-  announcementText: z
-    .string()
-    .trim()
-    .max(140, { error: "Must be at most 140 characters" }),
   freeShippingThreshold: z.coerce
     .number()
     .min(0, { error: "Must be at least 0" })

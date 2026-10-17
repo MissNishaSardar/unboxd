@@ -43,7 +43,11 @@ const AdminCategoryEditPage = async ({
       <CategoryForm
         mode="edit"
         categoryId={id}
-        initialData={{ name: category.name, parentId: category.parentId }}
+        initialData={{
+          name: category.name,
+          parentId: category.parentId,
+          position: category.position,
+        }}
         categories={categories}
         excludeIds={[...excludeIds]}
       />

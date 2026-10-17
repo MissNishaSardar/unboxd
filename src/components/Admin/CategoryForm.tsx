@@ -30,7 +30,11 @@ import {
   SelectValue,
 } from "@/components/shadcnui/select";
 import { toast } from "@/components/shadcnui/toast";
-import { categoryFormSchema, type categoryFormType } from "@/lib/zodSchema";
+import {
+  categoryFormSchema,
+  type categoryFormInputType,
+  type categoryFormType,
+} from "@/lib/zodSchema";
 
 const CategoryForm = ({
   mode,
@@ -44,7 +48,7 @@ const CategoryForm = ({
 }: {
   mode: "create" | "edit";
   categoryId?: string;
-  initialData?: { name: string; parentId: string | null };
+  initialData?: { name: string; parentId: string | null; position?: number };
   categories: { id: string; name: string }[];
   excludeIds?: string[];
   onCreated?: (cat: { id: string; name: string }) => void;
@@ -59,11 +63,12 @@ const CategoryForm = ({
     control,
     reset,
     formState: { errors, isDirty },
-  } = useForm<categoryFormType>({
+  } = useForm<categoryFormInputType, undefined, categoryFormType>({
     resolver: zodResolver(categoryFormSchema),
     defaultValues: {
       name: initialData?.name ?? "",
       parentId: initialData?.parentId ?? "",
+      position: initialData?.position ?? 0,
     },
     mode: "all",
   });
@@ -153,6 +158,32 @@ const CategoryForm = ({
           </Field>
         )}
       />
+
+      {mode === "edit" && (
+        <Controller
+          name="position"
+          control={control}
+          render={({ field, fieldState }) => (
+            <Field data-invalid={fieldState.invalid}>
+              <FieldLabel htmlFor={field.name}>Position</FieldLabel>
+              <Input
+                {...field}
+                id={field.name}
+                type="number"
+                step="1"
+                min="0"
+                max="9999"
+                value={field.value as number}
+                aria-invalid={fieldState.invalid}
+              />
+              <FieldDescription>
+                Lower shows first. Ties fall back to name order.
+              </FieldDescription>
+              {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+            </Field>
+          )}
+        />
+      )}
     </FieldGroup>
   );
 

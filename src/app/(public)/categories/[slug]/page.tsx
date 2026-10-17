@@ -64,7 +64,7 @@ const page = async ({
       children: {
         where: { deletedAt: null },
         select: { name: true, slug: true },
-        orderBy: { name: "asc" },
+        orderBy: [{ position: "asc" }, { name: "asc" }, { id: "asc" }],
       },
     },
   });

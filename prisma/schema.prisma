@@ -47,6 +47,7 @@ model Category {
   parent    Category?  @relation("CategoryTree", fields: [parentId], references: [id], onDelete: SetNull)
   children  Category[] @relation("CategoryTree")
   products  Product[]
+  position  Int       @default(0)
   deletedAt DateTime?
   createdAt DateTime   @default(now())
   updatedAt DateTime   @updatedAt
@@ -251,8 +252,6 @@ model StoreSettings {
   deliveryDays          Int    @default(5)
   lowStockThreshold     Int    @default(5)
   returnWindowDays      Int    @default(7)
-  announcementEnabled   Boolean @default(false)
-  announcementText      String @default("")
   freeShippingThreshold Decimal @default(999)
   shippingFlatRate      Decimal @default(99)
   maxDiscountPercent    Int     @default(50)

@@ -234,7 +234,7 @@ export async function getCategoriesWithCounts(params?: {
   }
   const categories = await prisma.category.findMany({
     where: { deletedAt: null },
-    orderBy: { name: "asc" },
+    orderBy: [{ position: "asc" }, { name: "asc" }, { id: "asc" }],
     include: {
       _count: {
         select: {

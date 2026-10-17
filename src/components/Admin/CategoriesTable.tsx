@@ -1,10 +1,25 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState, type HTMLAttributes } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import {
+  DndContext,
+  DragOverlay,
+  PointerSensor,
+  TouchSensor,
+  useDraggable,
+  useSensor,
+  useSensors,
+  type CollisionDetection,
+  type DragEndEvent,
+  type DragOverEvent,
+  type DragStartEvent,
+} from "@dnd-kit/core";
 import type {
   ColumnDef,
   OnChangeFn,
+  Row,
   SortingState,
 } from "@tanstack/react-table";
 import type { RowSelectionState } from "@tanstack/react-table";
@@ -12,19 +27,25 @@ import {
   ArrowDownIcon,
   ArrowUpDownIcon,
   ArrowUpIcon,
+  GripVertical,
   PencilIcon,
 } from "lucide-react";
 import CategoryActions from "@/components/Admin/CategoryActions";
 import DataTable from "@/components/Admin/DataTable";
 import { Badge } from "@/components/shadcnui/badge";
 import { Button } from "@/components/shadcnui/button";
+import { toast } from "@/components/shadcnui/toast";
+import { moveCategoryTo } from "@/server/admin/categories";
 import type { AdminCategoryNode } from "@/server/admin/queries";
 
 export type AdminCategoryFlatRow = {
   id: string;
   name: string;
   slug: string;
+  parentId: string | null;
+  position: number;
   productCount: number;
+  totalProductCount: number;
   childCount: number;
   depth: number;
   categories: { id: string; name: string; parentId: string | null }[];
@@ -63,6 +84,19 @@ const SortHeaderButton = ({
   </Button>
 );
 
+const binaryCompare = (x: string, y: string) =>
+  x < y ? -1
+  : x > y ? 1
+  : 0;
+
+// Mirrors the server contract: position asc, name asc in SQLite binary
+// collation, then id. Keep this equal to the server orderBy so the drag
+// preview matches the landed order when position ties.
+const byPosition = (a: AdminCategoryNode, b: AdminCategoryNode) =>
+  a.position - b.position ||
+  binaryCompare(a.name, b.name) ||
+  binaryCompare(a.id, b.id);
+
 const sortTree = (
   nodes: AdminCategoryNode[],
   sorting: SortingState,
@@ -73,7 +107,13 @@ const sortTree = (
   const dir = sort.desc ? -1 : 1;
   copy.sort((a, b) => {
     if (sort.id === "products") {
-      return (a.productCount - b.productCount) * dir;
+      return (
+        (a.totalProductCount - b.totalProductCount) * dir ||
+        (a.productCount - b.productCount) * dir
+      );
+    }
+    if (sort.id === "position") {
+      return byPosition(a, b) * dir;
     }
     return a.name.localeCompare(b.name) * dir;
   });
@@ -94,7 +134,10 @@ const flattenTree = (
       id: node.id,
       name: node.name,
       slug: node.slug,
+      parentId: node.parentId,
+      position: node.position,
       productCount: node.productCount,
+      totalProductCount: node.totalProductCount,
       childCount: node.children.length,
       depth,
       categories,
@@ -102,6 +145,111 @@ const flattenTree = (
     flattenTree(node.children, depth + 1, categories, out);
   }
   return out;
+};
+
+type DropZone = "above" | "inside" | "below";
+
+const categoryCollision: CollisionDetection = ({
+  active,
+  pointerCoordinates,
+}) => {
+  if (!pointerCoordinates || typeof document === "undefined") return [];
+  const hit = document
+    .elementsFromPoint(pointerCoordinates.x, pointerCoordinates.y)
+    .find((el) => el instanceof HTMLElement && el.closest("[data-cat-row]"));
+  const rowEl =
+    hit instanceof HTMLElement ? hit.closest("[data-cat-row]") : null;
+  if (!(rowEl instanceof HTMLElement)) return [];
+  const rowId = rowEl.getAttribute("data-cat-row");
+  if (!rowId || rowId === String(active.id)) return [];
+  const rect = rowEl.getBoundingClientRect();
+  const ratio = (pointerCoordinates.y - rect.top) / Math.max(1, rect.height);
+  const zone: DropZone =
+    ratio < 0.33 ? "above"
+    : ratio > 0.67 ? "below"
+    : "inside";
+  return [{ id: `${rowId}:${zone}` }];
+};
+
+const parseOverId = (
+  overId: string,
+): { rowId: string; zone: DropZone } | null => {
+  const sep = overId.lastIndexOf(":");
+  if (sep < 0) return null;
+  const zone = overId.slice(sep + 1);
+  if (zone !== "above" && zone !== "inside" && zone !== "below") return null;
+  return { rowId: overId.slice(0, sep), zone };
+};
+
+const computeMove = (
+  rows: AdminCategoryFlatRow[],
+  activeId: string,
+  overRowId: string,
+  zone: DropZone,
+): { parentId: string | null; index: number } | { error: "own" } => {
+  const activeIdx = rows.findIndex((row) => row.id === activeId);
+  if (activeIdx < 0) return { error: "own" };
+  const own = new Set<string>([activeId]);
+  const depth = rows[activeIdx].depth;
+  for (
+    let i = activeIdx + 1;
+    i < rows.length && rows[i].depth > depth;
+    i += 1
+  ) {
+    own.add(rows[i].id);
+  }
+  if (own.has(overRowId)) return { error: "own" };
+  const rest = rows.filter((row) => !own.has(row.id));
+  const overIdx = rest.findIndex((row) => row.id === overRowId);
+  if (overIdx < 0) return { error: "own" };
+  if (zone === "inside") {
+    return {
+      parentId: overRowId,
+      index: rest.filter((row) => row.parentId === overRowId).length,
+    };
+  }
+  const parentId = rest[overIdx].parentId;
+  const overSiblingIdx = rest
+    .filter((row) => row.parentId === parentId)
+    .findIndex((row) => row.id === overRowId);
+  return {
+    parentId,
+    index: zone === "above" ? overSiblingIdx : overSiblingIdx + 1,
+  };
+};
+
+const OrderDragHandle = ({
+  id,
+  name,
+  disabled,
+}: {
+  id: string;
+  name: string;
+  disabled: boolean;
+}) => {
+  const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
+    id,
+    disabled,
+  });
+  return (
+    <span
+      ref={setNodeRef}
+      {...attributes}
+      {...listeners}
+      className="inline-flex">
+      <Button
+        variant="ghost"
+        size="sm"
+        disabled={disabled}
+        aria-label={`Drag to reorder ${name}`}
+        title={disabled ? "Sort by Order to reorder" : "Drag to reorder"}>
+        <GripVertical
+          aria-hidden="true"
+          className={isDragging ? "opacity-40" : undefined}
+        />
+      </Button>
+    </span>
+  );
 };
 
 const CategoriesTable = ({
@@ -113,8 +261,15 @@ const CategoriesTable = ({
   categories: { id: string; name: string; parentId: string | null }[];
   total: number;
 }) => {
+  const router = useRouter();
+  const [isPending, setIsPending] = useState(false);
+  const [activeId, setActiveId] = useState<string | null>(null);
+  const [dropTarget, setDropTarget] = useState<{
+    rowId: string;
+    zone: DropZone;
+  } | null>(null);
   const [sorting, setSorting] = useState<SortingState>([
-    { id: "name", desc: false },
+    { id: "position", desc: false },
   ]);
 
   const handleSortingChange: OnChangeFn<SortingState> = (updater) => {
@@ -128,8 +283,109 @@ const CategoriesTable = ({
     return flattenTree(sorted, 0, categories);
   }, [tree, categories, sorting]);
 
+  const canDrag =
+    sorting[0]?.id === "position" && sorting[0]?.desc === false && !isPending;
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: { distance: 4 },
+    }),
+    useSensor(TouchSensor, {
+      activationConstraint: { delay: 200, tolerance: 6 },
+    }),
+  );
+
+  const handleDragStart = (event: DragStartEvent) => {
+    if (!canDrag) return;
+    setActiveId(String(event.active.id));
+  };
+
+  const handleDragOver = (event: DragOverEvent) => {
+    if (!event.over) {
+      setDropTarget(null);
+      return;
+    }
+    const parsed = parseOverId(String(event.over.id));
+    setDropTarget(parsed && parsed.rowId !== activeId ? parsed : null);
+  };
+
+  const handleDragEnd = async (event: DragEndEvent) => {
+    const overId = event.over ? String(event.over.id) : null;
+    const moving = activeId;
+    setActiveId(null);
+    setDropTarget(null);
+    if (!overId || !moving || !canDrag) return;
+    const parsed = parseOverId(overId);
+    if (!parsed || parsed.rowId === moving) return;
+    const move = computeMove(rows, moving, parsed.rowId, parsed.zone);
+    if ("error" in move) {
+      toast.add({
+        title: "Cannot move inside its own subcategory",
+        type: "error",
+      });
+      return;
+    }
+    setIsPending(true);
+    const result = await moveCategoryTo(moving, {
+      parentId: move.parentId,
+      index: move.index,
+    });
+    setIsPending(false);
+    if (result.ok) {
+      if (result.moved) router.refresh();
+    } else if (result.error === "INVALID_INPUT") {
+      toast.add({ title: "That move is not allowed", type: "error" });
+    } else {
+      toast.add({ title: "Something went wrong", type: "error" });
+    }
+  };
+
+  const handleDragCancel = () => {
+    setActiveId(null);
+    setDropTarget(null);
+  };
+
+  const getRowProps = useCallback(
+    (row: Row<AdminCategoryFlatRow>) => {
+      const props = {
+        "data-cat-row": row.original.id,
+      } as HTMLAttributes<HTMLTableRowElement>;
+      if (dropTarget && dropTarget.rowId === row.original.id) {
+        props.className =
+          dropTarget.zone === "inside" ? "bg-accent"
+          : dropTarget.zone === "above" ?
+            "shadow-[inset_0_2px_0_0_var(--color-primary)]"
+          : "shadow-[inset_0_-2px_0_0_var(--color-primary)]";
+      }
+      return props;
+    },
+    [dropTarget],
+  );
+
+  const activeRow =
+    activeId ? (rows.find((row) => row.id === activeId) ?? null) : null;
+
   const columns = useMemo<ColumnDef<AdminCategoryFlatRow>[]>(
     () => [
+      {
+        id: "position",
+        accessorKey: "position",
+        header: ({ column }) => (
+          <SortHeaderButton
+            label="Order"
+            sorted={column.getIsSorted()}
+            onToggle={() =>
+              column.toggleSorting(column.getIsSorted() === "asc")
+            }
+          />
+        ),
+        cell: ({ row }) => (
+          <OrderDragHandle
+            id={row.original.id}
+            name={row.original.name}
+            disabled={!canDrag}
+          />
+        ),
+      },
       {
         id: "name",
         accessorKey: "name",
@@ -179,9 +435,22 @@ const CategoriesTable = ({
             }
           />
         ),
-        cell: ({ row }) => (
-          <span className="tabular-nums">{row.original.productCount}</span>
-        ),
+        cell: ({ row }) => {
+          const direct = row.original.productCount;
+          const total = row.original.totalProductCount;
+          if (row.original.childCount === 0) {
+            return <span className="tabular-nums">{direct}</span>;
+          }
+          const label = `${direct} direct · ${total} total`;
+          return (
+            <span
+              className="whitespace-nowrap tabular-nums"
+              title={label}
+              aria-label={`${row.original.name}: ${label}`}>
+              {label}
+            </span>
+          );
+        },
       },
       {
         id: "structure",
@@ -223,7 +492,7 @@ const CategoriesTable = ({
         ),
       },
     ],
-    [],
+    [canDrag],
   );
 
   const toolbar = (
@@ -235,20 +504,40 @@ const CategoriesTable = ({
   );
 
   return (
-    <DataTable
-      columns={columns}
-      data={rows}
-      getRowId={(row) => row.id}
-      sorting={sorting}
-      onSortingChange={handleSortingChange}
-      rowSelection={{} as RowSelectionState}
-      onRowSelectionChange={() => {}}
-      enableRowSelection={false}
-      toolbar={toolbar}
-      emptyTitle="No categories yet"
-      emptyDescription="Create your first category to organize products."
-      minWidthClass="min-w-[720px]"
-    />
+    <DndContext
+      // Stable id keeps the drag handle describedby value identical on the
+      // server and the client. The library default uses a module counter
+      // that never matches across server and client renders.
+      id="admin-categories"
+      sensors={sensors}
+      collisionDetection={categoryCollision}
+      onDragStart={handleDragStart}
+      onDragOver={handleDragOver}
+      onDragEnd={handleDragEnd}
+      onDragCancel={handleDragCancel}>
+      <DataTable
+        columns={columns}
+        data={rows}
+        getRowId={(row) => row.id}
+        sorting={sorting}
+        onSortingChange={handleSortingChange}
+        rowSelection={{} as RowSelectionState}
+        onRowSelectionChange={() => {}}
+        enableRowSelection={false}
+        toolbar={toolbar}
+        emptyTitle="No categories yet"
+        emptyDescription="Create your first category to organize products."
+        minWidthClass="min-w-[840px]"
+        getRowProps={getRowProps}
+      />
+      <DragOverlay dropAnimation={null}>
+        {activeRow ?
+          <div className="border-border bg-card rounded-xl border px-4 py-2 text-sm font-medium shadow-sm">
+            {activeRow.name}
+          </div>
+        : null}
+      </DragOverlay>
+    </DndContext>
   );
 };
 

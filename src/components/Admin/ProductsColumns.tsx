@@ -94,8 +94,9 @@ const DealBadges = ({ product }: { product: AdminProductRow }) => {
     product.discountStartsAt,
     product.discountEndsAt,
   );
+  const endedLabel = range ? `Deal ended, ${range}` : "Deal ended";
   return (
-    <span className="flex items-center gap-1.5">
+    <span className="flex items-center justify-end gap-1.5">
       {formatPrice(effectivePrice(Number(product.basePrice), 0, active))}
       {hasDiscount(active) && (
         <Badge variant="secondary">{discountBadge(active)}</Badge>
@@ -103,12 +104,18 @@ const DealBadges = ({ product }: { product: AdminProductRow }) => {
       {status !== "none" && (
         <Badge
           variant={status === "live" ? "default" : "outline"}
-          title={range}>
+          title={status === "expired" ? endedLabel : range}
+          aria-label={
+            status === "live" ? "Live deal"
+            : status === "scheduled" ?
+              "Scheduled deal"
+            : endedLabel
+          }>
           {status === "live" ?
             "Live deal"
           : status === "scheduled" ?
             "Scheduled"
-          : "Expired"}
+          : "Deal ended"}
         </Badge>
       )}
     </span>
@@ -188,56 +195,74 @@ export const getProductsColumns = (): ColumnDef<AdminProductRow>[] => [
     id: "price",
     accessorKey: "basePrice",
     header: ({ column }) => (
-      <SortHeaderButton
-        label="Price"
-        sorted={column.getIsSorted()}
-        onToggle={() => column.toggleSorting(column.getIsSorted() === "asc")}
-      />
+      <div className="flex justify-end">
+        <SortHeaderButton
+          label="Price"
+          sorted={column.getIsSorted()}
+          onToggle={() => column.toggleSorting(column.getIsSorted() === "asc")}
+        />
+      </div>
     ),
     cell: ({ row }) => (
-      <span className="tabular-nums">
+      <span className="block text-right tabular-nums">
         <DealBadges product={row.original} />
       </span>
     ),
   },
   {
     id: "stock",
-    header: "Stock",
-    cell: ({ row }) => (
-      <span className="tabular-nums">
-        {row.original.flaggedVariants.length > 0 ?
-          <span className="flex flex-col gap-1">
-            {row.original.flaggedVariants.map((variant) => (
-              <span
-                key={variant.id}
-                className="flex items-baseline gap-1.5 text-sm">
-                <span className="min-w-0 truncate font-medium">
-                  {variant.name}
-                </span>
-                <span className="text-muted-foreground truncate text-xs">
-                  {variant.sku}
-                </span>
+    header: () => <div className="flex justify-end">Stock</div>,
+    cell: ({ row }) => {
+      const total = row.original.totalStock;
+      const count = row.original.variantCount;
+      const stockLabel = `${total} across ${count} variant${count === 1 ? "" : "s"}`;
+      return (
+        <span className="block text-right whitespace-nowrap tabular-nums">
+          {row.original.flaggedVariants.length > 0 ?
+            <span className="flex flex-col items-end gap-1">
+              {row.original.flaggedVariants.map((variant) => (
                 <span
-                  className={
-                    variant.stock === 0 ?
-                      "text-destructive font-semibold"
-                    : "font-semibold text-amber-600 dark:text-amber-400"
-                  }>
-                  {variant.stock}
+                  key={variant.id}
+                  className="flex items-baseline justify-end gap-1.5 text-sm">
+                  <span className="min-w-0 truncate font-medium">
+                    {variant.name}
+                  </span>
+                  <span className="text-muted-foreground truncate text-xs">
+                    {variant.sku}
+                  </span>
+                  <span
+                    className={
+                      variant.stock === 0 ?
+                        "text-destructive font-semibold"
+                      : "font-semibold text-amber-600 dark:text-amber-400"
+                    }>
+                    {variant.stock}
+                  </span>
                 </span>
+              ))}
+              <span
+                className="text-muted-foreground text-xs whitespace-nowrap tabular-nums"
+                title={stockLabel}
+                aria-label={`Total stock: ${stockLabel}`}>
+                Total {total}
               </span>
-            ))}
-          </span>
-        : row.original.totalStock}
-      </span>
-    ),
+            </span>
+          : <span
+              title={stockLabel}
+              aria-label={`Stock: ${stockLabel}`}>
+              {total}
+            </span>
+          }
+        </span>
+      );
+    },
     enableSorting: false,
   },
   {
     id: "status",
     header: "Status",
     cell: ({ row }) => (
-      <Badge variant={row.original.isActive ? "default" : "secondary"}>
+      <Badge variant={row.original.isActive ? "default" : "outline"}>
         {row.original.isActive ? "Active" : "Inactive"}
       </Badge>
     ),
@@ -245,9 +270,11 @@ export const getProductsColumns = (): ColumnDef<AdminProductRow>[] => [
   },
   {
     id: "variants",
-    header: "Variants",
+    header: () => <div className="flex justify-end">Variants</div>,
     cell: ({ row }) => (
-      <span className="tabular-nums">{row.original.variantCount}</span>
+      <span className="block text-right tabular-nums">
+        {row.original.variantCount}
+      </span>
     ),
     enableSorting: false,
   },

@@ -5,7 +5,11 @@ import { Prisma } from "@generated/prisma/client";
 import prisma from "@/lib/dbClient/prisma";
 import { requireAdmin } from "@/lib/guard";
 import { slugify } from "@/lib/utils";
-import { categoryFormSchema, reassignCategorySchema } from "@/lib/zodSchema";
+import {
+  categoryFormSchema,
+  moveCategoryToSchema,
+  reassignCategorySchema,
+} from "@/lib/zodSchema";
 
 export type AdminCategoryResult =
   | { ok: true; id: string; slug: string }
@@ -124,10 +128,19 @@ export async function createCategory(
                 throw new InvalidInputError();
               }
             }
+            // The create form has no position field, so new categories
+            // always append last. Max plus one keeps a fresh row off an
+            // occupied spot when earlier deletes or manual edits left gaps.
+            const scope = parentId ? { parentId } : { parentId: null };
+            const { _max } = await tx.category.aggregate({
+              where: scope,
+              _max: { position: true },
+            });
             return tx.category.create({
               data: {
                 name,
                 slug: candidate,
+                position: (_max.position ?? -1) + 1,
                 ...(parentId ? { parentId } : {}),
               },
             });
@@ -163,7 +176,7 @@ export async function updateCategory(
     return { ok: false, error: "INVALID_INPUT" };
   }
 
-  const { name, parentId } = parsed.data;
+  const { name, parentId, position } = parsed.data;
 
   try {
     const category = await prisma.$transaction(
@@ -197,6 +210,7 @@ export async function updateCategory(
           where: { id },
           data: {
             name,
+            position,
             ...(parentId ? { parentId } : { parentId: null }),
           },
         });
@@ -215,6 +229,136 @@ export async function updateCategory(
       return { ok: false, error: "INVALID_INPUT" };
     }
     console.error("updateCategory failed", e);
+    return { ok: false, error: "SERVER_ERROR" };
+  }
+}
+
+export type AdminMoveToResult =
+  | { ok: true; moved: boolean }
+  | {
+      ok: false;
+      error: "FORBIDDEN" | "INVALID_INPUT" | "NOT_FOUND" | "SERVER_ERROR";
+    };
+
+export async function moveCategoryTo(
+  id: string,
+  input: unknown,
+): Promise<AdminMoveToResult> {
+  try {
+    await requireAdmin();
+  } catch {
+    return { ok: false, error: "FORBIDDEN" };
+  }
+
+  const parsed = moveCategoryToSchema.safeParse(input);
+  if (!parsed.success) {
+    return { ok: false, error: "INVALID_INPUT" };
+  }
+  const { parentId, index } = parsed.data;
+
+  try {
+    const moved = await prisma.$transaction(
+      async (tx) => {
+        const target = await tx.category.findUnique({
+          where: { id, deletedAt: null },
+          select: { id: true, parentId: true },
+        });
+        if (!target) {
+          throw new NotFoundError();
+        }
+        if (parentId === id) {
+          throw new InvalidInputError();
+        }
+        if (parentId) {
+          const parent = await tx.category.findUnique({
+            where: { id: parentId, deletedAt: null },
+            select: { id: true },
+          });
+          if (!parent) {
+            throw new InvalidInputError();
+          }
+          const parentById = await getParentByIdMap(tx);
+          if (isDescendantOf(parentById, id, parentId)) {
+            throw new InvalidInputError();
+          }
+        }
+
+        const orderBy = [
+          { position: "asc" },
+          { name: "asc" },
+          { id: "asc" },
+        ] as const;
+        const scope = (scopeParentId: string | null) =>
+          scopeParentId ? { parentId: scopeParentId } : { parentId: null };
+        const oldSiblings = await tx.category.findMany({
+          where: { ...scope(target.parentId), deletedAt: null },
+          orderBy: [...orderBy],
+          select: { id: true },
+        });
+        const newSiblings =
+          target.parentId === parentId ?
+            oldSiblings
+          : await tx.category.findMany({
+              where: { ...scope(parentId), deletedAt: null },
+              orderBy: [...orderBy],
+              select: { id: true },
+            });
+        const withoutTarget = newSiblings.filter((item) => item.id !== id);
+        const clamped = Math.max(0, Math.min(index, withoutTarget.length));
+        const next = [
+          ...withoutTarget.slice(0, clamped),
+          { id },
+          ...withoutTarget.slice(clamped),
+        ];
+        const prevIds = newSiblings.map((item) => item.id);
+        const nextIds = next.map((item) => item.id);
+        const unchanged =
+          prevIds.length === nextIds.length &&
+          prevIds.every(
+            (siblingId, position) => siblingId === nextIds[position],
+          );
+        if (unchanged) return false;
+
+        if (target.parentId !== parentId) {
+          const oldWithout = oldSiblings.filter((item) => item.id !== id);
+          await Promise.all(
+            oldWithout.map((sibling, position) =>
+              tx.category.update({
+                where: { id: sibling.id },
+                data: { position },
+              }),
+            ),
+          );
+        }
+        await Promise.all(
+          next.map((sibling, position) =>
+            tx.category.update({
+              where: { id: sibling.id },
+              data: {
+                position,
+                ...(sibling.id === id ? { parentId } : {}),
+              },
+            }),
+          ),
+        );
+        return true;
+      },
+      { maxWait: 5000, timeout: 10000 },
+    );
+
+    if (moved) {
+      revalidateTag("products", "max");
+      revalidatePath("/admin/categories", "page");
+    }
+    return { ok: true, moved };
+  } catch (e) {
+    if (e instanceof NotFoundError) {
+      return { ok: false, error: "NOT_FOUND" };
+    }
+    if (e instanceof InvalidInputError) {
+      return { ok: false, error: "INVALID_INPUT" };
+    }
+    console.error("moveCategoryTo failed", e);
     return { ok: false, error: "SERVER_ERROR" };
   }
 }
@@ -423,6 +567,7 @@ export async function getCategorySubtreeForDelete(
   try {
     const all = await prisma.category.findMany({
       where: { deletedAt: null },
+      orderBy: [{ position: "asc" }, { name: "asc" }, { id: "asc" }],
       select: {
         id: true,
         name: true,

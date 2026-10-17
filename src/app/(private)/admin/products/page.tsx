@@ -13,7 +13,7 @@ import {
 import type { Metadata } from "next";
 import { requireAdminPage } from "@/lib/guard";
 import { adminProductListSearchParamsSchema } from "@/lib/zodSchema";
-import { getAdminProducts } from "@/server/admin/queries";
+import { getAdminProducts, getAdminTotals } from "@/server/admin/queries";
 import { getStoreSettings } from "@/server/admin/settings";
 
 export const metadata: Metadata = {
@@ -36,9 +36,13 @@ const AdminProductsPage = async ({
   } = adminProductListSearchParamsSchema.parse(await searchParams);
 
   // The list uses Load more pagination, so the first render always shows
-  // page 1. The ?page= param is only honored by /api/admin/products for
+  // page 1. The page param is only honored by the admin products API for
   // Load more requests.
-  const [{ products, total }, { lowStockThreshold }] = await Promise.all([
+  const [
+    { products, total: filteredTotal },
+    { lowStockThreshold },
+    { totalProducts: catalogTotal },
+  ] = await Promise.all([
     getAdminProducts({
       search,
       sort,
@@ -47,6 +51,7 @@ const AdminProductsPage = async ({
       page: 1,
     }),
     getStoreSettings(),
+    getAdminTotals(),
   ]);
 
   const hasActiveFilters =
@@ -60,7 +65,7 @@ const AdminProductsPage = async ({
             Products
           </h1>
           <p className="text-muted-foreground text-sm">
-            {total} product{total === 1 ? "" : "s"}
+            {catalogTotal} product{catalogTotal === 1 ? "" : "s"} in catalog
           </p>
         </div>
         <Button
@@ -99,7 +104,7 @@ const AdminProductsPage = async ({
         </Empty>
       : <AdminProductsLoadMore
           initialProducts={products}
-          total={total}
+          total={filteredTotal}
           lowStockThreshold={lowStockThreshold}
         />
       }

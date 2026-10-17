@@ -165,7 +165,7 @@ export async function getAdminProductForEdit(id: string) {
 
 export async function getAdminCategories() {
   const categories = await prisma.category.findMany({
-    orderBy: { name: "asc" },
+    orderBy: [{ position: "asc" }, { name: "asc" }, { id: "asc" }],
     select: { id: true, name: true },
   });
   return categories;
@@ -176,14 +176,16 @@ export type AdminCategoryNode = {
   name: string;
   slug: string;
   parentId: string | null;
+  position: number;
   productCount: number;
+  totalProductCount: number;
   children: AdminCategoryNode[];
 };
 
 export async function getAdminCategoryTree(): Promise<AdminCategoryNode[]> {
   const categories = await prisma.category.findMany({
     where: { deletedAt: null },
-    orderBy: { name: "asc" },
+    orderBy: [{ position: "asc" }, { name: "asc" }, { id: "asc" }],
     include: { _count: { select: { products: true } } },
   });
 
@@ -194,7 +196,9 @@ export async function getAdminCategoryTree(): Promise<AdminCategoryNode[]> {
       name: category.name,
       slug: category.slug,
       parentId: category.parentId,
+      position: category.position,
       productCount: category._count.products,
+      totalProductCount: category._count.products,
       children: [],
     });
   }
@@ -207,13 +211,20 @@ export async function getAdminCategoryTree(): Promise<AdminCategoryNode[]> {
       roots.push(node);
     }
   }
+  const rollup = (node: AdminCategoryNode): number => {
+    node.totalProductCount =
+      node.productCount +
+      node.children.reduce((sum, child) => sum + rollup(child), 0);
+    return node.totalProductCount;
+  };
+  for (const root of roots) rollup(root);
   return roots;
 }
 
 export async function getAdminCategoryForEdit(id: string) {
   const category = await prisma.category.findUnique({
     where: { id, deletedAt: null },
-    select: { id: true, name: true, parentId: true },
+    select: { id: true, name: true, parentId: true, position: true },
   });
   return category;
 }
@@ -221,7 +232,7 @@ export async function getAdminCategoryForEdit(id: string) {
 export async function getAdminCategoryOptions() {
   const categories = await prisma.category.findMany({
     where: { deletedAt: null },
-    orderBy: { name: "asc" },
+    orderBy: [{ position: "asc" }, { name: "asc" }, { id: "asc" }],
     select: { id: true, name: true, parentId: true },
   });
   return categories;
@@ -274,19 +285,41 @@ export async function getAdminAttention() {
 }
 
 export async function getAdminTotals() {
-  const [totalProducts, totalOrders, totalCategories, totalUsers] =
-    await Promise.all([
-      prisma.product.count(),
-      prisma.order.count(),
-      prisma.category.count({ where: { deletedAt: null } }),
-      prisma.user.count({ where: { deletedAt: null } }),
-    ]);
+  const [
+    totalProducts,
+    totalOrders,
+    totalCategories,
+    totalUsers,
+    parentCategories,
+    subCategories,
+    adminUsers,
+  ] = await Promise.all([
+    prisma.product.count(),
+    prisma.order.count(),
+    prisma.category.count({ where: { deletedAt: null } }),
+    prisma.user.count({ where: { deletedAt: null } }),
+    prisma.category.count({
+      where: { deletedAt: null, children: { some: { deletedAt: null } } },
+    }),
+    prisma.category.count({
+      where: {
+        deletedAt: null,
+        parentId: { not: null },
+        parent: { deletedAt: null },
+      },
+    }),
+    prisma.user.count({ where: { role: "admin", deletedAt: null } }),
+  ]);
 
   return {
     totalProducts,
     totalOrders,
     totalCategories,
     totalUsers,
+    parentCategories,
+    subCategories,
+    adminUsers,
+    customerUsers: totalUsers - adminUsers,
   };
 }
 
@@ -357,7 +390,7 @@ export async function getAdminUsers(params: {
   };
 }
 
-export async function getRecentOrders(limit = 7) {
+export async function getRecentOrders(limit = 5) {
   const orders = await prisma.order.findMany({
     orderBy: { createdAt: "desc" },
     take: limit,
