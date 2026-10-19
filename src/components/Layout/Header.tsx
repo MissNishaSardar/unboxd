@@ -12,7 +12,6 @@ import {
 import { useMounted } from "@/hooks/use-mounted";
 import { authClient } from "@/lib/auth-client";
 import { cartCountAtom, cartDrawerOpenAtom } from "@/lib/cart/atoms";
-import { PUBLIC_NAV } from "@/lib/nav";
 import { cn } from "@/lib/utils";
 import {
   parseAsArrayOf,
@@ -140,30 +139,6 @@ const Header = ({ brands }: { brands?: BrandWithCount[] }) => {
                     />
                   </Suspense>
                 </div>
-                <nav
-                  aria-label="Primary"
-                  className="flex flex-col gap-1 px-4">
-                  {PUBLIC_NAV.map((item) => {
-                    const isActive =
-                      pathname === item.href ||
-                      pathname.startsWith(`${item.href}/`);
-                    return (
-                      <Link
-                        key={item.href}
-                        href={item.href as never}
-                        onClick={() => setMobileOpen(false)}
-                        aria-current={isActive ? "page" : undefined}
-                        className={cn(
-                          "rounded-md px-3.5 py-2 text-sm font-medium transition-colors",
-                          isActive ?
-                            "bg-foreground text-background shadow-sm"
-                          : "text-muted-foreground hover:bg-muted hover:text-foreground",
-                        )}>
-                        {item.label}
-                      </Link>
-                    );
-                  })}
-                </nav>
                 {brands && brands.length > 0 && (
                   <div className="flex flex-col gap-2 px-4 pt-4">
                     <span className="text-muted-foreground px-3.5 text-xs font-semibold tracking-widest uppercase">
@@ -241,7 +216,7 @@ const Header = ({ brands }: { brands?: BrandWithCount[] }) => {
             </div>
           </div>
 
-          <div className="flex shrink-0 items-center gap-1">
+          <div className="flex shrink-0 items-center gap-2.5">
             <Button
               variant="ghost"
               size="icon"

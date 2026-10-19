@@ -9,11 +9,12 @@ import {
   PointerSensor,
   TouchSensor,
   useDraggable,
+  useDroppable,
   useSensor,
   useSensors,
   type CollisionDetection,
   type DragEndEvent,
-  type DragOverEvent,
+  type DragMoveEvent,
   type DragStartEvent,
 } from "@dnd-kit/core";
 import type {
@@ -168,17 +169,9 @@ const categoryCollision: CollisionDetection = ({
     ratio < 0.33 ? "above"
     : ratio > 0.67 ? "below"
     : "inside";
-  return [{ id: `${rowId}:${zone}` }];
-};
-
-const parseOverId = (
-  overId: string,
-): { rowId: string; zone: DropZone } | null => {
-  const sep = overId.lastIndexOf(":");
-  if (sep < 0) return null;
-  const zone = overId.slice(sep + 1);
-  if (zone !== "above" && zone !== "inside" && zone !== "below") return null;
-  return { rowId: overId.slice(0, sep), zone };
+  // The id must match a registered droppable for dnd-kit to engage its over
+  // state, so the zone travels in data instead of a synthetic composite id.
+  return [{ id: rowId, data: { zone } }];
 };
 
 const computeMove = (
@@ -227,13 +220,24 @@ const OrderDragHandle = ({
   name: string;
   disabled: boolean;
 }) => {
-  const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
+  const {
+    attributes,
+    listeners,
+    setNodeRef: setDragNodeRef,
+    isDragging,
+  } = useDraggable({
     id,
     disabled,
   });
+  // Registering the row as a droppable is what lets dnd-kit engage its over
+  // state: collision ids must resolve to a registered droppable with a rect.
+  const { setNodeRef: setDroppableNodeRef } = useDroppable({ id });
   return (
     <span
-      ref={setNodeRef}
+      ref={(node) => {
+        setDragNodeRef(node);
+        setDroppableNodeRef(node);
+      }}
       {...attributes}
       {...listeners}
       className="inline-flex">
@@ -299,24 +303,30 @@ const CategoriesTable = ({
     setActiveId(String(event.active.id));
   };
 
-  const handleDragOver = (event: DragOverEvent) => {
-    if (!event.over) {
-      setDropTarget(null);
+  const handleDragMove = (event: DragMoveEvent) => {
+    const collision = event.collisions?.[0];
+    const zone = collision?.data?.zone as DropZone | undefined;
+    if (!collision || !zone || String(collision.id) === activeId) {
+      setDropTarget((previous) => (previous === null ? previous : null));
       return;
     }
-    const parsed = parseOverId(String(event.over.id));
-    setDropTarget(parsed && parsed.rowId !== activeId ? parsed : null);
+    const rowId = String(collision.id);
+    setDropTarget((previous) =>
+      previous && previous.rowId === rowId && previous.zone === zone ?
+        previous
+      : { rowId, zone },
+    );
   };
 
   const handleDragEnd = async (event: DragEndEvent) => {
     const overId = event.over ? String(event.over.id) : null;
+    const zone = event.collisions?.[0]?.data?.zone as DropZone | undefined;
     const moving = activeId;
     setActiveId(null);
     setDropTarget(null);
-    if (!overId || !moving || !canDrag) return;
-    const parsed = parseOverId(overId);
-    if (!parsed || parsed.rowId === moving) return;
-    const move = computeMove(rows, moving, parsed.rowId, parsed.zone);
+    if (!overId || !zone || !moving || !canDrag) return;
+    if (overId === moving) return;
+    const move = computeMove(rows, moving, overId, zone);
     if ("error" in move) {
       toast.add({
         title: "Cannot move inside its own subcategory",
@@ -512,7 +522,7 @@ const CategoriesTable = ({
       sensors={sensors}
       collisionDetection={categoryCollision}
       onDragStart={handleDragStart}
-      onDragOver={handleDragOver}
+      onDragMove={handleDragMove}
       onDragEnd={handleDragEnd}
       onDragCancel={handleDragCancel}>
       <DataTable

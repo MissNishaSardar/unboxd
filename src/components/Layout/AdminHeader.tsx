@@ -77,7 +77,7 @@ const AdminHeader = () => {
           })}
         </BreadcrumbList>
       </Breadcrumb>
-      <div className="ml-auto flex items-center gap-1">
+      <div className="ml-auto flex items-center gap-2.5">
         <ThemeToggleButton className={iconButtonClass} />
         <UserMenu showStorefront />
       </div>

@@ -21,14 +21,22 @@ const CopyAddressButton = ({ text }: { text: string }) => {
 
   return (
     <Button
-      variant="ghost"
-      size="icon-sm"
+      variant="outline"
+      size="sm"
       onClick={handleCopy}
-      aria-label={copied ? "Address copied" : "Copy address"}
+      className="shrink-0 rounded-full"
       data-print-hidden>
       {copied ?
-        <CheckIcon aria-hidden="true" />
-      : <CopyIcon aria-hidden="true" />}
+        <CheckIcon
+          aria-hidden="true"
+          data-icon="inline-start"
+        />
+      : <CopyIcon
+          aria-hidden="true"
+          data-icon="inline-start"
+        />
+      }
+      {copied ? "Copied" : "Copy"}
     </Button>
   );
 };

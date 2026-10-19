@@ -121,11 +121,12 @@ model Order {
   address       Address?
   createdAt     DateTime    @default(now())
   updatedAt     DateTime    @updatedAt
-  statusUpdatedAt DateTime? @default(now())
-  cancelReason  String?
-  cancelNote    String?
-  cancelledAt   DateTime?
-  cancelledBy   String?
+  statusUpdatedAt    DateTime? @default(now())
+  cancelReason       String?
+  adminCancelReason  String?
+  cancelNote         String?
+  cancelledAt        DateTime?
+  cancelledBy        String?
 
   @@index([userId])
   @@index([status])

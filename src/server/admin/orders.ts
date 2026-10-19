@@ -20,6 +20,7 @@ export type AdminOrderRow = {
   itemCount: number;
   thumbnails: string[];
   cancelReason: string | null;
+  adminCancelReason: string | null;
 };
 
 export async function getAdminOrders(params: {
@@ -143,6 +144,7 @@ export async function getAdminOrders(params: {
       customerEmail: order.user.email,
       itemCount: order.items.reduce((sum, item) => sum + item.quantity, 0),
       cancelReason: order.cancelReason,
+      adminCancelReason: order.adminCancelReason,
       thumbnails: [
         ...new Set(
           order.items.map(
@@ -235,6 +237,7 @@ export async function getAdminOrderDetail(id: string) {
     cancellation:
       order.status === "CANCELLED" ?
         {
+          adminCancelReason: order.adminCancelReason,
           reason: order.cancelReason,
           note: order.cancelNote,
           cancelledAt: order.cancelledAt?.toISOString() ?? null,

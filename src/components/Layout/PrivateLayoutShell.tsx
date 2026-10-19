@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { LockIcon } from "lucide-react";
-import ImpersonationBanner from "@/components/Admin/ImpersonationBanner";
 import UnboxdLogo from "@/components/Brand/UnboxdLogo";
 import AppSidebar from "@/components/Layout/AppSidebar";
 import PrivateHeader from "@/components/Layout/PrivateHeader";
@@ -20,13 +19,9 @@ import { TooltipProvider } from "@/components/shadcnui/tooltip";
 const PrivateLayoutShell = ({
   children,
   defaultOpen,
-  userName,
-  impersonatedBy,
 }: {
   children: React.ReactNode;
   defaultOpen: boolean;
-  userName: string;
-  impersonatedBy: boolean;
 }) => {
   const pathname = usePathname();
 
@@ -82,7 +77,6 @@ const PrivateLayoutShell = ({
         <AppSidebar />
         <SidebarInset>
           <PrivateHeader />
-          {impersonatedBy && <ImpersonationBanner name={userName} />}
           <main className="flex-1 py-6">
             <Container>{children}</Container>
           </main>

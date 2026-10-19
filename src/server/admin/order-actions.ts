@@ -69,7 +69,7 @@ export async function updateOrderStatus(
             statusUpdatedAt: new Date(),
             ...(nextStatus === "CANCELLED" ?
               {
-                cancelReason: reason ?? null,
+                adminCancelReason: reason ?? null,
                 cancelNote: note?.trim() ? note.trim() : null,
                 cancelledAt: new Date(),
                 cancelledBy: session.user.id,
@@ -139,7 +139,7 @@ export async function bulkUpdateOrderStatus(
                 {
                   status: nextStatus,
                   statusUpdatedAt: new Date(),
-                  cancelReason: reason ?? null,
+                  adminCancelReason: reason ?? null,
                   cancelledAt: new Date(),
                   cancelledBy: session.user.id,
                 }

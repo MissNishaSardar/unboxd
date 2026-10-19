@@ -410,10 +410,54 @@ export const CANCEL_REASON_LABELS: Record<cancelReasonType, string> = {
   other: "Other",
 };
 
+export const adminCancelReasonSchema = z.enum([
+  "out_of_stock",
+  "unable_to_fulfill",
+  "address_issue",
+  "suspected_fraud",
+  "customer_request",
+  "payment_unsettled",
+  "other",
+]);
+
+export type adminCancelReasonType = z.infer<typeof adminCancelReasonSchema>;
+
+export const ADMIN_CANCEL_REASON_LABELS: Record<adminCancelReasonType, string> =
+  {
+    out_of_stock: "Out of stock",
+    unable_to_fulfill: "Unable to fulfill",
+    address_issue: "Address issue",
+    suspected_fraud: "Suspected fraud",
+    customer_request: "Customer requested it",
+    payment_unsettled: "Payment not settled",
+    other: "Other",
+  };
+
+export const adminCancelOrderSchema = z
+  .object({
+    reason: adminCancelReasonSchema,
+    note: z
+      .string()
+      .trim()
+      .max(500, { error: "Note must be at most 500 characters" })
+      .optional(),
+  })
+  .superRefine((data, ctx) => {
+    if (data.reason === "other" && !data.note) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["note"],
+        message: "Please add a note when reason is Other",
+      });
+    }
+  });
+
+export type adminCancelOrderType = z.infer<typeof adminCancelOrderSchema>;
+
 export const updateOrderStatusSchema = z
   .object({
     status: orderStatusSchema,
-    reason: cancelReasonSchema.optional(),
+    reason: adminCancelReasonSchema.optional(),
     note: z
       .string()
       .trim()
@@ -464,7 +508,7 @@ export const bulkOrderStatusSchema = z
   .object({
     orderIds: z.array(z.string().min(1)).min(1),
     status: z.enum(["SHIPPED", "DELIVERED", "CANCELLED"]),
-    reason: cancelReasonSchema.optional(),
+    reason: adminCancelReasonSchema.optional(),
   })
   .superRefine((data, ctx) => {
     if (data.status === "CANCELLED" && !data.reason) {

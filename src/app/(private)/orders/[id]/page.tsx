@@ -167,9 +167,9 @@ const OrderPage = async ({ params }: Props) => {
                 CANCEL_REASON_LABELS[
                   order.cancelReason as keyof typeof CANCEL_REASON_LABELS
                 ]
-              : "No reason given"}
+              : "The store cancelled this order"}
             </p>
-            {order.cancelNote && (
+            {order.cancelReason != null && order.cancelNote && (
               <p className="text-muted-foreground mt-1 text-sm">
                 {order.cancelNote}
               </p>

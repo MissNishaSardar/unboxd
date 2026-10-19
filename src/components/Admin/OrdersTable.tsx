@@ -24,9 +24,9 @@ import {
 import { Button } from "@/components/shadcnui/button";
 import { toast } from "@/components/shadcnui/toast";
 import { withMinDelay } from "@/lib/minDelay";
-import { CANCEL_REASON_LABELS } from "@/lib/zodSchema";
-import type { cancelReasonType } from "@/lib/zodSchema";
-import { cancelReasonSchema } from "@/lib/zodSchema";
+import { ADMIN_CANCEL_REASON_LABELS } from "@/lib/zodSchema";
+import { adminCancelReasonSchema } from "@/lib/zodSchema";
+import type { adminCancelReasonType } from "@/lib/zodSchema";
 import { cn } from "@/lib/utils";
 
 const urlSortToSortingState = (urlSort: string): SortingState => {
@@ -50,9 +50,8 @@ const OrdersTable = ({
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
   const [isPending, setIsPending] = useState(false);
   const [cancelOpen, setCancelOpen] = useState(false);
-  const [cancelReason, setCancelReason] = useState<cancelReasonType | null>(
-    null,
-  );
+  const [cancelReason, setCancelReason] =
+    useState<adminCancelReasonType | null>(null);
 
   useEffect(() => {
     setRowSelection({});
@@ -83,7 +82,7 @@ const OrdersTable = ({
 
   const handleBulk = async (
     status: "SHIPPED" | "DELIVERED" | "CANCELLED",
-    reason?: cancelReasonType | null,
+    reason?: adminCancelReasonType | null,
   ) => {
     if (status === "CANCELLED" && !reason) {
       toast.add({ title: "Please choose a reason", type: "error" });
@@ -208,7 +207,7 @@ const OrdersTable = ({
                   role="radiogroup"
                   aria-label="Cancellation reason"
                   className="flex flex-col gap-1.5">
-                  {cancelReasonSchema.options.map((value) => (
+                  {adminCancelReasonSchema.options.map((value) => (
                     <label
                       key={value}
                       className={cn(
@@ -226,7 +225,7 @@ const OrdersTable = ({
                         disabled={isPending}
                         className="size-4 accent-current"
                       />
-                      {CANCEL_REASON_LABELS[value]}
+                      {ADMIN_CANCEL_REASON_LABELS[value]}
                     </label>
                   ))}
                 </div>

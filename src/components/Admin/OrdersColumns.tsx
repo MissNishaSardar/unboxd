@@ -14,7 +14,10 @@ import { Badge } from "@/components/shadcnui/badge";
 import { Button } from "@/components/shadcnui/button";
 import { Checkbox } from "@/components/shadcnui/checkbox";
 import { formatDate, formatPrice } from "@/lib/format";
-import { CANCEL_REASON_LABELS } from "@/lib/zodSchema";
+import {
+  ADMIN_CANCEL_REASON_LABELS,
+  CANCEL_REASON_LABELS,
+} from "@/lib/zodSchema";
 import OrderStatusBadge from "@/components/Orders/OrderStatusBadge";
 
 const SortHeaderButton = ({
@@ -49,6 +52,23 @@ const SortHeaderButton = ({
     }
   </Button>
 );
+
+const cancelReasonLabel = (row: AdminOrderRow): string | null => {
+  if (
+    row.adminCancelReason != null &&
+    row.adminCancelReason in ADMIN_CANCEL_REASON_LABELS
+  ) {
+    return ADMIN_CANCEL_REASON_LABELS[
+      row.adminCancelReason as keyof typeof ADMIN_CANCEL_REASON_LABELS
+    ];
+  }
+  if (row.cancelReason != null && row.cancelReason in CANCEL_REASON_LABELS) {
+    return CANCEL_REASON_LABELS[
+      row.cancelReason as keyof typeof CANCEL_REASON_LABELS
+    ];
+  }
+  return null;
+};
 
 export const getOrdersColumns = (): ColumnDef<AdminOrderRow>[] => [
   {
@@ -169,14 +189,7 @@ export const getOrdersColumns = (): ColumnDef<AdminOrderRow>[] => [
     cell: ({ row }) => (
       <span className="max-w-44 truncate text-xs">
         {row.original.status === "CANCELLED" ?
-          (
-            row.original.cancelReason != null &&
-            row.original.cancelReason in CANCEL_REASON_LABELS
-          ) ?
-            CANCEL_REASON_LABELS[
-              row.original.cancelReason as keyof typeof CANCEL_REASON_LABELS
-            ]
-          : "No reason given"
+          (cancelReasonLabel(row.original) ?? "No reason given")
         : <span className="text-muted-foreground">-</span>}
       </span>
     ),

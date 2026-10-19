@@ -90,7 +90,7 @@ const PrivateHeader = () => {
           })}
         </BreadcrumbList>
       </Breadcrumb>
-      <div className="ml-auto flex items-center gap-1">
+      <div className="ml-auto flex items-center gap-2.5">
         <Button
           variant="ghost"
           size="icon"

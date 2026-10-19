@@ -1,9 +1,13 @@
 "use client";
 
+import { formatPrice } from "@/lib/format";
 import UnboxdLogo from "@/components/Brand/UnboxdLogo";
-import { Button } from "@/components/shadcnui/button";
-import { Input } from "@/components/shadcnui/input";
-import { CreditCardIcon } from "lucide-react";
+import {
+  BanknoteIcon,
+  CalendarClockIcon,
+  CreditCardIcon,
+  TruckIcon,
+} from "lucide-react";
 import Link from "next/link";
 
 export type FooterCategory = {
@@ -24,9 +28,15 @@ const shopLinksFallback: FooterCategory[] = [
 const Footer = ({
   categories,
   storeName = "unboxd",
+  codEnabled,
+  deliveryDays,
+  freeShippingThreshold,
 }: {
   categories?: FooterCategory[];
   storeName?: string;
+  codEnabled: boolean;
+  deliveryDays: number;
+  freeShippingThreshold: string;
 }) => {
   const shopCategories =
     categories && categories.length > 0 ? categories : shopLinksFallback;
@@ -35,7 +45,7 @@ const Footer = ({
       aria-label="Site footer"
       className="border-border bg-card text-card-foreground border-t">
       <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 md:py-12">
-        <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-4">
+        <div className="grid grid-cols-1 gap-8 md:grid-cols-3 lg:grid-cols-[1.4fr_1fr_1fr]">
           <div className="flex flex-col gap-4">
             <Link
               href="/"
@@ -52,6 +62,36 @@ const Footer = ({
               Electronics, unboxed. Smartphones, laptops, audio and accessories
               with cash on delivery and tracked delivery across India.
             </p>
+            <div>
+              <p className="text-muted-foreground text-xs font-semibold tracking-widest uppercase">
+                Why shop with us
+              </p>
+              <ul className="mt-3 space-y-2.5">
+                {codEnabled && (
+                  <li className="text-muted-foreground flex items-center gap-1.5 text-sm">
+                    <BanknoteIcon
+                      aria-hidden="true"
+                      className="size-3.5 shrink-0"
+                    />
+                    Cash on delivery across India
+                  </li>
+                )}
+                <li className="text-muted-foreground flex items-center gap-1.5 text-sm">
+                  <TruckIcon
+                    aria-hidden="true"
+                    className="size-3.5 shrink-0"
+                  />
+                  Free shipping above {formatPrice(freeShippingThreshold)}
+                </li>
+                <li className="text-muted-foreground flex items-center gap-1.5 text-sm">
+                  <CalendarClockIcon
+                    aria-hidden="true"
+                    className="size-3.5 shrink-0"
+                  />
+                  Delivered in about {deliveryDays} days
+                </li>
+              </ul>
+            </div>
           </div>
 
           <nav aria-label="Shop categories">
@@ -130,27 +170,6 @@ const Footer = ({
               </li>
             </ul>
           </nav>
-
-          <div className="flex flex-col">
-            <form
-              aria-label="Newsletter signup"
-              className="flex gap-2"
-              onSubmit={(e) => e.preventDefault()}>
-              <Input
-                type="email"
-                placeholder="Get 10% off - enter your email"
-                aria-label="Email address"
-                required
-                className="h-9 flex-1 rounded-full"
-              />
-              <Button
-                type="submit"
-                size="sm"
-                className="h-9 shrink-0 rounded-full px-5">
-                Subscribe
-              </Button>
-            </form>
-          </div>
         </div>
 
         <div className="border-border mt-8 flex flex-col items-center justify-between gap-4 border-t pt-6 md:flex-row">

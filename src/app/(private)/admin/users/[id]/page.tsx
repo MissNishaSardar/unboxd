@@ -219,9 +219,6 @@ const AdminUserDetailPage = async ({
                       <span className="text-sm font-medium tabular-nums">
                         {sessionRow.ipAddress ?? "Unknown IP"}
                       </span>
-                      {sessionRow.impersonatedBy && (
-                        <Badge variant="secondary">Impersonated</Badge>
-                      )}
                     </div>
                     <p className="text-muted-foreground truncate text-xs">
                       {sessionRow.userAgent ?? "Unknown device"}

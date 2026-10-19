@@ -150,7 +150,7 @@ export async function createCategory(
     );
 
     revalidateTag("products", "max");
-    revalidatePath("/admin/categories", "page");
+    revalidatePath("/admin/categories");
     return { ok: true, id: category.id, slug };
   } catch (e) {
     if (e instanceof InvalidInputError) {
@@ -219,7 +219,7 @@ export async function updateCategory(
     );
 
     revalidateTag("products", "max");
-    revalidatePath("/admin/categories", "page");
+    revalidatePath("/admin/categories");
     return { ok: true, id: category.id, slug: category.slug };
   } catch (e) {
     if (e instanceof NotFoundError) {
@@ -348,7 +348,7 @@ export async function moveCategoryTo(
 
     if (moved) {
       revalidateTag("products", "max");
-      revalidatePath("/admin/categories", "page");
+      revalidatePath("/admin/categories");
     }
     return { ok: true, moved };
   } catch (e) {
@@ -397,7 +397,7 @@ export async function deleteCategory(id: string): Promise<AdminCategoryResult> {
     );
 
     revalidateTag("products", "max");
-    revalidatePath("/admin/categories", "page");
+    revalidatePath("/admin/categories");
     return { ok: true, id: existing.id, slug: existing.slug };
   } catch (e) {
     if (e instanceof NotFoundError) {
@@ -469,7 +469,7 @@ export async function reassignAndDeleteCategory(
     );
 
     revalidateTag("products", "max");
-    revalidatePath("/admin/categories", "page");
+    revalidatePath("/admin/categories");
     return { ok: true, id: existing.id, slug: existing.slug };
   } catch (e) {
     if (e instanceof NotFoundError) {
@@ -544,7 +544,7 @@ export async function deleteCategoryCascade(
     );
 
     revalidateTag("products", "max");
-    revalidatePath("/admin/categories", "page");
+    revalidatePath("/admin/categories");
     return { ok: true, ...result };
   } catch (e) {
     if (e instanceof NotFoundError) {

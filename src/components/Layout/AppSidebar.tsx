@@ -30,7 +30,7 @@ const AppSidebar = () => {
   return (
     <Sidebar collapsible="icon">
       <SidebarHeader>
-        <SidebarBrand href="/" />
+        <SidebarBrand href="/myprofile" />
       </SidebarHeader>
       <SidebarContent>
         <SidebarGroup>

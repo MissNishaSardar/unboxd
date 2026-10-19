@@ -8,7 +8,6 @@ import {
   ArrowUpDownIcon,
   ArrowUpIcon,
   BanIcon,
-  EyeIcon,
   MoreHorizontalIcon,
   RotateCcwIcon,
   ShieldIcon,
@@ -47,7 +46,6 @@ type UsersColumnHandlers = {
   isPending: boolean;
   onRole: (user: AdminUserRow) => void;
   onBanToggle: (user: AdminUserRow) => void;
-  onImpersonate: (user: AdminUserRow) => void;
   onDeactivate: (user: AdminUserRow) => void;
 };
 
@@ -94,7 +92,6 @@ export const getUsersColumns = ({
   isPending,
   onRole,
   onBanToggle,
-  onImpersonate,
   onDeactivate,
 }: UsersColumnHandlers): ColumnDef<AdminUserRow>[] => [
   {
@@ -231,12 +228,6 @@ export const getUsersColumns = ({
                     <UnlockIcon aria-hidden="true" />
                   : <BanIcon aria-hidden="true" />}
                   {user.banned ? "Unban user" : "Ban user"}
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  onClick={() => onImpersonate(user)}
-                  disabled={isPending || user.role === "admin"}>
-                  <EyeIcon aria-hidden="true" />
-                  View as user
                 </DropdownMenuItem>
               </DropdownMenuGroup>
               <DropdownMenuSeparator />

@@ -21,7 +21,7 @@ export type OrderStatus =
 
 export const COD_DELIVERY_DAYS = 5;
 
-type StatusConfig = {
+export type StatusConfig = {
   label: string;
   badgeVariant: "default" | "secondary" | "destructive";
   badgeClass?: string;
@@ -102,6 +102,56 @@ export function getOrderStatusConfig(status: string): StatusConfig {
   return isOrderStatus(status) ?
       orderStatusConfig[status]
     : { label: status, badgeVariant: "secondary", icon: PackageIcon };
+}
+
+/** One dot or row in an order progress display. */
+export type OrderStepState = {
+  step: OrderStatus;
+  config: StatusConfig;
+  completed: boolean;
+  current: boolean;
+  terminal: boolean;
+};
+
+/**
+ * The four flow steps with their visual state. A cancelled order never
+ * completed any of them, a returned one completed all of them, and an
+ * unknown status leaves them all pending because there is nothing to mark.
+ */
+export function getOrderFlowStepStates(status: string): OrderStepState[] {
+  const returned = status === "RETURNED";
+  const terminal = returned || status === "CANCELLED";
+  const currentIndex = ORDER_STATUS_FLOW.indexOf(
+    status as (typeof ORDER_STATUS_FLOW)[number],
+  );
+
+  return ORDER_STATUS_FLOW.map((step, index) => ({
+    step,
+    config: orderStatusConfig[step],
+    completed:
+      returned ? true
+      : terminal ? false
+      : index < currentIndex,
+    current: !terminal && index === currentIndex,
+    terminal: false,
+  }));
+}
+
+/** The flow steps plus the terminal step, for vertical timeline displays. */
+export function getOrderStepStates(status: string): OrderStepState[] {
+  const flow = getOrderFlowStepStates(status);
+  if (!isTerminalStatus(status)) return flow;
+
+  return [
+    ...flow,
+    {
+      step: status as OrderStatus,
+      config: getOrderStatusConfig(status),
+      completed: false,
+      current: true,
+      terminal: true,
+    },
+  ];
 }
 
 export function getEstimatedDelivery(

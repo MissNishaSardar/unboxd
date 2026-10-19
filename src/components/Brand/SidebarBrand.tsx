@@ -2,7 +2,7 @@ import Link from "next/link";
 import UnboxdLogo from "@/components/Brand/UnboxdLogo";
 
 type SidebarBrandProps = {
-  href: "/admin" | "/";
+  href: "/admin" | "/" | "/myprofile";
   subtitle?: string;
 };
 

@@ -8,10 +8,10 @@ import { ArrowRightIcon, RotateCcwIcon, XCircleIcon } from "lucide-react";
 import { withMinDelay } from "@/lib/minDelay";
 import { updateOrderStatus } from "@/server/admin/order-actions";
 import {
-  CANCEL_REASON_LABELS,
-  cancelOrderSchema,
-  cancelOrderType,
-  cancelReasonSchema,
+  ADMIN_CANCEL_REASON_LABELS,
+  adminCancelOrderSchema,
+  adminCancelOrderType,
+  adminCancelReasonSchema,
 } from "@/lib/zodSchema";
 import {
   AlertDialog,
@@ -45,8 +45,8 @@ const OrderStatusActions = ({
   const [isPending, setIsPending] = useState(false);
   const [cancelOpen, setCancelOpen] = useState(false);
 
-  const cancelForm = useForm<cancelOrderType>({
-    resolver: zodResolver(cancelOrderSchema),
+  const cancelForm = useForm<adminCancelOrderType>({
+    resolver: zodResolver(adminCancelOrderSchema),
     defaultValues: { reason: undefined, note: "" },
     mode: "onSubmit",
   });
@@ -74,7 +74,7 @@ const OrderStatusActions = ({
   const canCancel = canTransition(status, "CANCELLED");
   const canReturn = canTransition(status, "RETURNED");
 
-  const handleCancel = async (values: cancelOrderType) => {
+  const handleCancel = async (values: adminCancelOrderType) => {
     setIsPending(true);
     const result = await withMinDelay(
       updateOrderStatus(orderId, {
@@ -184,7 +184,7 @@ const OrderStatusActions = ({
                       role="radiogroup"
                       aria-label="Cancellation reason"
                       className="flex flex-col gap-1.5">
-                      {cancelReasonSchema.options.map((value) => (
+                      {adminCancelReasonSchema.options.map((value) => (
                         <label
                           key={value}
                           className={cn(
@@ -203,7 +203,7 @@ const OrderStatusActions = ({
                             disabled={isPending}
                             className="size-4 accent-current"
                           />
-                          {CANCEL_REASON_LABELS[value]}
+                          {ADMIN_CANCEL_REASON_LABELS[value]}
                         </label>
                       ))}
                     </div>

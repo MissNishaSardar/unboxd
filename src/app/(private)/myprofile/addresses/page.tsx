@@ -29,10 +29,10 @@ const AddressesPage = async () => {
   const addresses = await getUserAddresses();
 
   return (
-    <div className="mx-auto flex max-w-3xl flex-col gap-6">
+    <div className="mx-auto flex max-w-6xl flex-col gap-8">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="font-heading text-2xl font-semibold tracking-tight">
+          <h1 className="font-heading text-2xl font-semibold tracking-tight md:text-3xl">
             Saved addresses
           </h1>
           <p className="text-muted-foreground text-sm">

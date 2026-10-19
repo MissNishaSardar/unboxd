@@ -18,10 +18,7 @@ const PrivateLayout = async ({ children }: LayoutProps) => {
   const defaultOpen = cookieStore.get("sidebar_state")?.value !== "false";
 
   return (
-    <PrivateLayoutShell
-      defaultOpen={defaultOpen}
-      userName={session.user.name}
-      impersonatedBy={Boolean(session.session.impersonatedBy)}>
+    <PrivateLayoutShell defaultOpen={defaultOpen}>
       {children}
     </PrivateLayoutShell>
   );

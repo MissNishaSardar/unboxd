@@ -2,7 +2,6 @@
 
 import { revalidatePath } from "next/cache";
 import { headers } from "next/headers";
-import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 import prisma from "@/lib/dbClient/prisma";
 import { DAY_MS } from "@/lib/constants";
@@ -233,39 +232,6 @@ export async function reactivateUser(
     console.error("reactivateUser failed", e);
     return { ok: false, error: "SERVER_ERROR" };
   }
-}
-
-export async function impersonateUser(
-  userId: string,
-): Promise<AdminUserActionResult> {
-  try {
-    await requireAdmin();
-  } catch {
-    return { ok: false, error: "FORBIDDEN" };
-  }
-
-  try {
-    await auth.api.impersonateUser({
-      body: { userId },
-      headers: await headers(),
-    });
-  } catch (e) {
-    console.error("impersonateUser failed", e);
-    return { ok: false, error: "SERVER_ERROR" };
-  }
-
-  redirect("/");
-}
-
-export async function stopImpersonating(): Promise<AdminUserActionResult> {
-  try {
-    await auth.api.stopImpersonating({ headers: await headers() });
-  } catch (e) {
-    console.error("stopImpersonating failed", e);
-    return { ok: false, error: "SERVER_ERROR" };
-  }
-
-  redirect("/");
 }
 
 export async function bulkBanUsers(

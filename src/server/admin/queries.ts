@@ -415,7 +415,6 @@ export type AdminUserDetailSession = {
   userAgent: string | null;
   createdAt: string;
   expiresAt: string;
-  impersonatedBy: string | null;
 };
 
 export type AdminUserDetailAddress = {
@@ -525,7 +524,6 @@ export async function getAdminUserDetail(userId: string) {
       userAgent: session.userAgent ?? null,
       createdAt: session.createdAt.toISOString(),
       expiresAt: session.expiresAt.toISOString(),
-      impersonatedBy: session.impersonatedBy ?? null,
     })),
     addresses: addresses.map((address): AdminUserDetailAddress => ({
       id: address.id,

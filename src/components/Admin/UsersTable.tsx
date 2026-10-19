@@ -12,7 +12,6 @@ import {
   reactivateUser,
   banUser,
   unbanUser,
-  impersonateUser,
   setUserRole,
 } from "@/server/admin/user-actions";
 import {
@@ -140,15 +139,6 @@ const UsersTable = ({
     }
   };
 
-  const handleImpersonate = async (user: AdminUserRow) => {
-    setIsPending(true);
-    const result = await impersonateUser(user.id);
-    setIsPending(false);
-    if (!result.ok) {
-      toast.add({ title: "Something went wrong", type: "error" });
-    }
-  };
-
   const handleDeactivate = async () => {
     if (!deactivateTarget) return;
     setIsPending(true);
@@ -229,7 +219,6 @@ const UsersTable = ({
         isPending,
         onRole: handleRole,
         onBanToggle: handleBanToggle,
-        onImpersonate: handleImpersonate,
         onDeactivate: (user) => setDeactivateTarget(user),
       }),
     // eslint-disable-next-line react-hooks/exhaustive-deps

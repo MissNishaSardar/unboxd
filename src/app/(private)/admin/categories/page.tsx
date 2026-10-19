@@ -11,6 +11,7 @@ import {
 } from "@/components/shadcnui/empty";
 import type { Metadata } from "next";
 import { requireAdminPage } from "@/lib/guard";
+import { connection } from "next/server";
 import {
   getAdminCategoryOptions,
   getAdminCategoryTree,
@@ -23,6 +24,11 @@ export const metadata: Metadata = {
 
 const AdminCategoriesPage = async () => {
   await requireAdminPage();
+  // The tree must be read per request. Without this, the SQLite reads complete
+  // during prerender and the category rows get baked into the static shell,
+  // where revalidatePath cannot reach them and drag reorder stays invisible
+  // until the server restarts.
+  await connection();
 
   const tree = await getAdminCategoryTree();
   const categories = await getAdminCategoryOptions();

@@ -25,9 +25,9 @@ const MyProfilePage = async () => {
   const isAdmin = profile.role === "admin";
 
   return (
-    <div className="mx-auto flex max-w-3xl flex-col gap-6">
+    <div className="mx-auto flex max-w-6xl flex-col gap-8">
       <div>
-        <h1 className="font-heading text-2xl font-semibold tracking-tight">
+        <h1 className="font-heading text-2xl font-semibold tracking-tight md:text-3xl">
           Profile
         </h1>
         <p className="text-muted-foreground text-sm">

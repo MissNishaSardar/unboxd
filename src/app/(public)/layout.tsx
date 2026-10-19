@@ -1,24 +1,16 @@
 import CartProvider from "@/components/Cart/CartProvider";
-import ImpersonationBanner from "@/components/Admin/ImpersonationBanner";
 import SaleBanner from "@/components/Layout/SaleBanner";
 import Container from "@/components/Layout/Container";
 import Header from "@/components/Layout/Header";
 import Footer from "@/components/Layout/Footer";
 import WishlistProvider from "@/components/Wishlist/WishlistProvider";
-import { auth } from "@/lib/auth";
 import { LayoutProps } from "@/lib/types";
 import { getCategoriesWithCounts } from "@/server/catalog";
 import { getBrandsWithCounts } from "@/server/brands";
 import { getStoreSettings } from "@/server/admin/settings";
-import { headers } from "next/headers";
 
 const PublicLayout = async ({ children }: LayoutProps) => {
-  const headerList = await headers();
-
-  const [session, categories, brands, settings] = await Promise.all([
-    auth.api.getSession({
-      headers: headerList,
-    }),
+  const [categories, brands, settings] = await Promise.all([
     getCategoriesWithCounts(),
     getBrandsWithCounts(),
     getStoreSettings(),
@@ -26,9 +18,6 @@ const PublicLayout = async ({ children }: LayoutProps) => {
 
   return (
     <div className="flex min-h-screen flex-col">
-      {session?.session.impersonatedBy && (
-        <ImpersonationBanner name={session.user.name} />
-      )}
       <SaleBanner />
       <Header brands={brands} />
       <main className="flex-1 overflow-x-clip">
@@ -37,6 +26,9 @@ const PublicLayout = async ({ children }: LayoutProps) => {
       <Footer
         categories={categories}
         storeName={settings.storeName}
+        codEnabled={settings.codEnabled}
+        deliveryDays={settings.deliveryDays}
+        freeShippingThreshold={settings.freeShippingThreshold}
       />
       <CartProvider />
       <WishlistProvider />
