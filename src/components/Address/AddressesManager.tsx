@@ -6,9 +6,11 @@ import AddressCard from "@/components/Address/AddressCard";
 import AddressForm from "@/components/Address/AddressForm";
 import { Button } from "@/components/shadcnui/button";
 import { toast } from "@/components/shadcnui/toast";
+import { withMinDelay } from "@/lib/minDelay";
 import {
   createUserAddress,
   deleteUserAddress,
+  getUserAddresses,
   setDefaultUserAddress,
   updateUserAddress,
   type UserAddressData,
@@ -53,13 +55,37 @@ const AddressesManager = ({
   };
 
   const handleAdd = async (values: AddressValues) => {
-    const result = await createUserAddress(values);
+    const result = await withMinDelay(createUserAddress(values));
     if (!result.ok) {
       toast.add({
         title: "Couldn't save the address",
         description: "Please check the fields and try again.",
         type: "error",
       });
+      return;
+    }
+    if (result.duplicate) {
+      // The save converged to an existing row. When the row is already in
+      // local state, show the list directly. Otherwise it came from another
+      // tab or session, so refetch to pick it up.
+      if (addresses.some((a) => a.id === result.id)) {
+        changeMode("list");
+        toast.add({ title: "Address already saved", type: "info" });
+        return;
+      }
+      try {
+        setAddresses(await getUserAddresses());
+        changeMode("list");
+        toast.add({ title: "Address already saved", type: "info" });
+      } catch {
+        // Refresh failed but the twin still exists server side. Stay in add
+        // mode so the form keeps the typed values and can be retried.
+        toast.add({
+          title: "Couldn't refresh addresses",
+          description: "Please try again in a moment.",
+          type: "error",
+        });
+      }
       return;
     }
     setAddresses((prev) => [
@@ -82,8 +108,17 @@ const AddressesManager = ({
 
   const handleEdit = async (values: AddressValues) => {
     if (!editingId) return;
-    const result = await updateUserAddress(editingId, values);
+    const result = await withMinDelay(updateUserAddress(editingId, values));
     if (!result.ok) {
+      if (result.error === "DUPLICATE") {
+        // Keep the edit form open so the typed values survive.
+        toast.add({
+          title: "This matches another saved address",
+          description: "Change the details or cancel the edit.",
+          type: "info",
+        });
+        return;
+      }
       toast.add({
         title: "Couldn't update the address",
         description: "Please check the fields and try again.",

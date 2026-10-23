@@ -40,7 +40,7 @@ const ProfileForm = ({ view }: ProfileFormProps) => {
   const router = useRouter();
   const [editing, setEditing] = useState(false);
 
-  const { getValues, handleSubmit, control, formState, reset } =
+  const { getValues, handleSubmit, control, formState, reset, watch } =
     useForm<profileUpdateType>({
       resolver: zodResolver(profileUpdateSchema),
       defaultValues: {
@@ -49,6 +49,14 @@ const ProfileForm = ({ view }: ProfileFormProps) => {
       },
       mode: "all",
     });
+
+  // Semantic check instead of raw isDirty. The schema trims the name, so a
+  // whitespace only edit or a typed and reverted value must not enable Save.
+  const watchName = watch("name");
+  const watchImage = watch("image");
+  const hasChanges =
+    (watchName ?? "").trim() !== view.name ||
+    (watchImage ?? null) !== view.image;
 
   const onSubmit = async (values: profileUpdateType) => {
     const prevImage = view.image;
@@ -240,7 +248,7 @@ const ProfileForm = ({ view }: ProfileFormProps) => {
                     "0 0 0 3px color-mix(in srgb, var(--primary) 25%, transparent)",
                 }}
               />
-              {formState.isDirty ?
+              {hasChanges ?
                 "Unsaved changes, apply your new avatar and name"
               : "Nothing to save yet"}
             </span>
@@ -256,7 +264,7 @@ const ProfileForm = ({ view }: ProfileFormProps) => {
               <Button
                 type="submit"
                 size="sm"
-                disabled={formState.isSubmitting || !formState.isDirty}
+                disabled={formState.isSubmitting || !hasChanges}
                 className="h-7 rounded-full px-3.5 text-xs">
                 {formState.isSubmitting && (
                   <Loader2Icon

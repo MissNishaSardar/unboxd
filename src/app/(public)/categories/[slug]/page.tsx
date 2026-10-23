@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import CategoryPillsRow from "@/components/Product/CategoryPillsRow";
 import ProductLoadMoreGrid from "@/components/Product/ProductLoadMoreGrid";
+import ProductSortMenu from "@/components/Product/ProductSortMenu";
 import ProductToolbar from "@/components/Product/ProductToolbar";
 import {
   Breadcrumb,
@@ -15,7 +16,11 @@ import {
 import prisma from "@/lib/dbClient/prisma";
 import { productListSearchParamsSchema } from "@/lib/zodSchema";
 import { getBrandsWithCounts } from "@/server/brands";
-import { getCategoriesWithCounts, getProducts } from "@/server/catalog";
+import {
+  getCategoriesWithCounts,
+  getOnSaleProductIds,
+  getProducts,
+} from "@/server/catalog";
 
 type PageProps = {
   params: Promise<{ slug: string }>;
@@ -51,6 +56,8 @@ const page = async ({
     min?: string | string[];
     max?: string | string[];
     page?: string | string[];
+    sale?: string | string[];
+    stock?: string | string[];
   }>;
 }) => {
   const { slug } = await params;
@@ -81,6 +88,7 @@ const page = async ({
   );
   const effectiveCategories =
     selectedInTree.length > 0 ? selectedInTree : treeSlugs;
+  const saleIds = sp.sale ? await getOnSaleProductIds() : null;
 
   const [data, categoriesInTree, brands] = await Promise.all([
     getProducts({
@@ -91,18 +99,24 @@ const page = async ({
       min: sp.min,
       max: sp.max,
       page: sp.page,
+      stock: sp.stock,
+      saleProducts: saleIds,
     }),
     getCategoriesWithCounts({
       q: sp.q,
       brands: sp.brands,
       min: sp.min,
       max: sp.max,
+      stock: sp.stock,
+      saleProducts: saleIds,
     }),
     getBrandsWithCounts({
       q: sp.q,
       categories: effectiveCategories,
       min: sp.min,
       max: sp.max,
+      stock: sp.stock,
+      saleProducts: saleIds,
     }),
   ]);
 
@@ -111,8 +125,8 @@ const page = async ({
   );
 
   return (
-    <div className="-mt-8 flex flex-col gap-6 lg:gap-8">
-      <div className="flex flex-col gap-2">
+    <div className="-mt-8 flex flex-col gap-5">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <Breadcrumb>
           <BreadcrumbList>
             <BreadcrumbItem>
@@ -143,32 +157,32 @@ const page = async ({
             </BreadcrumbItem>
           </BreadcrumbList>
         </Breadcrumb>
-        <header className="flex flex-col gap-1">
-          <h1 className="font-heading text-xl font-semibold tracking-tight md:text-2xl">
-            {category.name}
-          </h1>
-          <p className="text-muted-foreground text-sm tabular-nums">
-            {data.total} item{data.total === 1 ? "" : "s"} in this category
-            {category.children.length > 0 &&
-              selectedInTree.length === 0 &&
-              `, including ${category.children.map((child) => child.name).join(", ")}`}
-          </p>
-        </header>
+        <ProductSortMenu />
       </div>
 
-      <CategoryPillsRow categories={pills} />
+      <header>
+        <h1 className="font-heading text-3xl font-semibold tracking-tight md:text-[2rem]">
+          {category.name}
+        </h1>
+      </header>
 
-      <div className="flex min-w-0 flex-col gap-4">
+      <section className="from-card/60 to-card/30 overflow-hidden rounded-[16px] border bg-gradient-to-b shadow-[inset_0_1px_0_rgb(255_255_255/0.04)]">
+        <div className="px-3.5 pt-3">
+          <CategoryPillsRow categories={pills} />
+        </div>
+        <div className="bg-border h-px" />
         <ProductToolbar
           categories={pills}
           brands={brands}
-        />
-        <ProductLoadMoreGrid
-          initialProducts={data.products}
           total={data.total}
-          baseCategories={treeSlugs}
         />
-      </div>
+      </section>
+
+      <ProductLoadMoreGrid
+        initialProducts={data.products}
+        total={data.total}
+        baseCategories={treeSlugs}
+      />
     </div>
   );
 };

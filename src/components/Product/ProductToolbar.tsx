@@ -2,16 +2,10 @@
 
 /* eslint-disable react-hooks/set-state-in-effect -- syncing URL query state to draft inputs for popover is intentional */
 import { useEffect, useState } from "react";
-import {
-  ArrowDownIcon,
-  ArrowUpIcon,
-  ClockIcon,
-  SlidersHorizontalIcon,
-  StarIcon,
-  XIcon,
-} from "lucide-react";
+import { CheckIcon, SlidersHorizontalIcon, XIcon } from "lucide-react";
 import {
   parseAsArrayOf,
+  parseAsBoolean,
   parseAsFloat,
   parseAsInteger,
   parseAsString,
@@ -32,59 +26,31 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/shadcnui/popover";
-import {
-  ToggleGroup,
-  ToggleGroupItem,
-} from "@/components/shadcnui/toggle-group";
 import type { FilterCategory } from "@/components/Product/categoryFilterMeta";
 import type { BrandWithCount } from "@/server/brands";
-
-const SORT_OPTIONS = [
-  {
-    value: "newest",
-    label: "Newest First",
-    description: "Recently added",
-    icon: ClockIcon,
-  },
-  {
-    value: "price_asc",
-    label: "Price: Low to High",
-    description: "Cheapest first",
-    icon: ArrowUpIcon,
-  },
-  {
-    value: "price_desc",
-    label: "Price: High to Low",
-    description: "Most expensive first",
-    icon: ArrowDownIcon,
-  },
-  {
-    value: "rating_desc",
-    label: "Highest Rated",
-    description: "Best reviews first (5★ → 1★)",
-    icon: StarIcon,
-  },
-  {
-    value: "rating_asc",
-    label: "Lowest Rated",
-    description: "Lowest reviews first (1★ → 5★)",
-    icon: StarIcon,
-  },
-] as const;
 
 type Props = {
   categories: FilterCategory[];
   brands?: BrandWithCount[];
+  total: number;
 };
 
-const ProductToolbar = ({ categories, brands }: Props) => {
+const PRICE_PRESETS = [
+  { label: "Under ₹5,000", min: null, max: 4999 },
+  { label: "₹5,000 to ₹50,000", min: 5000, max: 50000 },
+  { label: "Above ₹50,000", min: 50001, max: null },
+] as const;
+
+const ProductToolbar = ({ categories, brands, total }: Props) => {
+  // sort lives in ProductSortMenu, this deck row owns filters and chips only
   const [filters, setFilters] = useQueryStates(
     {
       q: parseAsString,
       categories: parseAsArrayOf(parseAsString, ",").withDefault([]),
       category: parseAsString,
       brands: parseAsArrayOf(parseAsString, ",").withDefault([]),
-      sort: parseAsString,
+      sale: parseAsBoolean,
+      stock: parseAsBoolean,
       min: parseAsFloat,
       max: parseAsFloat,
       page: parseAsInteger,
@@ -99,7 +65,9 @@ const ProductToolbar = ({ categories, brands }: Props) => {
     },
   );
 
-  const sort = filters.sort ?? "newest";
+  const saleOn = filters.sale ?? false;
+  const stockOn = filters.stock ?? false;
+
   const singleCategory = filters.category;
   const activeCategories = Array.from(
     new Set([
@@ -117,7 +85,8 @@ const ProductToolbar = ({ categories, brands }: Props) => {
   const hasMin = activeMin !== null && activeMin !== undefined;
   const hasMax = activeMax !== null && activeMax !== undefined;
   const hasQ = activeQ !== null && activeQ !== "";
-  const hasFilters = hasCategories || hasBrands || hasMin || hasMax || hasQ;
+  const hasFilters =
+    hasCategories || hasBrands || hasMin || hasMax || hasQ || saleOn || stockOn;
 
   const priceLabel =
     hasMin && hasMax ?
@@ -172,6 +141,8 @@ const ProductToolbar = ({ categories, brands }: Props) => {
       categories: [],
       category: null,
       brands: [],
+      sale: null,
+      stock: null,
       min: null,
       max: null,
       page: null,
@@ -185,14 +156,12 @@ const ProductToolbar = ({ categories, brands }: Props) => {
   const [draftMax, setDraftMax] = useState(
     filters.max != null ? String(filters.max) : "",
   );
-  const [draftSort, setDraftSort] = useState(sort);
 
   useEffect(() => {
     if (open) return;
     setDraftMin(filters.min != null ? String(filters.min) : "");
     setDraftMax(filters.max != null ? String(filters.max) : "");
-    setDraftSort(sort);
-  }, [filters.min, filters.max, sort, open]);
+  }, [filters.min, filters.max, open]);
 
   const handleApply = () => {
     const parsedMin = draftMin === "" ? null : Number(draftMin);
@@ -206,212 +175,263 @@ const ProductToolbar = ({ categories, brands }: Props) => {
     void setFilters({
       min: nextMin,
       max: nextMax,
-      sort: draftSort,
       page: null,
     });
     setOpen(false);
   };
 
   return (
-    <div className="flex flex-col gap-3">
-      <div className="flex items-center justify-between gap-3">
-        <Popover
-          open={open}
-          onOpenChange={setOpen}>
-          <PopoverTrigger
-            render={
-              <Button
-                variant="outline"
-                size="sm"
-                className="gap-1.5 rounded-full"
-              />
-            }>
-            <SlidersHorizontalIcon className="size-4" />
-            Filter by
-          </PopoverTrigger>
-          <PopoverContent
-            align="center"
-            sideOffset={8}
-            className="w-80 max-w-[calc(100vw-24px)] p-0">
-            <Card
+    <div className="flex flex-wrap items-center gap-2 px-3.5 py-2.5">
+      <Popover
+        open={open}
+        onOpenChange={setOpen}>
+        <PopoverTrigger
+          render={
+            <Button
+              variant="outline"
               size="sm"
-              className="border-0 shadow-none">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm">Filters</CardTitle>
-              </CardHeader>
-              <CardContent className="flex flex-col gap-5">
-                <div className="flex flex-col gap-2">
-                  <span className="text-xs font-medium">Price</span>
-                  <div className="flex gap-2">
-                    <Field className="flex-1">
-                      <FieldLabel htmlFor="filter-min">Min</FieldLabel>
-                      <Input
-                        id="filter-min"
-                        type="number"
-                        placeholder="Min"
-                        value={draftMin}
-                        onChange={(e) => setDraftMin(e.target.value)}
-                      />
-                    </Field>
-                    <Field className="flex-1">
-                      <FieldLabel htmlFor="filter-max">Max</FieldLabel>
-                      <Input
-                        id="filter-max"
-                        type="number"
-                        placeholder="Max"
-                        value={draftMax}
-                        onChange={(e) => setDraftMax(e.target.value)}
-                      />
-                    </Field>
-                  </div>
+              className="gap-1.5 rounded-full"
+            />
+          }>
+          <SlidersHorizontalIcon className="size-4" />
+          Filter by
+        </PopoverTrigger>
+        <PopoverContent
+          align="center"
+          sideOffset={8}
+          className="w-80 max-w-[calc(100vw-24px)] p-0">
+          <Card
+            size="sm"
+            className="border-0 shadow-none">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm">Filters</CardTitle>
+            </CardHeader>
+            <CardContent className="flex flex-col gap-5">
+              <div className="flex flex-col gap-2">
+                <span className="text-xs font-medium">Availability</span>
+                <button
+                  type="button"
+                  onClick={() => {
+                    void setFilters({ sale: saleOn ? null : true, page: null });
+                  }}
+                  className="hover:bg-accent flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-left">
+                  <span className="flex flex-col items-start leading-none">
+                    <span className="text-xs font-medium">On sale</span>
+                    <span className="text-muted-foreground mt-1 text-[11px] font-normal">
+                      Items with an active deal
+                    </span>
+                  </span>
+                  {saleOn && (
+                    <CheckIcon className="text-primary ml-auto size-3.5 shrink-0" />
+                  )}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    void setFilters({
+                      stock: stockOn ? null : true,
+                      page: null,
+                    });
+                  }}
+                  className="hover:bg-accent flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-left">
+                  <span className="flex flex-col items-start leading-none">
+                    <span className="text-xs font-medium">In stock</span>
+                    <span className="text-muted-foreground mt-1 text-[11px] font-normal">
+                      Has variants in stock
+                    </span>
+                  </span>
+                  {stockOn && (
+                    <CheckIcon className="text-primary ml-auto size-3.5 shrink-0" />
+                  )}
+                </button>
+              </div>
+              <div className="flex flex-col gap-2">
+                <span className="text-xs font-medium">Price</span>
+                <div className="flex flex-wrap gap-1.5">
+                  {PRICE_PRESETS.map((preset) => {
+                    const presetMin = preset.min;
+                    const presetMax = preset.max;
+                    const isOn =
+                      activeMin === presetMin && activeMax === presetMax;
+                    return (
+                      <Button
+                        key={preset.label}
+                        type="button"
+                        variant={isOn ? "secondary" : "outline"}
+                        size="xs"
+                        className="rounded-full text-xs"
+                        onClick={() => {
+                          void setFilters({
+                            min: presetMin,
+                            max: presetMax,
+                            page: null,
+                          });
+                        }}>
+                        {preset.label}
+                      </Button>
+                    );
+                  })}
                 </div>
-                <div className="flex flex-col gap-2">
-                  <span className="text-xs font-medium">Sort by</span>
-                  <ToggleGroup
-                    orientation="vertical"
-                    value={[draftSort]}
-                    onValueChange={(values) => {
-                      const v = values[0];
-                      if (v) setDraftSort(v);
-                    }}
-                    className="w-full gap-1.5">
-                    {SORT_OPTIONS.map((option) => {
-                      const Icon = option.icon;
-                      const isRating = option.value.startsWith("rating_");
-                      return (
-                        <ToggleGroupItem
-                          key={option.value}
-                          value={option.value}
-                          variant="outline"
-                          className="data-[state=on]:bg-primary data-[state=on]:text-primary-foreground h-auto justify-start rounded-md px-3 py-2">
-                          <Icon
-                            className={
-                              isRating ?
-                                "size-3.5 shrink-0 fill-amber-400 text-amber-400 data-[state=on]:fill-white data-[state=on]:text-white"
-                              : "size-3.5 shrink-0"
-                            }
-                          />
-                          <span className="flex flex-col items-start leading-none">
-                            <span className="text-xs font-medium">
-                              {option.label}
-                            </span>
-                            <span className="text-[11px] font-normal opacity-70 data-[state=on]:opacity-90">
-                              {option.description}
-                            </span>
-                          </span>
-                        </ToggleGroupItem>
-                      );
-                    })}
-                  </ToggleGroup>
+                <div className="flex gap-2">
+                  <Field className="flex-1">
+                    <FieldLabel htmlFor="filter-min">Min</FieldLabel>
+                    <Input
+                      id="filter-min"
+                      type="number"
+                      placeholder="Min"
+                      value={draftMin}
+                      onChange={(e) => setDraftMin(e.target.value)}
+                    />
+                  </Field>
+                  <Field className="flex-1">
+                    <FieldLabel htmlFor="filter-max">Max</FieldLabel>
+                    <Input
+                      id="filter-max"
+                      type="number"
+                      placeholder="Max"
+                      value={draftMax}
+                      onChange={(e) => setDraftMax(e.target.value)}
+                    />
+                  </Field>
                 </div>
-                <Button
-                  size="sm"
-                  className="w-full"
-                  onClick={handleApply}>
-                  Apply
-                </Button>
-                {(hasMin || hasMax) && (
-                  <Button
-                    variant="ghost"
-                    size="xs"
-                    onClick={() => {
-                      void setFilters({ min: null, max: null, page: null });
-                      setOpen(false);
-                    }}>
-                    Clear price
-                  </Button>
-                )}
-              </CardContent>
-            </Card>
-          </PopoverContent>
-        </Popover>
-        <div className="text-muted-foreground hidden text-xs sm:block">
-          {SORT_OPTIONS.find((o) => o.value === sort)?.label}
-        </div>
-      </div>
-
-      {hasFilters && (
-        <div className="flex flex-wrap items-center gap-2">
-          {hasQ && (
-            <Badge
-              variant="secondary"
-              className="gap-1 pr-1">
-              <span className="max-w-32 truncate">q: {activeQ}</span>
+              </div>
               <Button
-                variant="ghost"
-                size="icon-xs"
-                aria-label="Remove search filter"
-                onClick={clearQ}
-                className="size-5 rounded-full">
-                <XIcon className="size-3" />
+                size="sm"
+                className="w-full"
+                onClick={handleApply}>
+                Apply
               </Button>
-            </Badge>
-          )}
-          {activeCategories.map((slug) => {
-            const name =
-              categories.find((item) => item.slug === slug)?.name ?? slug;
-            return (
-              <Badge
-                key={slug}
-                variant="secondary"
-                className="gap-1 pr-1">
-                <span className="max-w-32 truncate">{name}</span>
+              {(hasMin || hasMax) && (
                 <Button
                   variant="ghost"
-                  size="icon-xs"
-                  aria-label={`Remove ${name} filter`}
-                  onClick={() => removeCategory(slug)}
-                  className="size-5 rounded-full">
-                  <XIcon className="size-3" />
+                  size="xs"
+                  onClick={() => {
+                    void setFilters({ min: null, max: null, page: null });
+                    setOpen(false);
+                  }}>
+                  Clear price
                 </Button>
-              </Badge>
-            );
-          })}
-          {activeBrands.map((slug) => {
-            const name =
-              brands?.find((item) => item.slug === slug)?.name ?? slug;
-            return (
-              <Badge
-                key={slug}
-                variant="secondary"
-                className="gap-1 pr-1">
-                <span className="max-w-32 truncate">{name}</span>
-                <Button
-                  variant="ghost"
-                  size="icon-xs"
-                  aria-label={`Remove ${name} filter`}
-                  onClick={() => removeBrand(slug)}
-                  className="size-5 rounded-full">
-                  <XIcon className="size-3" />
-                </Button>
-              </Badge>
-            );
-          })}
+              )}
+            </CardContent>
+          </Card>
+        </PopoverContent>
+      </Popover>
 
-          {priceLabel && (
-            <Badge
-              variant="secondary"
-              className="gap-1 pr-1">
-              <span>{priceLabel}</span>
-              <Button
-                variant="ghost"
-                size="icon-xs"
-                aria-label="Remove price filter"
-                onClick={clearPrice}
-                className="size-5 rounded-full">
-                <XIcon className="size-3" />
-              </Button>
-            </Badge>
-          )}
-
+      {hasQ && (
+        <Badge
+          variant="secondary"
+          className="gap-1 pr-1">
+          <span className="max-w-32 truncate">q: {activeQ}</span>
           <Button
             variant="ghost"
-            size="xs"
-            onClick={clearAll}
-            className="h-6 px-2 text-xs">
-            Clear all
+            size="icon-xs"
+            aria-label="Remove search filter"
+            onClick={clearQ}
+            className="size-5 rounded-full">
+            <XIcon className="size-3" />
           </Button>
-        </div>
+        </Badge>
+      )}
+      {activeCategories.map((slug) => {
+        const name =
+          categories.find((item) => item.slug === slug)?.name ?? slug;
+        return (
+          <Badge
+            key={slug}
+            variant="secondary"
+            className="gap-1 pr-1">
+            <span className="max-w-32 truncate">{name}</span>
+            <Button
+              variant="ghost"
+              size="icon-xs"
+              aria-label={`Remove ${name} filter`}
+              onClick={() => removeCategory(slug)}
+              className="size-5 rounded-full">
+              <XIcon className="size-3" />
+            </Button>
+          </Badge>
+        );
+      })}
+      {activeBrands.map((slug) => {
+        const name = brands?.find((item) => item.slug === slug)?.name ?? slug;
+        return (
+          <Badge
+            key={slug}
+            variant="secondary"
+            className="gap-1 pr-1">
+            <span className="max-w-32 truncate">{name}</span>
+            <Button
+              variant="ghost"
+              size="icon-xs"
+              aria-label={`Remove ${name} filter`}
+              onClick={() => removeBrand(slug)}
+              className="size-5 rounded-full">
+              <XIcon className="size-3" />
+            </Button>
+          </Badge>
+        );
+      })}
+      {saleOn && (
+        <Badge
+          variant="secondary"
+          className="gap-1 pr-1">
+          <span>On sale</span>
+          <Button
+            variant="ghost"
+            size="icon-xs"
+            aria-label="Remove sale filter"
+            onClick={() => {
+              void setFilters({ sale: null, page: null });
+            }}
+            className="size-5 rounded-full">
+            <XIcon className="size-3" />
+          </Button>
+        </Badge>
+      )}
+      {stockOn && (
+        <Badge
+          variant="secondary"
+          className="gap-1 pr-1">
+          <span>In stock</span>
+          <Button
+            variant="ghost"
+            size="icon-xs"
+            aria-label="Remove stock filter"
+            onClick={() => {
+              void setFilters({ stock: null, page: null });
+            }}
+            className="size-5 rounded-full">
+            <XIcon className="size-3" />
+          </Button>
+        </Badge>
+      )}
+      {priceLabel && (
+        <Badge
+          variant="secondary"
+          className="gap-1 pr-1">
+          <span>{priceLabel}</span>
+          <Button
+            variant="ghost"
+            size="icon-xs"
+            aria-label="Remove price filter"
+            onClick={clearPrice}
+            className="size-5 rounded-full">
+            <XIcon className="size-3" />
+          </Button>
+        </Badge>
+      )}
+
+      <span className="text-muted-foreground ml-auto text-xs tabular-nums">
+        {total === 0 ? "No items" : `${total} item${total === 1 ? "" : "s"}`}
+      </span>
+      {hasFilters && (
+        <Button
+          variant="ghost"
+          size="xs"
+          onClick={clearAll}
+          className="-mr-1 text-xs">
+          Clear all
+        </Button>
       )}
     </div>
   );

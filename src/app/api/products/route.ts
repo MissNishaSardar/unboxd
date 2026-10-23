@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getProducts } from "@/server/catalog";
+import { getOnSaleProductIds, getProducts } from "@/server/catalog";
 import { productListSearchParamsSchema } from "@/lib/zodSchema";
 
 export async function GET(req: Request) {
@@ -7,6 +7,7 @@ export async function GET(req: Request) {
   const parsed = productListSearchParamsSchema.parse(
     Object.fromEntries(searchParams.entries()),
   );
+  const saleProducts = parsed.sale ? await getOnSaleProductIds() : null;
   const data = await getProducts({
     q: parsed.q,
     categories: parsed.categories,
@@ -15,6 +16,8 @@ export async function GET(req: Request) {
     min: parsed.min,
     max: parsed.max,
     page: parsed.page ?? 1,
+    stock: parsed.stock,
+    saleProducts,
   });
   return NextResponse.json(
     {

@@ -74,6 +74,13 @@ const csvStringArray = (schema: z.ZodType<string>) =>
       .filter(Boolean);
   }, z.array(schema).default([]));
 
+const booleanQueryString = z.preprocess((value) => {
+  const raw = Array.isArray(value) ? value[0] : value;
+  if (typeof raw !== "string") return false;
+  const lowered = raw.toLowerCase();
+  return lowered === "true" || lowered === "1";
+}, z.boolean());
+
 export const productSortSchema = z.enum([
   "price_asc",
   "price_desc",
@@ -90,6 +97,8 @@ export const productListSearchParamsSchema = z
     brands: csvStringArray(z.string().min(1).max(40)),
     brand: queryString(z.string().min(1).max(40)).optional(),
     sort: productSortSchema.catch("newest"),
+    sale: booleanQueryString,
+    stock: booleanQueryString,
     min: z
       .preprocess(
         (value) => (value === "" ? undefined : value),

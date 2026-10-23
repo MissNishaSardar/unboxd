@@ -139,6 +139,8 @@ export async function getCategoriesWithCounts(params?: {
   categories?: string[];
   min?: number;
   max?: number;
+  stock?: boolean;
+  saleProducts?: string[] | null;
 }) {
   "use cache";
   cacheLife("hours");
@@ -168,6 +170,15 @@ export async function getCategoriesWithCounts(params?: {
       lte: params?.max,
     };
   }
+  if (params?.stock) {
+    (whereProducts as Record<string, unknown>).variants = {
+      some: { stock: { gt: 0 } },
+    };
+  }
+  const saleProducts = params?.saleProducts;
+  if (Array.isArray(saleProducts)) {
+    (whereProducts as Record<string, unknown>).id = { in: saleProducts };
+  }
   const categories = await prisma.category.findMany({
     where: { deletedAt: null },
     orderBy: [{ position: "asc" }, { name: "asc" }, { id: "asc" }],
@@ -196,16 +207,55 @@ export type ProductListParams = {
   min?: number;
   max?: number;
   page?: number;
+  stock?: boolean;
+  sale?: boolean;
+  saleProducts?: string[] | null;
 };
 
 export async function getProducts(params: ProductListParams) {
-  const rows = await getProductRows(params);
+  // callers that also need counts pass saleProducts to skip the repeat,
+  // otherwise resolve here, uncached, so timed deals stay fresh
+  const saleProducts =
+    params.saleProducts ?? (params.sale ? await getOnSaleProductIds() : null);
+  const rows = await getProductRows({ ...params, saleProducts });
   return {
     products: await mapWithSale(rows.products),
     total: rows.total,
     page: rows.page,
     totalPages: rows.totalPages,
   };
+}
+
+// Time dependent on purpose, runs per request so discount windows and flash
+// sales never leak stale results through the products tag cache. Returns
+// null when a live store wide sale covers every product, an id list otherwise.
+export async function getOnSaleProductIds(): Promise<string[] | null> {
+  const [rows, globalPercent] = await Promise.all([
+    prisma.product.findMany({
+      where: { isActive: true, discountPercent: { gt: 0 } },
+      select: {
+        id: true,
+        discountPercent: true,
+        discountStartsAt: true,
+        discountEndsAt: true,
+      },
+    }),
+    getActiveSalePercent(),
+  ]);
+  if (globalPercent > 0) return null;
+  return rows
+    .filter(
+      (row) =>
+        activeDiscountPercent(
+          {
+            discountPercent: row.discountPercent ?? 0,
+            discountStartsAt: row.discountStartsAt,
+            discountEndsAt: row.discountEndsAt,
+          },
+          Date.now(),
+        ) > 0,
+    )
+    .map((row) => row.id);
 }
 
 async function getProductRows(params: ProductListParams) {
@@ -221,6 +271,8 @@ async function getProductRows(params: ProductListParams) {
     min,
     max,
     page = 1,
+    stock = false,
+    saleProducts,
   } = params;
   const trimmedQ = q?.trim();
   const where = {
@@ -242,6 +294,16 @@ async function getProductRows(params: ProductListParams) {
         gte: min,
         lte: max,
       },
+    }),
+    ...(stock && {
+      variants: {
+        some: {
+          stock: { gt: 0 },
+        },
+      },
+    }),
+    ...(Array.isArray(saleProducts) && {
+      id: { in: saleProducts },
     }),
   };
   if (sort === "rating_desc" || sort === "rating_asc") {

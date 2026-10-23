@@ -12,6 +12,8 @@ export async function getBrandsWithCounts(params?: {
   categories?: string[];
   min?: number;
   max?: number;
+  stock?: boolean;
+  saleProducts?: string[] | null;
 }): Promise<BrandWithCount[]> {
   "use cache";
   cacheLife("hours");
@@ -35,6 +37,15 @@ export async function getBrandsWithCounts(params?: {
       gte: params?.min,
       lte: params?.max,
     };
+  }
+  if (params?.stock) {
+    (where as Record<string, unknown>).variants = {
+      some: { stock: { gt: 0 } },
+    };
+  }
+  const saleProducts = params?.saleProducts;
+  if (Array.isArray(saleProducts)) {
+    (where as Record<string, unknown>).id = { in: saleProducts };
   }
 
   const grouped = await prisma.product.groupBy({

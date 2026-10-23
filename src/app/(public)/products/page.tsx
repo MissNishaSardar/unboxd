@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import CategoryPillsRow from "@/components/Product/CategoryPillsRow";
 import ProductLoadMoreGrid from "@/components/Product/ProductLoadMoreGrid";
+import ProductSortMenu from "@/components/Product/ProductSortMenu";
 import ProductToolbar from "@/components/Product/ProductToolbar";
 import {
   Breadcrumb,
@@ -11,9 +13,12 @@ import {
   BreadcrumbSeparator,
 } from "@/components/shadcnui/breadcrumb";
 import { productListSearchParamsSchema } from "@/lib/zodSchema";
-import { getCategoriesWithCounts, getProducts } from "@/server/catalog";
+import {
+  getCategoriesWithCounts,
+  getOnSaleProductIds,
+  getProducts,
+} from "@/server/catalog";
 import { getBrandsWithCounts } from "@/server/brands";
-import Link from "next/link";
 
 export const metadata: Metadata = {
   title: "Products",
@@ -33,9 +38,12 @@ const ProductsPage = async ({
     min?: string | string[];
     max?: string | string[];
     page?: string | string[];
+    sale?: string | string[];
+    stock?: string | string[];
   }>;
 }) => {
   const sp = productListSearchParamsSchema.parse(await searchParams);
+  const saleIds = sp.sale ? await getOnSaleProductIds() : null;
   const [data, categories, brands, allCategories, allBrands] =
     await Promise.all([
       getProducts({
@@ -46,18 +54,24 @@ const ProductsPage = async ({
         min: sp.min,
         max: sp.max,
         page: sp.page,
+        stock: sp.stock,
+        saleProducts: saleIds,
       }),
       getCategoriesWithCounts({
         q: sp.q,
         brands: sp.brands,
         min: sp.min,
         max: sp.max,
+        stock: sp.stock,
+        saleProducts: saleIds,
       }),
       getBrandsWithCounts({
         q: sp.q,
         categories: sp.categories,
         min: sp.min,
         max: sp.max,
+        stock: sp.stock,
+        saleProducts: saleIds,
       }),
       getCategoriesWithCounts(),
       getBrandsWithCounts(),
@@ -82,8 +96,8 @@ const ProductsPage = async ({
     activeBrandNames.length > 0 || activeCategoryNames.length > 0;
 
   return (
-    <div className="-mt-8 flex flex-col gap-6 lg:gap-8">
-      <div className="flex flex-col gap-2">
+    <div className="-mt-8 flex flex-col gap-5">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <Breadcrumb>
           <BreadcrumbList>
             <BreadcrumbItem>
@@ -119,32 +133,31 @@ const ProductsPage = async ({
             ))}
           </BreadcrumbList>
         </Breadcrumb>
-        <header className="flex flex-col gap-1">
-          <h1 className="font-heading text-xl font-semibold tracking-tight md:text-2xl">
-            Products
-          </h1>
-          <p className="text-muted-foreground text-sm tabular-nums">
-            {data.total} item{data.total === 1 ? "" : "s"} •{" "}
-            {sp.categories.length === 0 ?
-              "All categories"
-            : sp.categories.join(", ")}{" "}
-            {sp.brands.length > 0 && `• ${sp.brands.join(", ")}`}
-          </p>
-        </header>
+        <ProductSortMenu />
       </div>
 
-      <CategoryPillsRow categories={categories} />
+      <header>
+        <h1 className="font-heading text-3xl font-semibold tracking-tight md:text-[2rem]">
+          Products
+        </h1>
+      </header>
 
-      <div className="flex min-w-0 flex-col gap-4">
+      <section className="from-card/60 to-card/30 overflow-hidden rounded-[16px] border bg-gradient-to-b shadow-[inset_0_1px_0_rgb(255_255_255/0.04)]">
+        <div className="px-3.5 pt-3">
+          <CategoryPillsRow categories={categories} />
+        </div>
+        <div className="bg-border h-px" />
         <ProductToolbar
           categories={categories}
           brands={brands}
-        />
-        <ProductLoadMoreGrid
-          initialProducts={data.products}
           total={data.total}
         />
-      </div>
+      </section>
+
+      <ProductLoadMoreGrid
+        initialProducts={data.products}
+        total={data.total}
+      />
     </div>
   );
 };

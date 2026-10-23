@@ -69,10 +69,30 @@ const AddressForm = ({
     mode: "all",
   });
   const { isSubmitting, submitCount, isValid } = formState;
-  const labelValue = watch("label") ?? "";
+  const values = watch();
+  const labelValue = values.label ?? "";
   // Covers parents with an async follow-up after validation passes, such as
   // the checkout order request, so the form stays locked until it settles.
   const busy = isSubmitting || disabled;
+  // Semantic check instead of raw isDirty. The schema trims every field, so
+  // a whitespace only edit must not enable Save.
+  const base = {
+    label: defaultValues?.label ?? "",
+    name: defaultValues?.name ?? "",
+    phone: defaultValues?.phone ?? "",
+    addressLine: defaultValues?.addressLine ?? "",
+    city: defaultValues?.city ?? "",
+    state: defaultValues?.state ?? "",
+    pincode: defaultValues?.pincode ?? "",
+  };
+  const hasChanges =
+    (values.label ?? "").trim() !== base.label ||
+    (values.name ?? "").trim() !== base.name ||
+    values.phone !== base.phone ||
+    (values.addressLine ?? "").trim() !== base.addressLine ||
+    (values.city ?? "").trim() !== base.city ||
+    values.state !== base.state ||
+    values.pincode !== base.pincode;
 
   const submit = async (values: userAddressType) => {
     await onSubmit(values);
@@ -276,7 +296,7 @@ const AddressForm = ({
         <Button
           type="submit"
           id={submitId}
-          disabled={busy}
+          disabled={busy || !hasChanges}
           data-icon={busy ? "inline-start" : undefined}
           className="flex-1">
           {busy && (

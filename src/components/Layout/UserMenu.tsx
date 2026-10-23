@@ -125,7 +125,7 @@ const UserMenu = ({ showStorefront = true }: { showStorefront?: boolean }) => {
             {showStorefront && (
               <DropdownMenuItem onClick={() => router.push("/" as never)}>
                 <StoreIcon aria-hidden="true" />
-                Storefront
+                View store
               </DropdownMenuItem>
             )}
             <DropdownMenuItem

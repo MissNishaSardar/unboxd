@@ -122,7 +122,7 @@ const OrderPage = async ({ params }: Props) => {
   const totalSaved = Math.max(0, mrpTotal - Number(order.subtotal));
 
   return (
-    <div className="mx-auto flex max-w-2xl flex-col gap-8">
+    <div className="mx-auto flex max-w-6xl flex-col gap-8">
       <div className="flex flex-col gap-4">
         <Button
           variant="ghost"
